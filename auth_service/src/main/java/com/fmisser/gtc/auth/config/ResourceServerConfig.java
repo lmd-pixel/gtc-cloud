@@ -13,11 +13,16 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
         http.csrf().disable()
                 .authorizeRequests()
 //                .antMatchers("/user/**").permitAll()
+//                swagger
                 .antMatchers("/swagger-ui.html").permitAll()
                 .antMatchers("/webjars/**").permitAll()
                 .antMatchers("/swagger-resources/**").permitAll()
                 .antMatchers("/swagger/**").permitAll()
                 .antMatchers("/v2/api-docs/**").permitAll()
+//                eureka
+                .antMatchers("/actuator/**").permitAll()
+//                UserController
+                .antMatchers("/user/create").permitAll()
                 .anyRequest().authenticated();
     }
 }
