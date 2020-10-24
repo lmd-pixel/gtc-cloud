@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
-@Service
+@Service("top")
 public class UserDetailServiceImpl implements UserDetailsService {
 
     @Resource
@@ -17,5 +17,14 @@ public class UserDetailServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
         return userRepository.findByUsername(s);
+    }
+
+    /**
+     * 自定义手机号验证码登录模式
+     */
+    public UserDetails loadUserByPhoneAndSms(String phone, String code) {
+        // TODO: 2020/10/24 verify sms code
+
+        return userRepository.findTopByPhone(phone);
     }
 }
