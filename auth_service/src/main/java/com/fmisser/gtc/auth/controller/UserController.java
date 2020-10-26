@@ -3,6 +3,8 @@ package com.fmisser.gtc.auth.controller;
 import com.fmisser.gtc.auth.domain.User;
 import com.fmisser.gtc.auth.service.UserService;
 import io.swagger.annotations.Api;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -19,7 +21,8 @@ import java.security.Principal;
 @Validated
 public class UserController {
 
-    @Resource
+    @Autowired
+    @Qualifier("top")
     private UserService userService;
 
     @RequestMapping(value = "/current", method = RequestMethod.GET)
@@ -30,9 +33,6 @@ public class UserController {
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public User create(@RequestParam("username") String username,
                        @RequestParam("password") @Size(min = 6, max = 16) String pwd) {
-        User user = new User();
-        user.setUsername(username);
-        user.setPassword(pwd);
-        return userService.create(user);
+        return userService.create(username, pwd);
     }
 }

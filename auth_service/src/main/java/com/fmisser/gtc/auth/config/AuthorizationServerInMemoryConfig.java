@@ -25,18 +25,18 @@ import javax.annotation.Resource;
 //@EnableAuthorizationServer
 public class AuthorizationServerInMemoryConfig extends AuthorizationServerConfigurerAdapter {
 
-    @Resource
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
-    @Resource
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
-    @Bean
-    public JwtAccessTokenConverter jwtAccessTokenConverter() {
-        JwtAccessTokenConverter jwtAccessTokenConverter = new JwtAccessTokenConverter();
-        // 设置签名秘钥
-        jwtAccessTokenConverter.setSigningKey("jwt-key");
-        return jwtAccessTokenConverter;
+    private final JwtAccessTokenConverter jwtAccessTokenConverter;
+
+    public AuthorizationServerInMemoryConfig(PasswordEncoder passwordEncoder,
+                                             AuthenticationManager authenticationManager,
+                                             JwtAccessTokenConverter jwtAccessTokenConverter) {
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtAccessTokenConverter = jwtAccessTokenConverter;
     }
 
     @Override
@@ -54,7 +54,7 @@ public class AuthorizationServerInMemoryConfig extends AuthorizationServerConfig
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints
-                .accessTokenConverter(jwtAccessTokenConverter())    // token transform to jwt
+                .accessTokenConverter(jwtAccessTokenConverter)    // token transform to jwt
                 .authenticationManager(authenticationManager);  // oauth2 password need
 
     }

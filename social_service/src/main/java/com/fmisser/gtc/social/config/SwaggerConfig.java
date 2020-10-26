@@ -1,4 +1,4 @@
-package com.fmisser.gtc.auth.config;
+package com.fmisser.gtc.social.config;
 
 import io.swagger.annotations.Api;
 import org.springframework.context.annotation.Bean;
@@ -26,8 +26,9 @@ public class SwaggerConfig {
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("auth service api")
-                .description("gtc auth service api document")
+
+                .title("social service api")
+                .description("gtc social service api document")
                 .termsOfServiceUrl("http://www.fmisser.com")
                 .version("0.0.1-SNAPSHOT")
                 .build();
