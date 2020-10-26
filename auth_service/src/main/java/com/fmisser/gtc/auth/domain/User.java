@@ -28,9 +28,6 @@ public class User implements UserDetails {
     @Column(length = 18)
     private String phone;
 
-    @Column(name = "digit_id")
-    private Long digitId;
-
     @Column
     private String password;
 
