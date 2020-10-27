@@ -27,17 +27,20 @@ import java.util.Optional;
 public class UserDetailServiceImpl implements UserService {
     private final Logger logger = LoggerFactory.getLogger(UserDetailServiceImpl.class);
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private RoleRepository roleRepository;
+    private final RoleRepository roleRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private SmsService smsService;
+    private final SmsService smsService;
+
+    public UserDetailServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, SmsService smsService) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.smsService = smsService;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
@@ -52,6 +55,7 @@ public class UserDetailServiceImpl implements UserService {
         });
 
         User user = new User();
+        user.setId(0l);
         user.setUsername(username);
         String encodePwd = passwordEncoder.encode(password);
         user.setPassword(encodePwd);
@@ -85,7 +89,7 @@ public class UserDetailServiceImpl implements UserService {
 
     private User _innerCreateByPhone(String phone) {
         User newUser = new User();
-        newUser.setId(0l);
+        newUser.setId(0l);  // 因为存在多对多，必须要设置个值
         newUser.setUsername(phone);
         newUser.setType(1); // 手机号类型
         String encodePwd = passwordEncoder.encode(new Date().toString());   // 随机创建一个密码

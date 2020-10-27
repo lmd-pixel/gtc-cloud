@@ -17,6 +17,7 @@ public class CommonInjectObjectConfig {
     public JwtAccessTokenConverter jwtAccessTokenConverter() {
         JwtAccessTokenConverter jwtAccessTokenConverter = new JwtAccessTokenConverter();
         // 设置签名秘钥
+        // TODO: 2020/10/26 字段改成配置
         jwtAccessTokenConverter.setSigningKey("jwt-key");
         return jwtAccessTokenConverter;
     }

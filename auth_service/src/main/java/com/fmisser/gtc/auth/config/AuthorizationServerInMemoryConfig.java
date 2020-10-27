@@ -41,6 +41,7 @@ public class AuthorizationServerInMemoryConfig extends AuthorizationServerConfig
 
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+        // TODO: 2020/10/26 字段改成配置 
         clients.inMemory()
                 .withClient("test-client")
                 .secret(passwordEncoder.encode("test-client-secret"))

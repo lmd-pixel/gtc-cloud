@@ -21,9 +21,11 @@ import java.security.Principal;
 @Validated
 public class UserController {
 
-    @Autowired
-    @Qualifier("top")
-    private UserService userService;
+    private final UserService userService;
+
+    public UserController(@Qualifier("top") UserService userService) {
+        this.userService = userService;
+    }
 
     @RequestMapping(value = "/current", method = RequestMethod.GET)
     public Principal principal(Principal principal) {

@@ -16,6 +16,7 @@ import java.util.Map;
  * 可参考 {@link ResourceOwnerPasswordTokenGranter} 的实现
  */
 public class SmsLoginTokenGranter extends AbstractTokenGranter {
+    // TODO: 2020/10/26 改成配置
     private static final String GRANT_TYPE = "sms_login";
 
     private final UserDetailServiceImpl userDetailsService;
@@ -35,6 +36,7 @@ public class SmsLoginTokenGranter extends AbstractTokenGranter {
         Map<String, String> parameters = tokenRequest.getRequestParameters();
         UserDetails userDetails = getUser(parameters);
         if (userDetails == null) {
+            // TODO: 2020/10/26 改成配置
             throw new InvalidGrantException("无法获取用户信息");
         }
 
@@ -47,6 +49,7 @@ public class SmsLoginTokenGranter extends AbstractTokenGranter {
 
     private UserDetails getUser(Map<String, String> params) {
         // 获取 phone 和 sms_code 字段
+        // TODO: 2020/10/26 改成配置
         return userDetailsService.loadUserByPhoneAndSms(params.get("phone"), params.get("code"));
     }
 }
