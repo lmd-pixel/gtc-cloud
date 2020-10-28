@@ -5,6 +5,7 @@ import com.fmisser.gtc.social.service.YoungService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
@@ -21,8 +22,11 @@ import javax.annotation.Resource;
 @Validated
 public class YoungController {
 
-    @Resource
-    private YoungService youngService;
+    private final YoungService youngService;
+
+    public YoungController(YoungService youngService) {
+        this.youngService = youngService;
+    }
 
     @ApiOperation(value = "创建用户信息")
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
