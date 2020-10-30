@@ -2,6 +2,7 @@
 
 sudo docker run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=gtc_cloud@123456 --name gtc_cloud_db -d mysql:5.7
 sudo docker run -p 15672:15672 -p 5672:5672 -e RABBITMQ_DEFAULT_USER=root -e RABBITMQ_DEFAULT_PASS=gtc_cloud@123456 --name gtc_cloud_mq rabbitmq:management
+sudo docker run -p 9000:9000 -e MINIO_ACCESS_KEY=root -e MINIO_SECRET_KEY=gtc_cloud@123456 --name gtc_cloud_file minio/minio server /data
 
 ## docker compose
 
