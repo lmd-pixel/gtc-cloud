@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          # 开启后默认通过服务名称可以路由到服务内部，但是通过此方法路由过去触发hystrix有问题，超时设置无效，建议关闭
+          enabled: false
+          lower-case-service-id: true
+      routes:
+      - id: auth-route
+        uri: lb://auth
+        predicates:
+        - Path=/api/auth/**
+        filters:
+        - StripPrefix=2
+        - name: Hystrix
+          args:
+            name: fallbackcmd
+            fallbackUri: forward:/fallback
+      - id: social-route
+        uri: lb://social
+        predicates:
+        - Path=/api/social/**
+        filters:
+        - StripPrefix=2
+        - name: Hystrix
+          args:
+            name: fallbackcmd
+            fallbackUri: forward:/fallback
+      - id: notice-route
+        uri: lb://notice
+        predicates:
+        - Path=/api/notice/**
+        filters:
+        - StripPrefix=2
+        - name: Hystrix
+          args:
+            name: fallbackcmd
+            fallbackUri: forward:/fallback
+    circuitbreaker:
+      hystrix:
+        enabled: true
+
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        timeout:
+          enable: true
+        isolation:
+          strategy: SEMAPHORE
+          thread:
+            timeoutInMilliseconds: 1000
+
+server:
+  port: 8088
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8001/eureka/
+
