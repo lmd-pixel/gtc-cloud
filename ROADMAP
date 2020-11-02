@@ -1,0 +1,22 @@
+基础
+
+redis docker 创建
+
+spring cloud gateway 集成限流以及失败重试
+
+创建 hystrix dashboard项目（因为spring cloud gateway 无法和基于mvc web的项目兼容，所以 dashboard项目需要另外创建）
+
+创建一个 base server，完善基础的接口数据封装，全局异常处理，feign调用和被调用模块实现的接口方法统一，通用工具类等
+
+
+进阶
+
+Mysql 数据库关键数据加密
+
+minio 配合ngxin 只允许访问某些类型的文件（.jpg .png .mp4等），不允许访问目录，minio允许访问后，防止别人抓取所有资源
+
+所有容器以分布式、集群方式部署
+
+图片压缩，提供缩略图方式加快进度，图片渐进式加载
+
+日志 ELK 服务
