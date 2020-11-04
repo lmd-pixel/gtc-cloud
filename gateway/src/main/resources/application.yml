@@ -61,7 +61,15 @@ hystrix:
         isolation:
           strategy: SEMAPHORE
           thread:
-            timeoutInMilliseconds: 1000
+            timeoutInMilliseconds: 5000
+
+# actuator 暴露 hystrix
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info,hystrix.stream
+      base-path: /actuator
 
 server:
   port: 8088
@@ -70,6 +78,4 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8001/eureka/
-
-
 
