@@ -16,6 +16,7 @@ Mysql 数据库关键数据加密
 minio 配合ngxin 只允许访问某些类型的文件（.jpg .png .mp4等），不允许访问目录，minio允许访问后，防止别人抓取所有资源
 
 所有容器以分布式、集群方式部署
+k8s redis: https://www.imooc.com/article/275617
 
 图片压缩，提供缩略图方式加快进度，图片渐进式加载
 

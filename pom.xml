@@ -34,6 +34,11 @@
 
     <modules>
         <module>registry</module>
+        <module>auth_service</module>
+        <module>social_service</module>
+        <module>notice_service</module>
+        <module>gateway</module>
+        <module>base</module>
     </modules>
 
 </project>

@@ -8,6 +8,7 @@ spring:
           # 开启后默认通过服务名称可以路由到服务内部，但是通过此方法路由过去触发hystrix有问题，超时设置无效，建议关闭
           enabled: false
           lower-case-service-id: true
+      # 服务路由设置
       routes:
       - id: auth-route
         uri: lb://auth
@@ -39,10 +40,18 @@ spring:
           args:
             name: fallbackcmd
             fallbackUri: forward:/fallback
+      # cors 全局设置
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
     circuitbreaker:
       hystrix:
         enabled: true
 
+# hystrix 超时设置
 hystrix:
   command:
     fallbackcmd:
@@ -61,4 +70,6 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8001/eureka/
+
+
 
