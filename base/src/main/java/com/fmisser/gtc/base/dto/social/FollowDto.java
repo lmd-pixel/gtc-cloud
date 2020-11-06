@@ -1,4 +1,4 @@
-package com.fmisser.gtc.base.dto;
+package com.fmisser.gtc.base.dto.social;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -10,7 +10,7 @@ import java.util.Date;
  *  社交服务关注实体dto
  */
 @Data
-public class SocialFollowDto {
+public class FollowDto {
 
     private Long youngIdFrom;
 

@@ -2,6 +2,7 @@ package com.fmisser.gtc.base.exception;
 
 import com.fmisser.gtc.base.i18n.LocaleMessageUtil;
 import com.fmisser.gtc.base.response.ApiResp;
+import com.fmisser.gtc.base.response.ApiRespHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -25,10 +26,10 @@ import java.nio.file.AccessDeniedException;
 public class ControllerExceptionHandler {
     Logger logger = LoggerFactory.getLogger(ControllerExceptionHandler.class);
 
-    private final LocaleMessageUtil localeMessageUtil;
+    private final ApiRespHelper apiRespHelper;
 
-    public ControllerExceptionHandler(LocaleMessageUtil localeMessageUtil) {
-        this.localeMessageUtil = localeMessageUtil;
+    public ControllerExceptionHandler(ApiRespHelper apiRespHelper) {
+        this.apiRespHelper = apiRespHelper;
     }
 
     // api exception
@@ -82,8 +83,8 @@ public class ControllerExceptionHandler {
     }
 
     private <T> ApiResp<T> innerCreator(HttpServletRequest request, ApiErrorEnum error) {
-        ApiException apiException = localeMessageUtil.getLocaleException(error);
-        logger.error(request.getRequestURI() + " failed: " + apiException.getMessage());
-        return ApiResp.failed(apiException);
+        ApiResp<T> resp = apiRespHelper.error(error);
+        logger.error(request.getRequestURI() + " failed: " + resp.getMessage());
+        return resp;
     }
 }

@@ -1,7 +1,9 @@
 package com.fmisser.gtc.auth.config;
 
+import com.fmisser.gtc.auth.config.autologin.AutoLoginTokenGranter;
 import com.fmisser.gtc.auth.config.smslogin.SmsLoginTokenGranter;
 import com.fmisser.gtc.auth.service.impl.UserDetailServiceImpl;
+import com.fmisser.gtc.base.exception.oauth2.CustomExceptionTranslator;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +14,7 @@ import org.springframework.security.oauth2.config.annotation.configurers.ClientD
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
+import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.CompositeTokenGranter;
 import org.springframework.security.oauth2.provider.OAuth2RequestFactory;
@@ -40,7 +43,7 @@ import java.util.List;
 @EnableAuthorizationServer
 public class AuthorizationServerWithJDBCConfig extends AuthorizationServerConfigurerAdapter {
 
-    private final PasswordEncoder passwordEncoder;
+//    private final PasswordEncoder passwordEncoder;
 
     private final AuthenticationManager authenticationManager;
 
@@ -50,16 +53,20 @@ public class AuthorizationServerWithJDBCConfig extends AuthorizationServerConfig
 
     private final UserDetailsService userDetailsService;
 
+    private final CustomExceptionTranslator customExceptionTranslator;
+
     public AuthorizationServerWithJDBCConfig(DataSource dataSource,
-                                             PasswordEncoder passwordEncoder,
+//                                             PasswordEncoder passwordEncoder,
                                              AuthenticationManager authenticationManager,
                                              JwtAccessTokenConverter jwtAccessTokenConverter,
-                                             @Qualifier("top") UserDetailsService userDetailsService) {
+                                             @Qualifier("top") UserDetailsService userDetailsService,
+                                             @Qualifier("exception_translator") CustomExceptionTranslator customExceptionTranslator) {
         this.dataSource = dataSource;
-        this.passwordEncoder = passwordEncoder;
+//        this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtAccessTokenConverter = jwtAccessTokenConverter;
         this.userDetailsService = userDetailsService;
+        this.customExceptionTranslator = customExceptionTranslator;
     }
 
     @Bean
@@ -81,7 +88,7 @@ public class AuthorizationServerWithJDBCConfig extends AuthorizationServerConfig
 
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-        // 重设认证,增加短信验证类型
+        // 重设认证,增加短信验证和手机号一键登录类型
         endpoints.tokenGranter(new CompositeTokenGranter(
                 this.getTokenGranters(
                         endpoints.getClientDetailsService(),
@@ -94,14 +101,18 @@ public class AuthorizationServerWithJDBCConfig extends AuthorizationServerConfig
                 .accessTokenConverter(jwtAccessTokenConverter)
                 .userDetailsService(userDetailsService)
                 .authenticationManager(authenticationManager);
+
+        // 自定义异常返回
+        // controller封装了一层oauth/token的调用，不用再处理自定义异常
+//        endpoints.exceptionTranslator(customExceptionTranslator);
     }
 
-//    @Override
-//    public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
-//        security.allowFormAuthenticationForClients()
-//                .tokenKeyAccess("permitAll()")
-//                .checkTokenAccess("isAuthenticated()");
-//    }
+    @Override
+    public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
+        security.allowFormAuthenticationForClients()
+                .tokenKeyAccess("permitAll()")
+                .checkTokenAccess("isAuthenticated()");
+    }
 
     /**
      * 添加自定义的短信验证类型
@@ -127,6 +138,10 @@ public class AuthorizationServerWithJDBCConfig extends AuthorizationServerConfig
         // 新增短信验证
         tokenGranters.add(new SmsLoginTokenGranter(tokenServices,
                 clientDetailsService,requestFactory, (UserDetailServiceImpl) userDetailsService));
+        // 新增手机号一键登录验证
+        tokenGranters.add(new AutoLoginTokenGranter(tokenServices,
+                clientDetailsService,requestFactory, (UserDetailServiceImpl) userDetailsService));
+
         return tokenGranters;
     }
 }

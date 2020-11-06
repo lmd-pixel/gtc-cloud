@@ -2,10 +2,18 @@ package com.fmisser.gtc.auth.service.impl;
 
 import com.fmisser.gtc.auth.domain.Role;
 import com.fmisser.gtc.auth.domain.User;
+import com.fmisser.gtc.auth.feign.OAuthService;
 import com.fmisser.gtc.auth.repository.RoleRepository;
 import com.fmisser.gtc.auth.repository.UserRepository;
+import com.fmisser.gtc.auth.service.AutoLoginService;
 import com.fmisser.gtc.auth.service.SmsService;
 import com.fmisser.gtc.auth.service.UserService;
+import com.fmisser.gtc.base.dto.auth.TokenDto;
+import com.fmisser.gtc.base.exception.ApiException;
+import com.fmisser.gtc.base.response.ApiResp;
+import com.fmisser.gtc.base.utils.AuthUtils;
+import com.fmisser.gtc.base.utils.JPushUtils;
+import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +24,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import sun.tools.jstat.Token;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -35,11 +44,22 @@ public class UserDetailServiceImpl implements UserService {
 
     private final SmsService smsService;
 
-    public UserDetailServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, SmsService smsService) {
+    private final AutoLoginService autoLoginService;
+
+    private final OAuthService oAuthService;
+
+    public UserDetailServiceImpl(UserRepository userRepository,
+                                 RoleRepository roleRepository,
+                                 PasswordEncoder passwordEncoder,
+                                 SmsService smsService,
+                                 AutoLoginService autoLoginService,
+                                 OAuthService oAuthService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.smsService = smsService;
+        this.autoLoginService = autoLoginService;
+        this.oAuthService = oAuthService;
     }
 
     @Override
@@ -55,7 +75,7 @@ public class UserDetailServiceImpl implements UserService {
         });
 
         User user = new User();
-        user.setId(0l);
+        user.setId(0L);
         user.setUsername(username);
         String encodePwd = passwordEncoder.encode(password);
         user.setPassword(encodePwd);
@@ -66,6 +86,27 @@ public class UserDetailServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
         logger.info("new user has been created: {}", savedUser.getUsername());
         return savedUser;
+    }
+
+    @Override
+    public ApiResp<TokenDto> autoLogin(String phone, String token) throws ApiException {
+        String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
+        TokenDto dto = oAuthService.autoLogin(basicAuth, phone, token, "test", "auto_login");
+        return ApiResp.succeed(dto);
+    }
+
+    @Override
+    public ApiResp<TokenDto> smsLogin(String phone, String code) throws ApiException {
+        String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
+        TokenDto dto = oAuthService.autoLogin(basicAuth, phone, code, "test", "sms_login");
+        return ApiResp.succeed(dto);
+    }
+
+    @Override
+    public ApiResp<TokenDto> login(String username, String password) throws ApiException {
+        String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
+        TokenDto dto = oAuthService.login(basicAuth, username, password, "test", "password");
+        return ApiResp.succeed(dto);
     }
 
     /**
@@ -84,12 +125,31 @@ public class UserDetailServiceImpl implements UserService {
         }
 
         // 认证过后，如果数据库没有这条数据，则创建一条
-        return _innerCreateByPhone(phone);
+        return _innerCreateByPhone(phone, 1);
     }
 
-    private User _innerCreateByPhone(String phone) {
+    /**
+     * 自定义手机号一键登录模式
+     * 注册，登录一体
+     */
+    public UserDetails loadUserByPhoneAuto(String phone, String token) {
+        // verify phone token
+        if (!autoLoginService.checkPhoneToken(phone, token)) {
+            return null;
+        }
+
+        User user = userRepository.findByUsername(phone);
+        if (user != null) {
+            return user;
+        }
+
+        // 认证过后，如果数据库没有这条数据，则创建一条
+        return _innerCreateByPhone(phone, 2);
+    }
+
+    private User _innerCreateByPhone(String phone, int type) {
         User newUser = new User();
-        newUser.setId(0l);  // 因为存在多对多，必须要设置个值
+        newUser.setId(0L);  // 因为存在多对多，必须要设置个值
         newUser.setUsername(phone);
         newUser.setType(1); // 手机号类型
         String encodePwd = passwordEncoder.encode(new Date().toString());   // 随机创建一个密码

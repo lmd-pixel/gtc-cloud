@@ -3,6 +3,8 @@ package com.fmisser.gtc.base.exception;
 public enum ApiErrorEnum {
     NO_ERROR(0, ""),
 
+    UNKNOWN_ERROR(0, "msg.api.err.common"),
+
     // http request
 
     BAD_REQUEST(400, "msg.api.err.bad_request"),

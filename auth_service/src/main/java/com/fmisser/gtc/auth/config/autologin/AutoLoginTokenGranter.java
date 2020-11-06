@@ -1,10 +1,9 @@
-package com.fmisser.gtc.auth.config.smslogin;
+package com.fmisser.gtc.auth.config.autologin;
 
 import com.fmisser.gtc.auth.service.impl.UserDetailServiceImpl;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.common.exceptions.InvalidGrantException;
 import org.springframework.security.oauth2.provider.*;
-import org.springframework.security.oauth2.provider.password.ResourceOwnerPasswordTokenGranter;
 import org.springframework.security.oauth2.provider.token.AbstractTokenGranter;
 import org.springframework.security.oauth2.provider.token.AuthorizationServerTokenServices;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -12,20 +11,19 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import java.util.Map;
 
 /**
- * 验证码登录方式验证
- * 可参考 {@link ResourceOwnerPasswordTokenGranter} 的实现
+ * 手机号一键登录
  */
-public class SmsLoginTokenGranter extends AbstractTokenGranter {
-    // TODO: 2020/10/26 改成配置
-    private static final String GRANT_TYPE = "sms_login";
+
+public class AutoLoginTokenGranter extends AbstractTokenGranter {
+    private static final String GRANT_TYPE = "auto_login";
 
     private final UserDetailServiceImpl userDetailsService;
     private final OAuth2RequestFactory oAuth2RequestFactory;
 
-    public SmsLoginTokenGranter(AuthorizationServerTokenServices tokenServices,
-                                   ClientDetailsService clientDetailsService,
-                                   OAuth2RequestFactory requestFactory,
-                                   UserDetailServiceImpl userDetailsService) {
+    public AutoLoginTokenGranter(AuthorizationServerTokenServices tokenServices,
+                                    ClientDetailsService clientDetailsService,
+                                    OAuth2RequestFactory requestFactory,
+                                    UserDetailServiceImpl userDetailsService) {
         super(tokenServices, clientDetailsService, requestFactory, GRANT_TYPE);
         this.userDetailsService = userDetailsService;
         this.oAuth2RequestFactory = requestFactory;
@@ -36,7 +34,6 @@ public class SmsLoginTokenGranter extends AbstractTokenGranter {
         Map<String, String> parameters = tokenRequest.getRequestParameters();
         UserDetails userDetails = getUser(parameters);
         if (userDetails == null) {
-            // TODO: 2020/10/26 改成配置
             throw new InvalidGrantException("无法获取用户信息");
         }
 
@@ -48,8 +45,7 @@ public class SmsLoginTokenGranter extends AbstractTokenGranter {
     }
 
     private UserDetails getUser(Map<String, String> params) {
-        // 获取 phone 和 code 字段
-        // TODO: 2020/10/26 改成配置
-        return userDetailsService.loadUserByPhoneAndSms(params.get("phone"), params.get("code"));
+        // 获取 phone 和 token 字段
+        return userDetailsService.loadUserByPhoneAuto(params.get("phone"), params.get("token"));
     }
 }
