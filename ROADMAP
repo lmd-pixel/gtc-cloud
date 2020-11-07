@@ -1,4 +1,4 @@
-基础
+################## 基础 ##################
 
 redis docker 创建
 
@@ -9,7 +9,7 @@ spring cloud gateway 集成限流以及失败重试
 创建一个 base server，完善基础的接口数据封装，全局异常处理，feign调用和被调用模块实现的接口方法统一，通用工具类等
 
 
-进阶
+################## 进阶 ##################
 
 Mysql 数据库关键数据加密
 
@@ -22,7 +22,21 @@ k8s redis: https://www.imooc.com/article/275617
 
 日志 ELK 服务
 
+分布式文件系统 hdfs
 
-业务逻辑相关：
+数据库分库分表 https://github.com/apache/shardingsphere https://juejin.im/post/6844903857336614920
+
+数据库读写分离 https://juejin.im/post/6844903857835737095
+
+nosql： mongodb，redis
+
+newsql: tidb
+
+
+################## 业务逻辑相关 ##################
 
 1. 增加认证相关的记录到db
+
+################## 项目结构相关 ##################
+
+1. 通用的一些配置统一到base，比如 application.properties， ResourceServerConfig， swagger依赖 以及 SwaggerConfig
