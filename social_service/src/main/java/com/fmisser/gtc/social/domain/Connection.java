@@ -29,11 +29,11 @@ public class Connection {
 
     // 谁发起
     @Column(nullable = false)
-    private Long youngIdFrom;
+    private Long userIdFrom;
 
     // 谁接收
     @Column(nullable = false)
-    private Long youngIdTo;
+    private Long userIdTo;
 
     @CreatedDate
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")

@@ -63,6 +63,6 @@ public class UserMessageStatus {
 
     // 映射多条消息，
     // 设置此为维护端，设置级联删除，急加载，关系链断开删除子端
-    @OneToMany(mappedBy = "status",cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(mappedBy = "status", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private List<UserMessage> userMessages;
 }

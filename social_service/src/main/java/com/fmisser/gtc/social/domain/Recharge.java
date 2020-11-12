@@ -28,7 +28,7 @@ public class Recharge {
     private Long id;
 
     @Column(nullable = false)
-    private Long youngId;
+    private Long userId;
 
     @Column
     private BigDecimal coin;

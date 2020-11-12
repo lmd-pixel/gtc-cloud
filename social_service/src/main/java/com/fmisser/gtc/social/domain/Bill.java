@@ -21,7 +21,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "t_bill",
-        indexes = {@Index(columnList = "youngId")})
+        indexes = {@Index(columnList = "userId")})
 @Data
 @EntityListeners(AuditingEntityListener.class)
 @DynamicInsert
@@ -32,7 +32,7 @@ public class Bill {
     private Long id;
 
     @Column(nullable = false)
-    private Long youngId;
+    private Long userId;
 
     @Column
     private BigDecimal coinBefore;

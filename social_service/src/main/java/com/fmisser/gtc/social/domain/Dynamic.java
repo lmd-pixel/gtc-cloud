@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -9,14 +10,16 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 动态，个人更新的动态数据
  */
 @Entity
 @Table(name = "t_dynamic",
-        indexes = {@Index(columnList = "youngId,createTime")})
+        indexes = {@Index(columnList = "userId,isDelete,createTime")})
 @Data
 @EntityListeners(AuditingEntityListener.class)
 public class Dynamic {
@@ -25,7 +28,7 @@ public class Dynamic {
     private Long id;
 
     @Column(nullable = false)
-    private Long youngId;
+    private Long userId;
 
     @Column
     private String content;
@@ -68,4 +71,11 @@ public class Dynamic {
 
     @Column(nullable = false, columnDefinition = "int default 0")
     private int isDelete = 0;
+
+    @OneToMany(mappedBy = "dynamic", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<Interact> interacts = new ArrayList<>();
+
+    @JsonIgnore
+    @Version
+    private Long version;
 }

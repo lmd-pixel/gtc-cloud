@@ -13,29 +13,31 @@ import org.springframework.format.annotation.DateTimeFormat;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 个人基础信息
  */
 
 @Entity
-@Table(name = "t_young")
+@Table(name = "t_user", indexes = {@Index(columnList = "createTime")})
 @Data
 @EntityListeners(AuditingEntityListener.class)
 @DynamicInsert
 @DynamicUpdate
-public class Young {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private Long authId;
-
-    @Column(nullable = false, unique = true)
     private String digitId;
 
+    // 目前 username 就是 phone
     @Column(nullable = false, unique = true)
+    private String username;
+
+    @Column
     private String phone;
 
     @Column
@@ -50,54 +52,51 @@ public class Young {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date birth;
 
+    // 男女
     @Column
     private int gender;
 
+    // 城市
     @Column
     private String city;
 
+    // 职业
     @Column
     private String profession;
 
+    // 个性签名
     @Column
     private String intro;
 
+    // 语音介绍
     @Column
     private String voice;
 
-    @Column
-    private String labels;
-
+    // 保留字段，暂时不用
+    @JsonIgnore
     @Column
     private String loves;
 
+    /**
+     * 上传的照片,多张照片逗号隔开
+     */
+    @JsonIgnore
     @Column
     private String photos;
 
+    // 自拍认证图片
     @Column
-    private String verifyImage;
+    private String selfie;
 
-    /**
-     * 认证状态 0: 未认证 10： 审核中 20: 审核未通过 30： 审核通过，已认证
-     */
-    @Column(nullable = false, columnDefinition = "int default 0")
-    private int verifyStatus = 0;
-
-    @Column(nullable = false)
-    private BigDecimal coin = BigDecimal.ZERO;
-
+    // 语音呼叫价格
     @Column
     private BigDecimal callPrice;
 
+    // 视频呼叫价格
     @Column
     private BigDecimal videoPrice;
 
-    @Column
-    private int freeDialDuration;
-
-    @Column
-    private int freeAnswerDuration;
-
+    // 关注数量
     @Column(nullable = false, columnDefinition = "int default 0")
     private int follows = 0;
 
@@ -113,9 +112,28 @@ public class Young {
     @Column
     private Date modifyTime;
 
+    // 资产信息
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private Asset asset;
+
+    // 资产信息
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private VerifyStatus verifyStatus;
+
+    // 标签信息
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "t_user_label",
+            joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "label_id", referencedColumnName = "id"))
+    private List<Label> labels;
+
     @Transient
     private String constellation;   // 星座
 
     @Transient
-    private String age; // 年龄
+    private int age; // 年龄
+
+    @Transient
+    private List<String> photoList; // 照片列表
 }

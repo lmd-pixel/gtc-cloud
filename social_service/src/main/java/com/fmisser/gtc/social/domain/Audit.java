@@ -20,7 +20,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "t_audit",
-        indexes = {@Index(columnList = "youngId,createTime")})
+        indexes = {@Index(columnList = "userId,type,status,createTime")})
 @Data
 @EntityListeners(AuditingEntityListener.class)
 @DynamicInsert
@@ -31,8 +31,17 @@ public class Audit {
     private Long id;
 
     @Column(nullable = false)
-    private Long youngId;
+    private Long userId;
 
+    /**
+     * 审核类型
+     */
+    @Column(nullable = false)
+    private int type;
+
+    /**
+     * 10： 审核中 20: 审核未通过 30： 审核通过
+     */
     @Column
     private int status;
 

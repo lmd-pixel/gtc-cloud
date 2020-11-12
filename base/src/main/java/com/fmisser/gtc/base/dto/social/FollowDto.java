@@ -12,7 +12,9 @@ import java.util.Date;
 @Data
 public class FollowDto {
 
-    private Long youngIdFrom;
+    private Long userIdFrom;
+
+    private Long userIdTo;
 
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")

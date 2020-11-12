@@ -1,6 +1,8 @@
 package com.fmisser.gtc.social.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -15,19 +17,25 @@ import java.util.Date;
  * 动态互动,评论点赞等
  */
 @Entity
-@Table(name = "t_interact", indexes = {@Index(columnList = "dynamicId,createTime")})
+@Table(name = "t_interact",
+        indexes = {@Index(columnList = "dynamic_id,type,isDelete,createTime"),
+                @Index(columnList = "dynamic_id,userId")})
 @Data
 @EntityListeners(AuditingEntityListener.class)
 public class Interact {
+
+    // 防止嵌套调用引起的堆栈溢出
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "dynamic_id", referencedColumnName = "id")
+    private Dynamic dynamic;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private Long dynamicId;
-
-    @Column(nullable = false)
-    private Long youngId;
+    private Long userId;
 
     /**
      * 类型 0： 点赞  1： 评论
@@ -52,4 +60,17 @@ public class Interact {
 
     @Column(nullable = false, columnDefinition = "int default 0")
     private int isDelete = 0;
+
+    // 防止嵌套调用引起的堆栈溢出
+    @Override
+    public String toString() {
+        return "Interact{" +
+                "id=" + id +
+                ",userId=" + userId +
+                ",type=" + type +
+                ",content=" + content +
+                ",createTime=" + createTime.toString() +
+                ",modifyTime=" + modifyTime.toString() +
+                ",isDelete=" + isDelete;
+    }
 }

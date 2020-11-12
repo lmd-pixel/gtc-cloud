@@ -31,7 +31,7 @@ public class Active {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private Long youngId;
+    private Long userId;
 
     /**
      * 最近活跃状态

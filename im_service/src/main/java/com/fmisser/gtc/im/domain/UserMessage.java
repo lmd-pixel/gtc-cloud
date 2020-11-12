@@ -1,7 +1,6 @@
 package com.fmisser.gtc.im.domain;
 
 import lombok.Data;
-import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
 

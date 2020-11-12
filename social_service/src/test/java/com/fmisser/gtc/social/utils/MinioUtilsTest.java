@@ -1,14 +1,19 @@
 package com.fmisser.gtc.social.utils;
 
 import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class MinioUtilsTest {
 
+    static MinioUtils minioUtils = null;
+
     @BeforeAll
     static void init() {
-        MinioUtils.init();
+        minioUtils = new MinioUtils();
+        minioUtils.init();
     }
 
     @AfterAll
@@ -28,16 +33,16 @@ class MinioUtilsTest {
     @Test
     void bucketExists() {
         String bucketName = "test-bucket";
-        boolean exist = MinioUtils.bucketExists(bucketName);
+        boolean exist = minioUtils.bucketExists(bucketName);
         Assertions.assertTrue(exist);
     }
 
     @Test
     void createBucket() {
         String newBucketName = "test-bucket-2";
-        Assertions.assertFalse(MinioUtils.bucketExists(newBucketName));
-        MinioUtils.createBucket(newBucketName);
-        Assertions.assertTrue(MinioUtils.bucketExists(newBucketName));
+        Assertions.assertFalse(minioUtils.bucketExists(newBucketName));
+        minioUtils.createBucket(newBucketName);
+        Assertions.assertTrue(minioUtils.bucketExists(newBucketName));
     }
 
     @Test
@@ -60,7 +65,7 @@ class MinioUtilsTest {
     void getObjectUrl() {
         String bucketName = "test-bucket";
         String objectName = "images/tp1.png";
-        String returnUrl = MinioUtils.getObjectUrl(bucketName, objectName);
+        String returnUrl = minioUtils.getObjectUrl(bucketName, objectName);
         System.out.println("object url is:" + returnUrl);
         Assertions.assertNotNull(returnUrl);
     }

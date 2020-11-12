@@ -79,6 +79,7 @@ public class ControllerExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
     public <T> ApiResp<T> handleException(HttpServletRequest request, Exception e) {
+        logger.error(e.getMessage());
         return innerCreator(request, ApiErrorEnum.INTERNAL_SERVER_ERROR);
     }
 

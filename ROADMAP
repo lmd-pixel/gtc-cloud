@@ -18,7 +18,7 @@ minio 配合ngxin 只允许访问某些类型的文件（.jpg .png .mp4等），
 所有容器以分布式、集群方式部署
 k8s redis: https://www.imooc.com/article/275617
 
-图片压缩，提供缩略图方式加快进度，图片渐进式加载
+图片压缩，提供缩略图方式加快进度，图片渐进式加载 Thumbnails
 
 日志 ELK 服务
 
@@ -32,6 +32,9 @@ nosql： mongodb，redis
 
 newsql: tidb
 
+jpa 二级缓存 https://developer.aliyun.com/article/754510
+
+jpa 乐观锁重试机制
 
 ################## 业务逻辑相关 ##################
 
