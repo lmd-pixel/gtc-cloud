@@ -2,7 +2,8 @@ package com.fmisser.gtc.social.service;
 
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.Dynamic;
-import com.fmisser.gtc.social.domain.Interact;
+import com.fmisser.gtc.social.domain.DynamicComment;
+import com.fmisser.gtc.social.domain.DynamicHeart;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -16,11 +17,13 @@ public interface DynamicService {
     // 新增动态
     Dynamic create(long userId, int type, String content, Map<String, MultipartFile> multipartFileMap) throws ApiException;
     // 获取用户发布的动态列表
-    List<Dynamic> getUserDynamicList(long userId, int page, int pageSize) throws ApiException;
-    // 评论或者点赞动态
-    Interact newInteract(long dynamicId, long userId, int type, String content) throws ApiException;
-    // 取消点赞或者评论
-    Interact cancelInteract(long interactId, long userId) throws ApiException;
-    // 获取评论数
-    List<Interact> getCommentList(long dynamicId, int page, int pageSize) throws ApiException;
+    List<Dynamic> getUserDynamicList(long userId, long selfUserId, int pageIndex, int pageSize) throws ApiException;
+    // 点赞或者取消点赞
+    int dynamicHeart(long dynamicId, long userId, String nickname, int isCancel) throws ApiException;
+    // 添加评论
+    int newDynamicComment(long dynamicId, long userId, String nickname, String content) throws ApiException;
+    // 删除评论
+    int delDynamicComment(long commentId, long userId) throws ApiException;
+    // 获取评论数据
+    List<DynamicComment> getDynamicCommentList(long dynamicId, int page, int pageSize) throws ApiException;
 }

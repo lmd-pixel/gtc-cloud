@@ -10,9 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * 动态，个人更新的动态数据
@@ -64,18 +62,24 @@ public class Dynamic {
     private BigDecimal latitude;
 
     @Column(nullable = false, columnDefinition = "int default 0")
-    private int heart = 0;
-
-    @Column(nullable = false, columnDefinition = "int default 0")
-    private int comment = 0;
-
-    @Column(nullable = false, columnDefinition = "int default 0")
     private int isDelete = 0;
 
-    @OneToMany(mappedBy = "dynamic", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<Interact> interacts = new ArrayList<>();
+    @OneToMany(mappedBy = "dynamic", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private List<DynamicComment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "dynamic", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private Set<DynamicHeart> hearts = new LinkedHashSet<>();
 
     @JsonIgnore
     @Version
     private Long version;
+
+    @Transient
+    private int heartCount = 0;
+
+    @Transient
+    private int selfHeart = 0;
+
+    @Transient
+    private int commentCount = 0;
 }
