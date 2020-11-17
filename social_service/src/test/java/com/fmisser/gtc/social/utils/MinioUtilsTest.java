@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.utils;
 
+import com.fmisser.gtc.base.prop.OssConfProp;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -12,7 +13,8 @@ class MinioUtilsTest {
 
     @BeforeAll
     static void init() {
-        minioUtils = new MinioUtils();
+        OssConfProp ossConfProp = new OssConfProp();
+        minioUtils = new MinioUtils(ossConfProp);
         minioUtils.init();
     }
 

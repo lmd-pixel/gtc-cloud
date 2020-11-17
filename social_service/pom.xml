@@ -78,6 +78,13 @@
             <version>2.9.2</version>
         </dependency>
 
+        <!-- 图片压缩 -->
+        <dependency>
+            <groupId>net.coobird</groupId>
+            <artifactId>thumbnailator</artifactId>
+            <version>0.4.13</version>
+        </dependency>
+
         <dependency>
             <groupId>com.fmisser.gtc</groupId>
             <artifactId>base</artifactId>

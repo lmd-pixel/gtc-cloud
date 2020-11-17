@@ -43,6 +43,7 @@ public class User {
     @Column
     private String nick;
 
+    @JsonIgnore
     @Column
     private String head;
 
@@ -69,6 +70,7 @@ public class User {
     private String intro;
 
     // 语音介绍
+    @JsonIgnore
     @Column
     private String voice;
 
@@ -84,6 +86,7 @@ public class User {
     @Column
     private String photos;
 
+    @JsonIgnore
     // 自拍认证图片
     @Column
     private String selfie;
@@ -135,5 +138,23 @@ public class User {
     private int age; // 年龄
 
     @Transient
-    private List<String> photoList; // 照片列表
+    private List<String> photoUrlList; // 照片列表
+
+    @Transient
+    private List<String> photoThumbnailUrlList; // 照片缩略图列表
+
+    @Transient
+    private String headUrl;
+
+    @Transient
+    private String headThumbnailUrl;    // 头像缩略图
+
+    @Transient
+    private String selfieUrl;
+
+    @Transient
+    private String selfieThumbnailUrl;  // 自拍缩略图
+
+    @Transient
+    private String voiceUrl;
 }

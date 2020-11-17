@@ -48,7 +48,7 @@ public class UserController {
             // return error
         }
 
-        return userService.create(phone, gender);
+        return ApiResp.succeed(userService.create(phone, gender));
     }
 
     @ApiOperation(value = "更新用户信息")
@@ -66,7 +66,9 @@ public class UserController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         // TODO: 2020/11/10 check params
-        return userService.updateProfile(username, nick, birth, city, profession
-                , intro, labels, callPrice, videoPrice, request.getFileMap());
+        User user = userService.updateProfile(username, nick, birth, city, profession,
+                intro, labels, callPrice, videoPrice, request.getFileMap());
+
+        return ApiResp.succeed(user);
     }
 }

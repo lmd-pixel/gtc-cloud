@@ -20,11 +20,15 @@ import java.util.List;
 @RequestMapping("/dynamic")
 @Validated
 public class DynamicController {
-    @Autowired
-    private DynamicService dynamicService;
+    private final DynamicService dynamicService;
 
-    @Autowired
-    private ApiRespHelper apiRespHelper;
+    private final ApiRespHelper apiRespHelper;
+
+    public DynamicController(DynamicService dynamicService,
+                             ApiRespHelper apiRespHelper) {
+        this.dynamicService = dynamicService;
+        this.apiRespHelper = apiRespHelper;
+    }
 
     @ApiOperation(value = "创建动态")
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
@@ -36,26 +40,6 @@ public class DynamicController {
         Dynamic dynamic = dynamicService.create(userId, type, content, request.getFileMap());
         return ApiResp.succeed(dynamic);
     }
-
-//    @ApiOperation(value = "新评论或者点赞")
-//    @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
-//    @PostMapping(value = "/interact/new")
-//    ApiResp<Interact> newInteract(@RequestParam("dynamicId") Long dynamicId,
-//                                  @RequestParam("userId") Long userId,
-//                                  @RequestParam("type") int type,
-//                                  @RequestParam(value = "content", required = false) String content) {
-//        Interact interact = dynamicService.newInteract(dynamicId, userId, type, content);
-//        return ApiResp.succeed(interact);
-//    }
-//
-//    @ApiOperation(value = "取消点赞或者评论")
-//    @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
-//    @PostMapping(value = "/interact/cancel")
-//    ApiResp<Interact> cancelInteract(@RequestParam("interactId") Long interactId,
-//                                  @RequestParam("userId") Long userId) {
-//        Interact interact = dynamicService.cancelInteract(interactId, userId);
-//        return ApiResp.succeed(interact);
-//    }
 
     @ApiOperation(value = "点赞或者取消")
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")

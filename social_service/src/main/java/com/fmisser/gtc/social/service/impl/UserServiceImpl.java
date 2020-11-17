@@ -1,8 +1,10 @@
 package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.exception.ApiException;
+import com.fmisser.gtc.base.prop.OssConfProp;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.base.response.ApiRespHelper;
+import com.fmisser.gtc.base.utils.CryptoUtils;
 import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.Asset;
 import com.fmisser.gtc.social.domain.Label;
@@ -13,12 +15,14 @@ import com.fmisser.gtc.social.repository.UserRepository;
 import com.fmisser.gtc.social.service.UserService;
 import com.fmisser.gtc.social.utils.MinioUtils;
 import io.minio.ObjectWriteResponse;
+import jdk.internal.util.xml.impl.Input;
 import lombok.SneakyThrows;
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -36,22 +40,26 @@ public class UserServiceImpl implements UserService {
 
     private final LabelRepository labelRepository;
 
+    private final OssConfProp ossConfProp;
+
     public UserServiceImpl(UserRepository userRepository,
                            ApiRespHelper apiRespHelper,
                            MinioUtils minioUtils,
-                           LabelRepository labelRepository) {
+                           LabelRepository labelRepository,
+                           OssConfProp ossConfProp) {
         this.userRepository = userRepository;
         this.apiRespHelper = apiRespHelper;
         this.minioUtils = minioUtils;
         this.labelRepository = labelRepository;
+        this.ossConfProp = ossConfProp;
     }
 
     @Override
-    public ApiResp<User> create(String phone, int gender) throws ApiException {
+    public User create(String phone, int gender) throws ApiException {
         // check exist
         if (userRepository.existsByUsername(phone)) {
             // 已经存在
-            return apiRespHelper.error();
+            throw new ApiException(-1, "用户名重复");
         }
 
         // create
@@ -81,24 +89,24 @@ public class UserServiceImpl implements UserService {
             return _prepareResponse(user);
         } else {
             // 创建失败
-            return apiRespHelper.error();
+            throw new ApiException(-1, "创建用户信息失败");
         }
     }
 
     @Override
-    public ApiResp<User> profile(String username) throws ApiException {
+    public User profile(String username) throws ApiException {
         User user = userRepository.findByUsername(username);
         return _prepareResponse(user);
     }
 
-    @Override
     @SneakyThrows
-    public ApiResp<User> updateProfile(String username, String nick, String birth, String city, String profession,
+    @Override
+    public User updateProfile(String username, String nick, String birth, String city, String profession,
                                        String intro, String labels, String callPrice, String videoPrice,
                                        Map<String, MultipartFile> multipartFileMap) throws ApiException {
         User userDo = userRepository.findByUsername(username);
         if (userDo == null) {
-            return apiRespHelper.error();
+            throw new ApiException(-1, "用户数据不存在");
         }
 
         // 处理文本结构
@@ -135,18 +143,31 @@ public class UserServiceImpl implements UserService {
             if (file.isEmpty()) {
                 continue;
             }
+
+            String randomUUID = UUID.randomUUID().toString();
+
             String name = file.getName();
             if (name.equals("voice")) {
                 InputStream inputStream = file.getInputStream();
                 String filename = file.getOriginalFilename();
                 String suffixName = filename.substring(filename.lastIndexOf("."));
-                // TODO: 2020/11/9 判断文件类型是否满足需要
-                // TODO: 2020/11/9 压缩并分别存储压缩后和原始文件
-                String objectName = String.format("media/audio/%s/voice_%s%s",
-                        userDo.getUsername(), String.valueOf(new Date().getTime()), suffixName);
-                ObjectWriteResponse response = minioUtils.put("user-profiles", objectName,
+                if (!isAudioSupported(suffixName)) {
+                    throw new ApiException(-1, "语音格式不支持!");
+                }
+
+                // object name 格式： prefix/username_date_randomUUID.xxx
+                String objectName = String.format("%s%s_%s_%s%s",
+                        ossConfProp.getUserProfileVoicePrefix(),
+                        CryptoUtils.base64AesSecret(userDo.getUsername(), ossConfProp.getObjectAesKey()),
+                        new Date().getTime(),
+                        randomUUID,
+                        suffixName);
+                ObjectWriteResponse response = minioUtils.put(ossConfProp.getUserProfileBucket(), objectName,
                         inputStream, file.getSize(), "audio/mpeg");
-                System.out.println(response);
+
+                if (response.object().isEmpty()) {
+                    throw new ApiException(-1, "存储语音文件失败!");
+                }
 
                 userDo.setVoice(response.object());
 
@@ -154,27 +175,35 @@ public class UserServiceImpl implements UserService {
                 InputStream inputStream = file.getInputStream();
                 String filename = file.getOriginalFilename();
                 String suffixName = filename.substring(filename.lastIndexOf("."));
-                // TODO: 2020/11/9 判断文件类型是否满足需要
-                // TODO: 2020/11/9 压缩并分别存储压缩后和原始文件
-                String objectName = String.format("media/image/%s/head_%s%s",
-                        userDo.getUsername(), String.valueOf(new Date().getTime()), suffixName);
-                ObjectWriteResponse response = minioUtils.put("user-profiles", objectName,
-                        inputStream, file.getSize(), "image/png");
-                System.out.println(response);
+                if (!isPictureSupported(suffixName)) {
+                    throw new ApiException(-1, "图片格式不支持!");
+                }
+
+                // 存储原始图片
+                String objectName = String.format("%s%s_%s_%s%s",
+                        ossConfProp.getUserProfileHeadPrefix(),
+                        CryptoUtils.base64AesSecret(userDo.getUsername(), ossConfProp.getObjectAesKey()),
+                        new Date().getTime(),
+                        randomUUID,
+                        suffixName);
+
+                ObjectWriteResponse response = _minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
+                        objectName, inputStream, file.getSize(), "image/png");
 
                 userDo.setHead(response.object());
-            } else if (name.equals("video")) {
-                InputStream inputStream = file.getInputStream();
-                String filename = file.getOriginalFilename();
-                String suffixName = filename.substring(filename.lastIndexOf("."));
-                // TODO: 2020/11/9 判断文件类型是否满足需要
-                // TODO: 2020/11/9 压缩并分别存储压缩后和原始文件
-                String objectName = String.format("media/video/%s/min_video_%s%s",
-                        userDo.getUsername(), String.valueOf(new Date().getTime()), suffixName);
-                ObjectWriteResponse response = minioUtils.put("user-profiles", objectName,
-                        inputStream, file.getSize(), "video/mp4");
-                System.out.println(response);
             }
+//            else if (name.equals("video")) {
+//                InputStream inputStream = file.getInputStream();
+//                String filename = file.getOriginalFilename();
+//                String suffixName = filename.substring(filename.lastIndexOf("."));
+//                // TODO: 2020/11/9 判断文件类型是否满足需要
+//                // TODO: 2020/11/9 压缩并分别存储压缩后和原始文件
+//                String objectName = String.format("media/video/%s/min_video_%s%s",
+//                        userDo.getUsername(), String.valueOf(new Date().getTime()), suffixName);
+//                ObjectWriteResponse response = minioUtils.put("user-profiles", objectName,
+//                        inputStream, file.getSize(), "video/mp4");
+//                System.out.println(response);
+//            }
         }
 
         // 判断资料是否完全录入
@@ -191,17 +220,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @SneakyThrows
-    public ApiResp<User> updatePhotos(String username,
+    public User updatePhotos(String username,
                                               Map<String, MultipartFile> multipartFileMap) throws ApiException {
 
         User userDo = userRepository.findByUsername(username);
         if (userDo == null) {
-            return apiRespHelper.error();
-        }
-
-        if (multipartFileMap.size() < 1) {
-            //
-            return apiRespHelper.error();
+            throw new ApiException(-1, "用户数据不存在");
         }
 
         List<String> photoList = new ArrayList<>();
@@ -211,18 +235,34 @@ public class UserServiceImpl implements UserService {
                 continue;
             }
 
+            String randomUUID = UUID.randomUUID().toString();
+
             InputStream inputStream = file.getInputStream();
             String filename = file.getOriginalFilename();
             String suffixName = filename.substring(filename.lastIndexOf("."));
-            // TODO: 2020/11/9 判断文件类型是否满足需要
-            // TODO: 2020/11/9 压缩并分别存储压缩后和原始文件
-            String objectName = String.format("media/image/%s/photos_%s%s",
-                    userDo.getUsername(), String.valueOf(new Date().getTime()), suffixName);
-            ObjectWriteResponse response = minioUtils.put("user-profiles", objectName,
-                    inputStream, file.getSize(), "image/png");
-            System.out.println(response);
+
+            if (!isPictureSupported(suffixName)) {
+                throw new ApiException(-1, "图片格式不支持!");
+            }
+
+            String objectName = String.format("%s%s_%s_%s%s",
+                    ossConfProp.getUserProfilePhotoPrefix(),
+                    CryptoUtils.base64AesSecret(userDo.getUsername(), ossConfProp.getObjectAesKey()),
+                    new Date().getTime(),
+                    randomUUID,
+                    suffixName);
+
+            ObjectWriteResponse response = _minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
+                    objectName,
+                    inputStream,
+                    file.getSize(),
+                    "image/png");
 
             photoList.add(response.object());
+        }
+
+        if (userDo.getPhotos() == null || userDo.getPhotos().isEmpty()) {
+            throw new ApiException(-1, "上传信息不正确");
         }
 
         // 更新照片更新状态
@@ -236,16 +276,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @SneakyThrows
-    public ApiResp<User> updateVerifyImage(String username,
+    public User updateVerifyImage(String username,
                                              Map<String, MultipartFile> multipartFileMap) throws ApiException {
         User userDo = userRepository.findByUsername(username);
         if (userDo == null) {
-            return apiRespHelper.error();
-        }
-
-        if (multipartFileMap.size() < 1) {
-            //
-            return apiRespHelper.error();
+            throw new ApiException(-1, "用户数据不存在");
         }
 
         for (MultipartFile file: multipartFileMap.values()) {
@@ -253,21 +288,37 @@ public class UserServiceImpl implements UserService {
                 continue;
             }
 
+            String randomUUID = UUID.randomUUID().toString();
+
             InputStream inputStream = file.getInputStream();
             String filename = file.getOriginalFilename();
             String suffixName = filename.substring(filename.lastIndexOf("."));
-            // TODO: 2020/11/9 判断文件类型是否满足需要
-            // TODO: 2020/11/9 压缩并分别存储压缩后和原始文件
-            String objectName = String.format("media/image/%s/selfie_%s%s",
-                    userDo.getUsername(), String.valueOf(new Date().getTime()), suffixName);
-            ObjectWriteResponse response = minioUtils.put("user-profiles", objectName,
-                    inputStream, file.getSize(), "image/png");
-            System.out.println(response);
+
+            if (!isPictureSupported(suffixName)) {
+                throw new ApiException(-1, "图片格式不支持!");
+            }
+
+            String objectName = String.format("%s%s_%s_%s%s",
+                    ossConfProp.getUserProfileVerifyImagePrefix(),
+                    CryptoUtils.base64AesSecret(userDo.getUsername(), ossConfProp.getObjectAesKey()),
+                    new Date().getTime(),
+                    randomUUID,
+                    suffixName);
+
+            ObjectWriteResponse response = _minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
+                    objectName,
+                    inputStream,
+                    file.getSize(),
+                    "image/png");
 
             userDo.setSelfie(response.object());
 
             // 只处理第一张能处理的照片
             break;
+        }
+
+        if (userDo.getSelfie() == null || userDo.getSelfie().isEmpty()) {
+            throw new ApiException(-1, "上传信息不正确");
         }
 
         // 更新照片更新状态
@@ -279,8 +330,55 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ApiResp<String> logout() throws ApiException {
-        return ApiResp.succeed("");
+    public int logout() throws ApiException {
+        return 1;
+    }
+
+    // minio 存储原始图片和缩略图
+    @SneakyThrows
+    private ObjectWriteResponse _minioPutImageAndThumbnail(String bucketName,
+                                                           String objectName,
+                                                           InputStream inputStream,
+                                                           Long size,
+                                                           String contentType) throws ApiException {
+        ObjectWriteResponse response = minioUtils.put(bucketName, objectName,
+                inputStream, size, contentType);
+
+        if (response.object().isEmpty()) {
+            throw new ApiException(-1, "存储缩略图失败!");
+        }
+
+        // 压缩图片
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        if (size > 1024 * 1024 * 2) {
+            // 2m 以上
+            Thumbnails.of(inputStream).scale(0.5).outputQuality(0.2).toOutputStream(outputStream);
+        } else if (size > 1024 * 1024) {
+            // 1m ～ 2m
+            Thumbnails.of(inputStream).scale(0.75).outputQuality(0.2).toOutputStream(outputStream);
+        } else if (size > 1024 * 1024 * 0.5) {
+            // 500k ~1m
+            Thumbnails.of(inputStream).scale(0.75f).outputQuality(0.3).toOutputStream(outputStream);
+        } else if (size > 1024 * 1024 * 0.1) {
+            // 100k ~ 500k
+            Thumbnails.of(inputStream).scale(1.0f).outputQuality(0.3).toOutputStream(outputStream);
+        } else {
+            // 100k ~ 500k
+            Thumbnails.of(inputStream).scale(1.0f).outputQuality(0.5).toOutputStream(outputStream);
+        }
+
+        // 存储压缩图片
+        InputStream thumbnailStream = new ByteArrayInputStream(outputStream.toByteArray());
+        String thumbnailObjectName = String.format("thumbnail_%s", objectName);
+        response = minioUtils.put(bucketName, thumbnailObjectName,
+                thumbnailStream, outputStream.size(), contentType);
+
+        if (response.object().isEmpty()) {
+            throw new ApiException(-1, "存储缩略图失败!");
+        }
+
+        // 返回存储原始图的response
+        return response;
     }
 
     /**
@@ -293,15 +391,39 @@ public class UserServiceImpl implements UserService {
     /**
      * 准备返回给前端的数据
      */
-    private ApiResp<User> _prepareResponse(User user) {
+    private User _prepareResponse(User user) {
         // 计算返回给前端的数据
         user.setAge(DateUtils.getAgeFromBirth(user.getBirth()));
         user.setConstellation(DateUtils.getConstellationFromBirth(user.getBirth()));
         if (user.getPhotos() != null) {
-            user.setPhotoList(_changePhotosToList(user.getPhotos()));
+            List<String> photosName = _changePhotosToList(user.getPhotos());
+            List<String> photosUrl = photosName.stream()
+                    .map( name -> String.format("%s/%s", ossConfProp.getMinioUrl(), name))
+                    .collect(Collectors.toList());
+            List<String> photosThumbnailUrl = photosName.stream()
+                    .map( name -> String.format("%s/thumbnail_%s", ossConfProp.getMinioUrl(), name))
+                    .collect(Collectors.toList());
+            user.setPhotoUrlList(photosUrl);
+            user.setPhotoThumbnailUrlList(photosThumbnailUrl);
+        }
+        if (!user.getHead().isEmpty()) {
+            String headUrl = String.format("%s/%s", ossConfProp.getMinioUrl(), user.getHead());
+            String headThumbnailUrl = String.format("%s/thumbnail_%s", ossConfProp.getMinioUrl(), user.getHead());
+            user.setHeadUrl(headUrl);
+            user.setHeadThumbnailUrl(headThumbnailUrl);
+        }
+        if (!user.getVoice().isEmpty()) {
+            String voiceUrl = String.format("%s/%s", ossConfProp.getMinioUrl(), user.getVoice());
+            user.setVoiceUrl(voiceUrl);
+        }
+        if (!user.getSelfie().isEmpty()) {
+            String selfieUrl = String.format("%s/%s", ossConfProp.getMinioUrl(), user.getSelfie());
+            String selfieThumbnailUrl = String.format("%s/thumbnail_%s", ossConfProp.getMinioUrl(), user.getSelfie());
+            user.setSelfieUrl(selfieUrl);
+            user.setSelfieThumbnailUrl(selfieThumbnailUrl);
         }
 
-        return ApiResp.succeed(user);
+        return user;
     }
 
     /**
@@ -360,4 +482,18 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    protected static boolean isPictureSupported(String stuff) {
+        return stuff.toLowerCase().equals(".jpg") ||
+                stuff.toLowerCase().equals(".jpeg") ||
+                stuff.toLowerCase().equals(".png");
+    }
+
+    protected static boolean isVideoSupported(String stuff) {
+        return stuff.toLowerCase().equals(".mp4") ||
+                stuff.toLowerCase().equals(".avi");
+    }
+
+    protected static boolean isAudioSupported(String stuff) {
+        return stuff.toLowerCase().equals(".mp3");
+    }
 }

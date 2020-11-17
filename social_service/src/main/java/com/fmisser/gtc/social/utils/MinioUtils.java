@@ -1,8 +1,10 @@
 package com.fmisser.gtc.social.utils;
 
+import com.fmisser.gtc.base.prop.OssConfProp;
 import io.minio.*;
 import io.minio.messages.Bucket;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -14,18 +16,20 @@ import java.util.List;
  */
 @Component
 public class MinioUtils {
-    private static String MINIO_URL = "http://localhost:9000";
-    private static String MINIO_ACCESSKEY = "root";
-    private static String MINIO_SECRETKEY = "gtc_cloud@123456";
-    private static String MINIO_BUCKET = "test-bucket";
+
+    private final OssConfProp ossConfProp;
 
     private static MinioClient minioClient;
+
+    public MinioUtils(OssConfProp ossConfProp) {
+        this.ossConfProp = ossConfProp;
+    }
 
     @PostConstruct
     public void init() {
         minioClient = MinioClient.builder()
-                .endpoint(MINIO_URL)
-                .credentials(MINIO_ACCESSKEY, MINIO_SECRETKEY)
+                .endpoint(ossConfProp.getMinioUrl())
+                .credentials(ossConfProp.getMinioAccessKey(), ossConfProp.getMinioSecretKey())
                 .build();
     }
 
@@ -50,11 +54,12 @@ public class MinioUtils {
     }
 
     @SneakyThrows(Exception.class)
-    public ObjectWriteResponse upload(String bucketName, String objectName, String filename) {
+    public ObjectWriteResponse upload(String bucketName, String objectName, String filename, String contentType) {
         UploadObjectArgs args = UploadObjectArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
                 .filename(filename)
+                .contentType(contentType)
 //                .contentType("video/mp4")
                 .build();
         return minioClient.uploadObject(args);
