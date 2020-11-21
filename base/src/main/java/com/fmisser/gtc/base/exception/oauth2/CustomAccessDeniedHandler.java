@@ -15,6 +15,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+/**
+ * 自定义security禁止访问异常返回结构
+ */
 @Component("access_denied_handler")
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 

@@ -28,6 +28,8 @@ k8s redis: https://www.imooc.com/article/275617
 
 数据库读写分离 https://juejin.im/post/6844903857835737095
 
+CQRS ES http://soooban.github.io/2019/06/10/Event-Sourcing-And-CQRS/
+
 nosql： mongodb，redis
 
 newsql: tidb

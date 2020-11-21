@@ -13,6 +13,13 @@ import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.oauth2.provider.error.WebResponseExceptionTranslator;
 import org.springframework.stereotype.Component;
 
+/**
+ * 自定义oauth2请求token时异常返回结构
+ * @deprecated 这里只能返回异常信息，返回正确的时候无法改变;
+ * 目前使用另外一个接口封装了oauth/token,这样可以自定义正确和错误的所有情况，而且可以不用暴露client secret
+ */
+
+@Deprecated
 @Component("exception_translator")
 public class CustomExceptionTranslator implements WebResponseExceptionTranslator<OAuth2Exception> {
 

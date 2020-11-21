@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -10,18 +11,22 @@ import java.math.BigDecimal;
  */
 
 @Entity
-@Table(name = "t_asset", indexes = {@Index(columnList = "coin")})
+@Table(name = "t_asset", indexes = {@Index(columnList = "userId")})
 @Data
 public class Asset {
 
-    //  急加载，inner join 方式
-    @OneToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User user;
+//    @OneToOne(fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "user_id", referencedColumnName = "id")
+//    private User user;
 
+    @JsonIgnore
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @JsonIgnore
+    @Column(nullable = false, unique = true)
+    private Long userId;
 
     @Column(nullable = false)
     private BigDecimal coin = BigDecimal.ZERO;
@@ -32,5 +37,7 @@ public class Asset {
     @Column(nullable = false, columnDefinition = "int default 0")
     private int freeAnswerDuration = 0;
 
-
+    @JsonIgnore
+    @Version
+    private Long version;
 }

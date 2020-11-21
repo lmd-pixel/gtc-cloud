@@ -6,12 +6,11 @@ import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.base.response.ApiRespHelper;
 import com.fmisser.gtc.base.utils.CryptoUtils;
 import com.fmisser.gtc.base.utils.DateUtils;
-import com.fmisser.gtc.social.domain.Asset;
-import com.fmisser.gtc.social.domain.Label;
-import com.fmisser.gtc.social.domain.User;
-import com.fmisser.gtc.social.domain.VerifyStatus;
+import com.fmisser.gtc.social.domain.*;
+import com.fmisser.gtc.social.repository.AssetRepository;
 import com.fmisser.gtc.social.repository.LabelRepository;
 import com.fmisser.gtc.social.repository.UserRepository;
+import com.fmisser.gtc.social.service.IdentityAuditService;
 import com.fmisser.gtc.social.service.UserService;
 import com.fmisser.gtc.social.utils.MinioUtils;
 import io.minio.ObjectWriteResponse;
@@ -19,6 +18,7 @@ import jdk.internal.util.xml.impl.Input;
 import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.awt.image.BufferedImage;
@@ -34,26 +34,31 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    private final ApiRespHelper apiRespHelper;
-
     private final MinioUtils minioUtils;
 
     private final LabelRepository labelRepository;
 
     private final OssConfProp ossConfProp;
 
+    private final IdentityAuditService identityAuditService;
+
+    private final AssetRepository assetRepository;
+
     public UserServiceImpl(UserRepository userRepository,
-                           ApiRespHelper apiRespHelper,
                            MinioUtils minioUtils,
                            LabelRepository labelRepository,
-                           OssConfProp ossConfProp) {
+                           OssConfProp ossConfProp,
+                           IdentityAuditService identityAuditService,
+                           AssetRepository assetRepository) {
         this.userRepository = userRepository;
-        this.apiRespHelper = apiRespHelper;
         this.minioUtils = minioUtils;
         this.labelRepository = labelRepository;
         this.ossConfProp = ossConfProp;
+        this.identityAuditService = identityAuditService;
+        this.assetRepository = assetRepository;
     }
 
+    @Transactional
     @Override
     public User create(String phone, int gender) throws ApiException {
         // check exist
@@ -79,63 +84,73 @@ public class UserServiceImpl implements UserService {
         user.setBirth(Date.from(defaultBirth.atZone(ZoneId.systemDefault()).toInstant()));
         user.setGender(gender);
 
-        user.setAsset(new Asset());
         user.setLabels(new ArrayList<>());
-        user.setVerifyStatus(new VerifyStatus());
-
+//        user.setVerifyStatus(new VerifyStatus());
         user = userRepository.save(user);
-        if (user.getId() > 0) {
-            // success
-            return _prepareResponse(user);
-        } else {
-            // 创建失败
-            throw new ApiException(-1, "创建用户信息失败");
-        }
+
+        // 创建资产
+        Asset asset = new Asset();
+        asset.setUserId(user.getId());
+        assetRepository.save(asset);
+
+        return _prepareResponse(user);
     }
 
     @Override
-    public User profile(String username) throws ApiException {
-        User user = userRepository.findByUsername(username);
+    public User getUserByUsername(String username) throws ApiException {
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (!userOptional.isPresent()) {
+            throw new ApiException(-1, "用户数据不存在");
+        }
+        return userOptional.get();
+    }
+
+    @Override
+    public User profile(User user) throws ApiException {
         return _prepareResponse(user);
     }
 
     @SneakyThrows
     @Override
-    public User updateProfile(String username, String nick, String birth, String city, String profession,
-                                       String intro, String labels, String callPrice, String videoPrice,
-                                       Map<String, MultipartFile> multipartFileMap) throws ApiException {
-        User userDo = userRepository.findByUsername(username);
-        if (userDo == null) {
-            throw new ApiException(-1, "用户数据不存在");
+    public User updateProfile(User user,
+                              String nick, String birth, String city, String profession,
+                              String intro, String labels, String callPrice, String videoPrice,
+                              Map<String, MultipartFile> multipartFileMap) throws ApiException {
+
+        Optional<IdentityAudit> identityAudit = identityAuditService.getLastProfileAudit(user);
+        if (identityAudit.isPresent() &&
+                identityAudit.get().getStatus() == 10) {
+            // 资料审核中不能修改
+            throw new ApiException(-1, "资料在认证审核中，暂时无法修改");
         }
 
         // 处理文本结构
         if (nick != null && !nick.isEmpty()) {
-            userDo.setNick(nick);
+            user.setNick(nick);
         }
         if (birth != null && !birth.isEmpty()) {
-            userDo.setBirth(new Date(Long.parseLong(birth)));
+            user.setBirth(new Date(Long.parseLong(birth)));
         }
         if (city != null && !city.isEmpty()) {
-            userDo.setCity(city);
+            user.setCity(city);
         }
         if (profession != null && !profession.isEmpty()) {
-            userDo.setProfession(profession);
+            user.setProfession(profession);
         }
         if (intro != null && !intro.isEmpty()) {
-            userDo.setIntro(intro);
+            user.setIntro(intro);
         }
         if (labels != null && !labels.isEmpty()) {
             String[] labelList = labels.split(",");
-            userDo.setLabels(_innerCreateLabels(labelList));
+            user.setLabels(_innerCreateLabels(labelList));
         }
         if (callPrice != null && !callPrice.isEmpty()) {
             BigDecimal price = BigDecimal.valueOf(Long.parseLong(callPrice));
-            userDo.setCallPrice(price);
+            user.setCallPrice(price);
         }
         if (videoPrice != null && !videoPrice.isEmpty()) {
             BigDecimal price = BigDecimal.valueOf(Long.parseLong(videoPrice));
-            userDo.setVideoPrice(price);
+            user.setVideoPrice(price);
         }
 
         // 处理表单
@@ -158,7 +173,7 @@ public class UserServiceImpl implements UserService {
                 // object name 格式： prefix/username_date_randomUUID.xxx
                 String objectName = String.format("%s%s_%s_%s%s",
                         ossConfProp.getUserProfileVoicePrefix(),
-                        CryptoUtils.base64AesSecret(userDo.getUsername(), ossConfProp.getObjectAesKey()),
+                        CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
                         new Date().getTime(),
                         randomUUID,
                         suffixName);
@@ -169,7 +184,7 @@ public class UserServiceImpl implements UserService {
                     throw new ApiException(-1, "存储语音文件失败!");
                 }
 
-                userDo.setVoice(response.object());
+                user.setVoice(response.object());
 
             } else if (name.equals("head")) {
                 InputStream inputStream = file.getInputStream();
@@ -182,7 +197,7 @@ public class UserServiceImpl implements UserService {
                 // 存储原始图片
                 String objectName = String.format("%s%s_%s_%s%s",
                         ossConfProp.getUserProfileHeadPrefix(),
-                        CryptoUtils.base64AesSecret(userDo.getUsername(), ossConfProp.getObjectAesKey()),
+                        CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
                         new Date().getTime(),
                         randomUUID,
                         suffixName);
@@ -190,7 +205,7 @@ public class UserServiceImpl implements UserService {
                 ObjectWriteResponse response = _minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
                         objectName, inputStream, file.getSize(), "image/png");
 
-                userDo.setHead(response.object());
+                user.setHead(response.object());
             }
 //            else if (name.equals("video")) {
 //                InputStream inputStream = file.getInputStream();
@@ -207,25 +222,26 @@ public class UserServiceImpl implements UserService {
         }
 
         // 判断资料是否完全录入
-        if (_checkProfileCompleted(userDo)) {
-            userDo.getVerifyStatus().setProfileStatus(10);
-        } else {
-            userDo.getVerifyStatus().setProfileStatus(0);
-        }
+//        if (_checkProfileCompleted(userDo)) {
+//            userDo.getVerifyStatus().setProfileStatus(10);
+//        } else {
+//            userDo.getVerifyStatus().setProfileStatus(0);
+//        }
 
-        userDo = userRepository.save(userDo);
+        user = userRepository.save(user);
 
-        return _prepareResponse(userDo);
+        return _prepareResponse(user);
     }
 
     @Override
     @SneakyThrows
-    public User updatePhotos(String username,
-                                              Map<String, MultipartFile> multipartFileMap) throws ApiException {
-
-        User userDo = userRepository.findByUsername(username);
-        if (userDo == null) {
-            throw new ApiException(-1, "用户数据不存在");
+    public User updatePhotos(User user,
+                             Map<String, MultipartFile> multipartFileMap) throws ApiException {
+        Optional<IdentityAudit> identityAudit = identityAuditService.getLastPhotosAudit(user);
+        if (identityAudit.isPresent() &&
+                identityAudit.get().getStatus() == 10) {
+            // 资料审核中不能修改
+            throw new ApiException(-1, "资料在认证审核中，暂时无法修改");
         }
 
         List<String> photoList = new ArrayList<>();
@@ -247,7 +263,7 @@ public class UserServiceImpl implements UserService {
 
             String objectName = String.format("%s%s_%s_%s%s",
                     ossConfProp.getUserProfilePhotoPrefix(),
-                    CryptoUtils.base64AesSecret(userDo.getUsername(), ossConfProp.getObjectAesKey()),
+                    CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
                     new Date().getTime(),
                     randomUUID,
                     suffixName);
@@ -261,28 +277,23 @@ public class UserServiceImpl implements UserService {
             photoList.add(response.object());
         }
 
-        if (userDo.getPhotos() == null || userDo.getPhotos().isEmpty()) {
+        if (user.getPhotos() == null || user.getPhotos().isEmpty()) {
             throw new ApiException(-1, "上传信息不正确");
         }
 
         // 更新照片更新状态
-        userDo.getVerifyStatus().setPhotosStatus(10);   // 照片资料完善
+//        userDo.getVerifyStatus().setPhotosStatus(10);   // 照片资料完善
 
-        userDo.setPhotos(photoList.toString());
-        userDo = userRepository.save(userDo);
+        user.setPhotos(photoList.toString());
+        user = userRepository.save(user);
 
-        return _prepareResponse(userDo);
+        return _prepareResponse(user);
     }
 
     @Override
     @SneakyThrows
-    public User updateVerifyImage(String username,
-                                             Map<String, MultipartFile> multipartFileMap) throws ApiException {
-        User userDo = userRepository.findByUsername(username);
-        if (userDo == null) {
-            throw new ApiException(-1, "用户数据不存在");
-        }
-
+    public User updateVerifyImage(User user,
+                                  Map<String, MultipartFile> multipartFileMap) throws ApiException {
         for (MultipartFile file: multipartFileMap.values()) {
             if (file.isEmpty()) {
                 continue;
@@ -300,7 +311,7 @@ public class UserServiceImpl implements UserService {
 
             String objectName = String.format("%s%s_%s_%s%s",
                     ossConfProp.getUserProfileVerifyImagePrefix(),
-                    CryptoUtils.base64AesSecret(userDo.getUsername(), ossConfProp.getObjectAesKey()),
+                    CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
                     new Date().getTime(),
                     randomUUID,
                     suffixName);
@@ -311,26 +322,27 @@ public class UserServiceImpl implements UserService {
                     file.getSize(),
                     "image/png");
 
-            userDo.setSelfie(response.object());
+            user.setSelfie(response.object());
 
             // 只处理第一张能处理的照片
             break;
         }
 
-        if (userDo.getSelfie() == null || userDo.getSelfie().isEmpty()) {
+        if (user.getSelfie() == null || user.getSelfie().isEmpty()) {
             throw new ApiException(-1, "上传信息不正确");
         }
 
         // 更新照片更新状态
-        userDo.getVerifyStatus().setSelfieStatus(10);   // 照片资料完善
+//        userDo.getVerifyStatus().setSelfieStatus(10);   // 照片资料完善
 
-        userDo = userRepository.save(userDo);
+        user = userRepository.save(user);
 
-        return _prepareResponse(userDo);
+        return _prepareResponse(user);
     }
 
     @Override
-    public int logout() throws ApiException {
+    public int logout(User user) throws ApiException {
+        // TODO: 2020/11/21 考虑登出im相关服务
         return 1;
     }
 
@@ -382,19 +394,14 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * 判断资料是否已全部完善
-     */
-    private boolean _checkProfileCompleted(User user) {
-        return false;
-    }
-
-    /**
      * 准备返回给前端的数据
      */
     private User _prepareResponse(User user) {
-        // 计算返回给前端的数据
+        // 通过生日计算年龄和星座
         user.setAge(DateUtils.getAgeFromBirth(user.getBirth()));
         user.setConstellation(DateUtils.getConstellationFromBirth(user.getBirth()));
+
+        // 返回完整的照片的链接和缩略图的链接
         if (user.getPhotos() != null) {
             List<String> photosName = _changePhotosToList(user.getPhotos());
             List<String> photosUrl = photosName.stream()
@@ -406,22 +413,28 @@ public class UserServiceImpl implements UserService {
             user.setPhotoUrlList(photosUrl);
             user.setPhotoThumbnailUrlList(photosThumbnailUrl);
         }
+
+        // 返回完整的头像的链接和缩略图的链接
         if (!user.getHead().isEmpty()) {
             String headUrl = String.format("%s/%s", ossConfProp.getMinioUrl(), user.getHead());
             String headThumbnailUrl = String.format("%s/thumbnail_%s", ossConfProp.getMinioUrl(), user.getHead());
             user.setHeadUrl(headUrl);
             user.setHeadThumbnailUrl(headThumbnailUrl);
         }
+
+        // 返回完整的语音介绍的链接
         if (!user.getVoice().isEmpty()) {
             String voiceUrl = String.format("%s/%s", ossConfProp.getMinioUrl(), user.getVoice());
             user.setVoiceUrl(voiceUrl);
         }
-        if (!user.getSelfie().isEmpty()) {
-            String selfieUrl = String.format("%s/%s", ossConfProp.getMinioUrl(), user.getSelfie());
-            String selfieThumbnailUrl = String.format("%s/thumbnail_%s", ossConfProp.getMinioUrl(), user.getSelfie());
-            user.setSelfieUrl(selfieUrl);
-            user.setSelfieThumbnailUrl(selfieThumbnailUrl);
-        }
+
+        // 返回完整的认证图片链接和缩略图的链接
+//        if (!user.getSelfie().isEmpty()) {
+//            String selfieUrl = String.format("%s/%s", ossConfProp.getMinioUrl(), user.getSelfie());
+//            String selfieThumbnailUrl = String.format("%s/thumbnail_%s", ossConfProp.getMinioUrl(), user.getSelfie());
+//            user.setSelfieUrl(selfieUrl);
+//            user.setSelfieThumbnailUrl(selfieThumbnailUrl);
+//        }
 
         return user;
     }

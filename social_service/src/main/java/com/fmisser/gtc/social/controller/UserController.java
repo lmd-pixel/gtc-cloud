@@ -65,8 +65,10 @@ public class UserController {
                                 @RequestParam(value = "videoPrice", required = false) String videoPrice) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+        //
         // TODO: 2020/11/10 check params
-        User user = userService.updateProfile(username, nick, birth, city, profession,
+        User user = userService.updateProfile(userDo, nick, birth, city, profession,
                 intro, labels, callPrice, videoPrice, request.getFileMap());
 
         return ApiResp.succeed(user);

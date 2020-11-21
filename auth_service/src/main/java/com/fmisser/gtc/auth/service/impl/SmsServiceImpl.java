@@ -32,6 +32,12 @@ public class SmsServiceImpl implements SmsService {
     // 验证手机号验证码
     @Override
     public boolean checkPhoneCode(String phone, String code, int type) {
+
+        // TODO: 2020/11/20 测试代码 code 使用8888 直接pass
+        if (code.equals("8888")) {
+            return true;
+        }
+
         // 获取本地存储的 msg id
         PhoneCodeRequestDto phoneCodeRequestDto =
                 phoneCodeRequestRepository.findByPhoneAndTypeOrderByCreateTimeDesc(phone, type);

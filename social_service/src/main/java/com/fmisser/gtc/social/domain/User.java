@@ -26,6 +26,7 @@ import java.util.List;
 @DynamicInsert
 @DynamicUpdate
 public class User {
+    @JsonIgnore
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,6 +34,7 @@ public class User {
     @Column(nullable = false, unique = true)
     private String digitId;
 
+    @JsonIgnore
     // 目前 username 就是 phone
     @Column(nullable = false, unique = true)
     private String username;
@@ -99,6 +101,14 @@ public class User {
     @Column
     private BigDecimal videoPrice;
 
+    // 单条聊天价格
+    @Column
+    private BigDecimal messagePrice;
+
+    // 身份 0：普通用户 1： 男神 女神
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private int identity = 0;
+
     // 关注数量
     @Column(nullable = false, columnDefinition = "int default 0")
     private int follows = 0;
@@ -115,13 +125,13 @@ public class User {
     @Column
     private Date modifyTime;
 
-    // 资产信息
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    private Asset asset;
+//    // 资产信息
+//    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+//    private Asset asset;
 
-    // 资产信息
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    private VerifyStatus verifyStatus;
+//    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+//    @Transient
+//    private VerifyStatus verifyStatus;
 
     // 标签信息
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -130,6 +140,10 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "label_id", referencedColumnName = "id"))
     private List<Label> labels;
+
+    @JsonIgnore
+    @Version
+    private Long version;
 
     @Transient
     private String constellation;   // 星座
@@ -149,9 +163,11 @@ public class User {
     @Transient
     private String headThumbnailUrl;    // 头像缩略图
 
+    @JsonIgnore
     @Transient
     private String selfieUrl;
 
+    @JsonIgnore
     @Transient
     private String selfieThumbnailUrl;  // 自拍缩略图
 

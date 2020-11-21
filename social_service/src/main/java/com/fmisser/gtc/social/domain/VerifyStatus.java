@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -8,13 +9,13 @@ import javax.persistence.*;
  * 用户资料状态
  */
 
-@Entity
-@Table(name = "t_verify_status")
-@Data
+//@Entity
+//@Table(name = "t_verify_status")
+//@Data
 public class VerifyStatus {
 
-    //  急加载，inner join 方式
-    @OneToOne(fetch = FetchType.EAGER, optional = false)
+    @JsonIgnore
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
@@ -44,5 +45,12 @@ public class VerifyStatus {
 
     @Column(nullable = false, columnDefinition = "int default 0")
     private int selfieAuditStatus;
+
+    // 实名状态
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private int realNameStatus;
+
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private int realNameAuditStatus;
 
 }

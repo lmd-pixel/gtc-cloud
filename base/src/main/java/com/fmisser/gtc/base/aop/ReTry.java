@@ -7,8 +7,10 @@ import java.lang.annotation.Target;
 
 /**
  * 重试机制
+ * @deprecated 官方已有实现 @Retryable
  */
 
+@Deprecated
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface ReTry {

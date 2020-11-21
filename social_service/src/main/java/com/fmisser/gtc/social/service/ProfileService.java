@@ -6,6 +6,10 @@ import com.fmisser.gtc.social.domain.Label;
 
 import java.util.List;
 
+/**
+ * 配置文件相关
+ */
+
 public interface ProfileService {
     ApiResp<List<Label>> labels() throws ApiException;
     ApiResp<List<String>> chatPrices(int type) throws ApiException;

@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.domain;
 
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import org.hibernate.annotations.DynamicInsert;
@@ -12,21 +13,20 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
-import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 账单
+ * 身份审核
  */
 
-//@Entity
-//@Table(name = "t_bill",
-//        indexes = {@Index(columnList = "userId")})
-//@Data
-//@EntityListeners(AuditingEntityListener.class)
-//@DynamicInsert
-//@DynamicUpdate
-public class Bill {
+@Entity
+@Table(name = "t_identity_audit",
+        indexes = {@Index(columnList = "userId,type,createTime")})
+@Data
+@EntityListeners(AuditingEntityListener.class)
+@DynamicInsert
+@DynamicUpdate
+public class IdentityAudit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,34 +34,26 @@ public class Bill {
     @Column(nullable = false)
     private Long userId;
 
-    @Column
-    private BigDecimal coinBefore;
-
-    @Column
-    private BigDecimal coinAfter;
-
     /**
-     * 0： 入账
-     * 1： 出账
+     * 审核类型 1： 资料审核  2： 相册审核
      */
-    @Column
+    @Column(nullable = false)
     private int type;
 
     /**
-     * 出入帐的行为
-     * 1： 充值
-     * 50：奖励
-     * 100：通话
-     * 150：送礼物
+     * 0: 未审核 10： 审核中 20: 审核未通过 30： 审核通过
      */
+    @Column(nullable = false)
+    private int status;
+
     @Column
-    private int action;
+    private String message;
 
     @CreatedDate
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column
-    private Date creatTime;
+    private Date createTime;
 
     @LastModifiedDate
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")

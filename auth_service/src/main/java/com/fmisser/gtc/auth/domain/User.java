@@ -13,8 +13,9 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
-@Table(name = "t_user",
-uniqueConstraints = {@UniqueConstraint(columnNames = "username")})
+@Table(name = "t_user")
+// unique 默认会创建索引，字符串类型请指定length
+//uniqueConstraints = {@UniqueConstraint(columnNames = "username")})
 @Data
 @EntityListeners(AuditingEntityListener.class)
 public class User implements UserDetails {

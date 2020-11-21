@@ -15,6 +15,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+/**
+ * 自定义认证失败异常返回结构
+ */
+
 @Component("auth_ex_handler")
 public class CustomAuthExceptionHandler implements AuthenticationEntryPoint {
 

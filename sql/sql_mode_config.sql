@@ -12,4 +12,11 @@ alter table `t_role` change intro intro varchar(255) character set utf8;
 -- auto increment start number
 alter table `t_role` AUTO_INCREMENT=10241024;
 
+-- slow query log
+set global slow_query_log='ON';
+
+set global long_query_time=2;
+
+show variables like '%slow_query_log_file%';
+
 

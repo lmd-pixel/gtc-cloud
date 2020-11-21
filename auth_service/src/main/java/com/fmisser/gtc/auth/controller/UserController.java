@@ -54,6 +54,12 @@ public class UserController {
         return userService.autoLogin(phone, token);
     }
 
+    @PostMapping("/sms-login")
+    public ApiResp<TokenDto> phoneCodeLogin(@RequestParam("phone") @Size(min = 11, max = 11, message = "请输入有效的手机号") String phone,
+                                       @RequestParam("code") String code) throws ApiException {
+        return userService.smsLogin(phone, code);
+    }
+
     @PostMapping("/phone-code")
     public ApiResp<String> sendPhoneCode(@RequestParam("phone") @Size(min = 11, max = 11, message = "请输入有效的手机号") String phone,
                                    @RequestParam("type") int type) throws ApiException {
