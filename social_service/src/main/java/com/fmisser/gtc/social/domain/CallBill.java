@@ -31,7 +31,7 @@ public class CallBill {
     private Long id;
 
     // 流水号，保留
-    @Column
+    @Column(nullable = false, unique = true)
     private String serialNumber;
 
     @Column(nullable = false)

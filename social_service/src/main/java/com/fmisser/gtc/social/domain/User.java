@@ -105,7 +105,7 @@ public class User {
     @Column
     private BigDecimal messagePrice;
 
-    // 身份 0：普通用户 1： 男神 女神
+    // 身份 0：普通用户 1： 主播
     @Column(nullable = false, columnDefinition = "int default 0")
     private int identity = 0;
 

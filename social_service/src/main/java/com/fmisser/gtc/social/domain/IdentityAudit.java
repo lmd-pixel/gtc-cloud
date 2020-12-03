@@ -2,6 +2,7 @@ package com.fmisser.gtc.social.domain;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -21,18 +22,39 @@ import java.util.Date;
 
 @Entity
 @Table(name = "t_identity_audit",
-        indexes = {@Index(columnList = "userId,type,createTime")})
+        indexes = {@Index(columnList = "userId"), @Index(columnList = "createTime")})
 @Data
 @EntityListeners(AuditingEntityListener.class)
 @DynamicInsert
 @DynamicUpdate
 public class IdentityAudit {
+    @JsonIgnore
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @Column(nullable = false)
     private Long userId;
+
+    // 编号
+    @Column(nullable = false, unique = true)
+    private String serialNumber;
+
+    @Column
+    private String digitId;
+
+    @Column
+    private String phone;
+
+    @Column
+    private String nick;
+
+    @Column
+    private int gender;
+
+    @Column
+    private int age;
 
     /**
      * 审核类型 1： 资料审核  2： 相册审核
@@ -41,7 +63,7 @@ public class IdentityAudit {
     private int type;
 
     /**
-     * 0: 未审核 10： 审核中 20: 审核未通过 30： 审核通过
+     * 10： 审核中 20: 审核未通过 30： 审核通过
      */
     @Column(nullable = false)
     private int status;
@@ -55,16 +77,19 @@ public class IdentityAudit {
     @Column
     private Date createTime;
 
+    @JsonIgnore
     @LastModifiedDate
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column
     private Date modifyTime;
 
+    @JsonIgnore
     @CreatedBy
     @Column
     private String createBy;
 
+    @JsonIgnore
     @LastModifiedBy
     @Column
     private String modifyBy;

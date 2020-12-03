@@ -2,12 +2,14 @@ package com.fmisser.gtc.base.prop;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 @Data
 @Component
-@PropertySource(value = "classpath:config/oss-conf.properties", encoding = "UTF-8")
+@Configuration
+@PropertySource(value = "classpath:config/oss-conf-${base.profiles.active}.properties", encoding = "UTF-8")
 public class OssConfProp {
 
     @Value("${oss.minio.url}")

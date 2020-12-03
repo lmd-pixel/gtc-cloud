@@ -12,4 +12,6 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
 
     @Query(value = "SELECT * FROM t_role WHERE name = 'ROLE_ADMIN' LIMIT 1", nativeQuery = true)
     Role getAdminRole();
+
+    Role findByName(String name);
 }

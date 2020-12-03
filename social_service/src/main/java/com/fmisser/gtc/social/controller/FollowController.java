@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Api("关注相关接口")
+@Api(description = "关注API")
 @RestController
 @RequestMapping("/follow")
 @Validated

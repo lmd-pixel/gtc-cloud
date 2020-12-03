@@ -80,7 +80,8 @@ public class ControllerExceptionHandler {
     @ExceptionHandler(Exception.class)
     public <T> ApiResp<T> handleException(HttpServletRequest request, Exception e) {
         logger.error(e.getMessage());
-        return innerCreator(request, ApiErrorEnum.INTERNAL_SERVER_ERROR);
+//        return innerCreator(request, ApiErrorEnum.INTERNAL_SERVER_ERROR);
+        return ApiResp.failed(-1, e.getMessage());
     }
 
     private <T> ApiResp<T> innerCreator(HttpServletRequest request, ApiErrorEnum error) {

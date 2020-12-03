@@ -14,6 +14,7 @@ import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.base.utils.AuthUtils;
 import com.fmisser.gtc.base.utils.JPushUtils;
 import io.swagger.annotations.Api;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,10 +69,14 @@ public class UserDetailServiceImpl implements UserService {
     }
 
     @Override
-    public User create(String username, String password) {
+    public User create(String username, String password, String roleName) {
+        // TODO: 2020/11/21 通过jpa函数调用是否需要防sql注入
+        roleName = StringEscapeUtils.escapeSql(roleName);
+
         Optional<User> userOptional = Optional.ofNullable(userRepository.findByUsername(username));
         userOptional.ifPresent(u -> {
-            throw new IllegalArgumentException("user already exists:" + u.getUsername());
+//            throw new IllegalArgumentException("user already exists:" + u.getUsername());
+            throw new ApiException(-1, "用户已存在");
         });
 
         User user = new User();
@@ -80,8 +85,16 @@ public class UserDetailServiceImpl implements UserService {
         String encodePwd = passwordEncoder.encode(password);
         user.setPassword(encodePwd);
 
-        // give default role: USER_ROLE
-        user.setAuthorities(_innerCreateUserRole());
+        if (roleName == null || roleName.isEmpty()) {
+            // give default role: USER_ROLE
+            user.setAuthorities(_innerCreateUserRole());
+        } else {
+            Role role = roleRepository.findByName(roleName);
+            if (role == null) {
+                throw new ApiException(-1, "不存在该权限");
+            }
+            user.setAuthorities(_innerCreteRole(role));
+        }
 
         User savedUser = userRepository.save(user);
         logger.info("new user has been created: {}", savedUser.getUsername());
@@ -89,24 +102,40 @@ public class UserDetailServiceImpl implements UserService {
     }
 
     @Override
-    public ApiResp<TokenDto> autoLogin(String phone, String token) throws ApiException {
-        String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
-        TokenDto dto = oAuthService.autoLogin(basicAuth, phone, token, "test", "auto_login");
-        return ApiResp.succeed(dto);
+    public int enableUser(String username, int enable) throws ApiException {
+        Optional<User> userOptional = Optional.ofNullable(userRepository.findByUsername(username));
+        if (!userOptional.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+
+        User user = userOptional.get();
+        user.setEnabled(enable);
+        userRepository.save(user);
+
+        return 1;
     }
 
     @Override
-    public ApiResp<TokenDto> smsLogin(String phone, String code) throws ApiException {
-        String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
-        TokenDto dto = oAuthService.autoLogin(basicAuth, phone, code, "test", "sms_login");
-        return ApiResp.succeed(dto);
+    public int deleteUser(String username) throws ApiException {
+        throw new ApiException(-1,"危险操作，已禁止");
     }
 
     @Override
-    public ApiResp<TokenDto> login(String username, String password) throws ApiException {
+    public TokenDto autoLogin(String phone, String token) throws ApiException {
         String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
-        TokenDto dto = oAuthService.login(basicAuth, username, password, "test", "password");
-        return ApiResp.succeed(dto);
+        return oAuthService.autoLogin(basicAuth, phone, token, "test", "auto_login");
+    }
+
+    @Override
+    public TokenDto smsLogin(String phone, String code) throws ApiException {
+        String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
+        return oAuthService.smsLogin(basicAuth, phone, code, "test", "sms_login");
+    }
+
+    @Override
+    public TokenDto login(String username, String password) throws ApiException {
+        String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
+        return oAuthService.login(basicAuth, username, password, "test", "password");
     }
 
     /**
@@ -167,6 +196,13 @@ public class UserDetailServiceImpl implements UserService {
         Role userRole = roleRepository.getUserRole();
         List<Role> roleList = new ArrayList<>();
         roleList.add(userRole);
+
+        return roleList;
+    }
+
+    private List<Role> _innerCreteRole(Role role) {
+        List<Role> roleList = new ArrayList<>();
+        roleList.add(role);
 
         return roleList;
     }

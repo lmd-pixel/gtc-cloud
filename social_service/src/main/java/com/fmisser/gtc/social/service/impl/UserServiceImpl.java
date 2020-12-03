@@ -106,6 +106,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User getUserByDigitId(String digitId) throws ApiException {
+        Optional<User> userOptional = userRepository.findByDigitId(digitId);
+        if (!userOptional.isPresent()) {
+            throw new ApiException(-1, "用户数据不存在");
+        }
+        return userOptional.get();
+    }
+
+    @Override
     public User profile(User user) throws ApiException {
         return _prepareResponse(user);
     }
@@ -117,6 +126,10 @@ public class UserServiceImpl implements UserService {
                               String intro, String labels, String callPrice, String videoPrice,
                               Map<String, MultipartFile> multipartFileMap) throws ApiException {
 
+        if (user.getIdentity() == 1) {
+            // TODO: 2020/11/30 如果是主播身份，不能随意更改资料，需要审核
+        }
+        
         Optional<IdentityAudit> identityAudit = identityAuditService.getLastProfileAudit(user);
         if (identityAudit.isPresent() &&
                 identityAudit.get().getStatus() == 10) {
@@ -343,6 +356,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public int logout(User user) throws ApiException {
         // TODO: 2020/11/21 考虑登出im相关服务
+        // TODO: 2020/11/26 记录登出
         return 1;
     }
 
@@ -353,39 +367,46 @@ public class UserServiceImpl implements UserService {
                                                            InputStream inputStream,
                                                            Long size,
                                                            String contentType) throws ApiException {
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+        // mark top
+        bufferedInputStream.mark(Integer.MAX_VALUE);
+
         ObjectWriteResponse response = minioUtils.put(bucketName, objectName,
-                inputStream, size, contentType);
+                bufferedInputStream, size, contentType);
 
         if (response.object().isEmpty()) {
             throw new ApiException(-1, "存储缩略图失败!");
         }
 
+        // reset stream to mark position
+        bufferedInputStream.reset();
+
         // 压缩图片
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         if (size > 1024 * 1024 * 2) {
             // 2m 以上
-            Thumbnails.of(inputStream).scale(0.5).outputQuality(0.2).toOutputStream(outputStream);
+            Thumbnails.of(bufferedInputStream).scale(0.5).outputQuality(0.2).toOutputStream(outputStream);
         } else if (size > 1024 * 1024) {
             // 1m ～ 2m
-            Thumbnails.of(inputStream).scale(0.75).outputQuality(0.2).toOutputStream(outputStream);
+            Thumbnails.of(bufferedInputStream).scale(0.75).outputQuality(0.2).toOutputStream(outputStream);
         } else if (size > 1024 * 1024 * 0.5) {
             // 500k ~1m
-            Thumbnails.of(inputStream).scale(0.75f).outputQuality(0.3).toOutputStream(outputStream);
+            Thumbnails.of(bufferedInputStream).scale(0.75f).outputQuality(0.3).toOutputStream(outputStream);
         } else if (size > 1024 * 1024 * 0.1) {
             // 100k ~ 500k
-            Thumbnails.of(inputStream).scale(1.0f).outputQuality(0.3).toOutputStream(outputStream);
+            Thumbnails.of(bufferedInputStream).scale(1.0f).outputQuality(0.3).toOutputStream(outputStream);
         } else {
             // 100k ~ 500k
-            Thumbnails.of(inputStream).scale(1.0f).outputQuality(0.5).toOutputStream(outputStream);
+            Thumbnails.of(bufferedInputStream).scale(1.0f).outputQuality(0.5).toOutputStream(outputStream);
         }
 
         // 存储压缩图片
         InputStream thumbnailStream = new ByteArrayInputStream(outputStream.toByteArray());
         String thumbnailObjectName = String.format("thumbnail_%s", objectName);
-        response = minioUtils.put(bucketName, thumbnailObjectName,
+        ObjectWriteResponse responseThumbnail = minioUtils.put(bucketName, thumbnailObjectName,
                 thumbnailStream, outputStream.size(), contentType);
 
-        if (response.object().isEmpty()) {
+        if (responseThumbnail.object().isEmpty()) {
             throw new ApiException(-1, "存储缩略图失败!");
         }
 
@@ -415,21 +436,30 @@ public class UserServiceImpl implements UserService {
         }
 
         // 返回完整的头像的链接和缩略图的链接
-        if (!user.getHead().isEmpty()) {
-            String headUrl = String.format("%s/%s", ossConfProp.getMinioUrl(), user.getHead());
-            String headThumbnailUrl = String.format("%s/thumbnail_%s", ossConfProp.getMinioUrl(), user.getHead());
+        if (user.getHead() != null && !user.getHead().isEmpty()) {
+            String headUrl = String.format("%s/%s/%s",
+                    ossConfProp.getMinioUrl(),
+                    ossConfProp.getUserProfileBucket(),
+                    user.getHead());
+            String headThumbnailUrl = String.format("%s/%s/thumbnail_%s",
+                    ossConfProp.getMinioUrl(),
+                    ossConfProp.getUserProfileBucket(),
+                    user.getHead());
             user.setHeadUrl(headUrl);
             user.setHeadThumbnailUrl(headThumbnailUrl);
         }
 
         // 返回完整的语音介绍的链接
-        if (!user.getVoice().isEmpty()) {
-            String voiceUrl = String.format("%s/%s", ossConfProp.getMinioUrl(), user.getVoice());
+        if (user.getVoice() != null && !user.getVoice().isEmpty()) {
+            String voiceUrl = String.format("%s/%s/%s",
+                    ossConfProp.getMinioUrl(),
+                    ossConfProp.getUserProfileBucket(),
+                    user.getVoice());
             user.setVoiceUrl(voiceUrl);
         }
 
         // 返回完整的认证图片链接和缩略图的链接
-//        if (!user.getSelfie().isEmpty()) {
+//        if (user.getSelfie() != null && !user.getSelfie().isEmpty()) {
 //            String selfieUrl = String.format("%s/%s", ossConfProp.getMinioUrl(), user.getSelfie());
 //            String selfieThumbnailUrl = String.format("%s/thumbnail_%s", ossConfProp.getMinioUrl(), user.getSelfie());
 //            user.setSelfieUrl(selfieUrl);

@@ -28,6 +28,7 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
         http.csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/user/**").permitAll()
+                .antMatchers("/cms/**").permitAll()
 //                swagger
                 .antMatchers("/swagger-ui.html").permitAll()
                 .antMatchers("/webjars/**").permitAll()

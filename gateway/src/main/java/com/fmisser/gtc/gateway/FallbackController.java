@@ -17,7 +17,7 @@ public class FallbackController {
         Map<String,Object> result = new HashMap<>();
         result.put("data", null);
         result.put("code", 500);
-        result.put("message", "get request fallback");
+        result.put("message", "服务暂不可用，稍后再试");
         return result;
     }
 }

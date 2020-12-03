@@ -16,12 +16,12 @@ import java.util.Date;
  * 记录连线信息，比如语音聊天，视频聊天
  */
 
-@Entity
-@Table(name = "t_connection")
-@Data
-@EntityListeners(AuditingEntityListener.class)
-@DynamicInsert
-@DynamicUpdate
+//@Entity
+//@Table(name = "t_connection")
+//@Data
+//@EntityListeners(AuditingEntityListener.class)
+//@DynamicInsert
+//@DynamicUpdate
 public class Connection {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

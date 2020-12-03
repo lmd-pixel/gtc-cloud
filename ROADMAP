@@ -13,6 +13,8 @@ spring cloud gateway 集成限流以及失败重试
 
 Mysql 数据库关键数据加密
 
+Mysql 加锁 https://zhuanlan.zhihu.com/p/144471126
+
 minio 配合ngxin 只允许访问某些类型的文件（.jpg .png .mp4等），不允许访问目录，minio允许访问后，防止别人抓取所有资源
 
 所有容器以分布式、集群方式部署
@@ -37,6 +39,10 @@ newsql: tidb
 jpa 二级缓存 https://developer.aliyun.com/article/754510
 
 jpa 乐观锁重试机制
+
+jpa 防sql注入
+
+微服务统一配置
 
 ################## 业务逻辑相关 ##################
 

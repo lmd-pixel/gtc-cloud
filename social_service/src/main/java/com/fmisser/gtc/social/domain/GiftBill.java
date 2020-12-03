@@ -31,7 +31,7 @@ public class GiftBill {
     private Long id;
 
     // 流水号，保留
-    @Column
+    @Column(nullable = false, unique = true)
     private String serialNumber;
 
     @Column(nullable = false)
@@ -46,7 +46,7 @@ public class GiftBill {
 
     // 礼物id
     @Column(nullable = false)
-    private int giftId;
+    private Long giftId;
 
     // 礼物折扣，可通过增加不同价格的同样礼物实现
 //    private BigDecimal giftDiscount;

@@ -3,11 +3,14 @@ package com.fmisser.gtc.base.response;
 import com.fmisser.gtc.base.exception.ApiErrorEnum;
 import com.fmisser.gtc.base.exception.ApiException;
 
+import java.util.Map;
+
 public class ApiResp<T> {
     private boolean success;
     private long code;
     private String message;
     private T data;
+    private Map<String, Object> extra;
 
     private ApiResp() {
 
@@ -29,6 +32,10 @@ public class ApiResp<T> {
         return data;
     }
 
+    public Map<String, Object> getExtra() {
+        return extra;
+    }
+
     public static <T> ApiResp<T> succeed(T data, String message) {
         ApiResp<T> resp = new ApiResp<T>();
         resp.success = true;
@@ -43,6 +50,15 @@ public class ApiResp<T> {
         resp.success = true;
         resp.code = ApiErrorEnum.NO_ERROR.getCode();
         resp.data = data;
+        return resp;
+    }
+
+    public static <T> ApiResp<T> succeed(T data, Map<String, Object> extra) {
+        ApiResp<T> resp = new ApiResp<T>();
+        resp.success = true;
+        resp.code = ApiErrorEnum.NO_ERROR.getCode();
+        resp.data = data;
+        resp.extra = extra;
         return resp;
     }
 

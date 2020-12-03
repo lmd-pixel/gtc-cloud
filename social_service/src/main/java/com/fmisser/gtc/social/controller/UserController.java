@@ -1,26 +1,26 @@
 package com.fmisser.gtc.social.controller;
 
+import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import javax.ws.rs.DELETE;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-@Api("用户相关接口")
+@Api(description = "用户API")
 @RestController
 @RequestMapping("/user")
 @Validated
@@ -33,19 +33,15 @@ public class UserController {
     }
 
     @ApiOperation(value = "创建用户")
-    @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/create")
     ApiResp<User> create(@RequestParam("phone") String phone,
-                         @RequestParam("gender") int gender) {
-
+                         @RequestParam("gender") @Range(min = 0, max = 1) int gender) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         if (!username.equals(phone)) {
             // return error
-        }
-
-        if (gender != 0 && gender != 1) {
-            // return error
+            throw new ApiException(-1, "非法操作，认证用户无法创建其他用户资料！");
         }
 
         return ApiResp.succeed(userService.create(phone, gender));
@@ -72,5 +68,27 @@ public class UserController {
                 intro, labels, callPrice, videoPrice, request.getFileMap());
 
         return ApiResp.succeed(user);
+    }
+
+    @ApiOperation(value = "获取用户信息")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @GetMapping(value = "/profile")
+    ApiResp<User> getProfile() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+        User user = userService.profile(userDo);
+        return ApiResp.succeed(user);
+    }
+
+    @ApiOperation(value = "退出账号")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @PostMapping(value = "/logout")
+    ApiResp<Integer> logout() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+        int ret = userService.logout(userDo);
+        return ApiResp.succeed(ret);
     }
 }

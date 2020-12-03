@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import java.util.List;
 
-@Api("动态相关接口")
+@Api(description = "动态API")
 @RestController
 @RequestMapping("/dynamic")
 @Validated

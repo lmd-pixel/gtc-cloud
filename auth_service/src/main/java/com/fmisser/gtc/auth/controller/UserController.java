@@ -8,8 +8,11 @@ import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.base.response.ApiRespHelper;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +20,7 @@ import javax.annotation.Resource;
 import javax.validation.constraints.Size;
 import java.security.Principal;
 
-@Api("用户中心")
+@Api(description = "平台账户中心")
 @RestController
 @RequestMapping("/user")
 @Validated
@@ -37,27 +40,16 @@ public class UserController {
         this.apiRespHelper = apiRespHelper;
     }
 
-    @RequestMapping(value = "/current", method = RequestMethod.GET)
-    public Principal principal(Principal principal) {
-        return principal;
-    }
-
-    @RequestMapping(value = "/create", method = RequestMethod.POST)
-    public User create(@RequestParam("username") String username,
-                       @RequestParam("password") @Size(min = 6, max = 16) String pwd) {
-        return userService.create(username, pwd);
-    }
-
     @PostMapping("/auto-login")
     public ApiResp<TokenDto> autoLogin(@RequestParam("phone") @Size(min = 11, max = 11, message = "请输入有效的手机号") String phone,
                                        @RequestParam("token") String token) throws ApiException {
-        return userService.autoLogin(phone, token);
+        return ApiResp.succeed(userService.autoLogin(phone, token));
     }
 
     @PostMapping("/sms-login")
     public ApiResp<TokenDto> phoneCodeLogin(@RequestParam("phone") @Size(min = 11, max = 11, message = "请输入有效的手机号") String phone,
                                        @RequestParam("code") String code) throws ApiException {
-        return userService.smsLogin(phone, code);
+        return ApiResp.succeed(userService.smsLogin(phone, code));
     }
 
     @PostMapping("/phone-code")
@@ -70,4 +62,6 @@ public class UserController {
             return apiRespHelper.error();
         }
     }
+
+
 }

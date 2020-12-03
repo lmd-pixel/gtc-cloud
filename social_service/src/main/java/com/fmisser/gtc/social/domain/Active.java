@@ -20,7 +20,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "t_active",
-        indexes = @Index(columnList = "activeTime"))
+        indexes = {@Index(columnList = "activeTime"),@Index(columnList = "userId")})
 @Data
 @EntityListeners({AuditingEntityListener.class})
 @DynamicInsert
@@ -33,7 +33,7 @@ public class Active {
     @Column(nullable = false)
     private Long userId;
 
-    @Column
+    @Column(nullable = false)
     private int identity;
 
     /**

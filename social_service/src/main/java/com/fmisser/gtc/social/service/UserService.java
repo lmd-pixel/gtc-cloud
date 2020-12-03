@@ -9,6 +9,7 @@ import java.util.Map;
 public interface UserService {
     User create(String phone, int gender) throws ApiException;
     User getUserByUsername(String username) throws ApiException;
+    User getUserByDigitId(String digitId) throws ApiException;
     User profile(User user) throws ApiException;
     User updateProfile(User user,
                        String nick, String birth, String city,

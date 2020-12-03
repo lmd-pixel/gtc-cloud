@@ -10,6 +10,7 @@ import javax.persistence.*;
 import java.util.Date;
 
 /**
+ * 极光短信验证码
  * 请求验证码的信息
  */
 @Entity

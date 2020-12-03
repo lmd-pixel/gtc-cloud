@@ -31,13 +31,13 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
     @Override
     public Optional<IdentityAudit> getLastProfileAudit(User user) throws ApiException {
         return identityAuditRepository
-                .findByUserIdAndTypeOrderByCreateTimeDesc(user.getId(), 1);
+                .findTopByUserIdAndTypeOrderByCreateTimeDesc(user.getId(), 1);
     }
 
     @Override
     public Optional<IdentityAudit> getLastPhotosAudit(User user) throws ApiException {
         return identityAuditRepository
-                .findByUserIdAndTypeOrderByCreateTimeDesc(user.getId(), 2);
+                .findTopByUserIdAndTypeOrderByCreateTimeDesc(user.getId(), 2);
     }
 
     @Override
@@ -78,6 +78,11 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
         return 1;
     }
 
+    /**
+     * 审核身份认证
+     * @deprecated 已转移到 {@link com.fmisser.gtc.social.service.UserManagerService}
+     */
+    @Deprecated
     @Transactional
 //    @ReTry(value = {PessimisticLockingFailureException.class})
 //    @Retryable(value = {PessimisticLockingFailureException.class})
@@ -107,11 +112,11 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
 
         identityAuditRepository.save(identityAudit);
 
-        // 判断是否不通的审核都已满足,如果都通过，则完成了认证
+        // 判断是否不同的审核都已满足,如果都通过，则完成了认证
         if (pass == 1) {
             int type = identityAudit.getType() == 1 ? 2 : 1;
             Optional<IdentityAudit> identityAuditAnother = identityAuditRepository
-                    .findByUserIdAndTypeOrderByCreateTimeDesc(identityAudit.getUserId(), type);
+                    .findTopByUserIdAndTypeOrderByCreateTimeDesc(identityAudit.getUserId(), type);
 
             if (identityAuditAnother.isPresent() &&
                     identityAuditAnother.get().getStatus() == 30) {
