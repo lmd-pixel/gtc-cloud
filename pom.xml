@@ -7,6 +7,7 @@
     <groupId>com.fmisser.gtc</groupId>
     <artifactId>gtc_cloud</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -33,12 +34,14 @@
     </dependencyManagement>
 
     <modules>
-        <module>registry</module>
+<!--        <module>registry</module>-->
         <module>auth_service</module>
         <module>social_service</module>
-        <module>notice_service</module>
         <module>gateway</module>
-        <module>im_service</module>
+        <module>monitor</module>
+
+<!--        <module>notice_service</module>-->
+<!--        <module>im_service</module>-->
         <module>base</module>
     </modules>
 

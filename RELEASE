@@ -5,4 +5,29 @@
     添加角色
     添加管理员账号
 
-2.
+2. Docker 配置
+    开启docker 远程连接
+
+    systemctl stop docker
+
+    vi /lib/systemd/system/docker.service
+    ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
+
+    systemctl daemon-reload
+    systemctl restart docker
+
+3. Docker Maven 插件
+    mvn docker:build 报错 No plugin found for prefix 'docker' in the current project and in the plugin groups
+
+    maven setting.xml 增加
+    <settings>
+        <pluginGroups>
+            <pluginGroup>com.spotify</pluginGroup>
+        </pluginGroups>
+    </settings>
+
+4. 打包成docker
+    设置docker地址  export DOCKER_HOST=tcp://42.192.212.67:2375
+    打包  mvn docker:build
+
+5. 统一打包  mvn clean package -Dmaven.test.skip=true

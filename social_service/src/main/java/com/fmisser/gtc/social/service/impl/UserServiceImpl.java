@@ -14,14 +14,12 @@ import com.fmisser.gtc.social.service.IdentityAuditService;
 import com.fmisser.gtc.social.service.UserService;
 import com.fmisser.gtc.social.utils.MinioUtils;
 import io.minio.ObjectWriteResponse;
-import jdk.internal.util.xml.impl.Input;
 import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
