@@ -25,7 +25,7 @@ public interface WithdrawAuditRepository extends JpaRepository<WithdrawAudit, Lo
     @Query(value = "SELECT twa.order_number AS orderNumber, twa.draw_curr AS drawCurr, " +
             "twa.draw_max AS drawMax, twa.draw_actual As drawActual, " +
             "twa.fee_ratio AS feeRatio, twa.fee AS fee, " +
-            "twa.coin_before AS coreBefore, twa.coin_after AS coreAfter, " +
+            "twa.coin_before AS coinBefore, twa.coin_after AS coinAfter, " +
             "twa.status, twa.remark AS remark, twa.create_time AS createTime, " +
             "tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone " +
             "FROM t_withdraw_audit twa " +
@@ -41,7 +41,7 @@ public interface WithdrawAuditRepository extends JpaRepository<WithdrawAudit, Lo
     @Query(value = "SELECT twa.order_number AS orderNumber, twa.draw_curr AS drawCurr, " +
             "twa.draw_max AS drawMax, twa.draw_actual As drawActual, " +
             "twa.fee_ratio AS feeRatio, twa.fee AS fee, " +
-            "twa.coin_before AS coreBefore, twa.coin_after AS coreAfter, " +
+            "twa.coin_before AS coinBefore, twa.coin_after AS coinAfter, " +
             "twa.status, twa.remark AS remark, twa.create_time AS createTime, " +
             "tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone " +
             "FROM t_withdraw_audit twa " +
