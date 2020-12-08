@@ -473,10 +473,12 @@ public class UserServiceImpl implements UserService {
         if (user.getPhotos() != null) {
             List<String> photosName = _changePhotosToList(user.getPhotos());
             List<String> photosUrl = photosName.stream()
-                    .map( name -> String.format("%s/%s", ossConfProp.getMinioUrl(), name))
+                    .map( name -> String.format("%s/%s/%s",
+                            ossConfProp.getMinioUrl(), ossConfProp.getUserProfileBucket(), name))
                     .collect(Collectors.toList());
             List<String> photosThumbnailUrl = photosName.stream()
-                    .map( name -> String.format("%s/thumbnail_%s", ossConfProp.getMinioUrl(), name))
+                    .map( name -> String.format("%s/%s/thumbnail_%s",
+                            ossConfProp.getMinioUrl(), ossConfProp.getUserProfileBucket(), name))
                     .collect(Collectors.toList());
             user.setPhotoUrlList(photosUrl);
             user.setPhotoThumbnailUrlList(photosThumbnailUrl);
@@ -515,7 +517,10 @@ public class UserServiceImpl implements UserService {
 
         // 返回完整的视频链接
         if (user.getVideo() != null && !user.getVideo().isEmpty()) {
-            String videoUrl = String.format("%s/%s",ossConfProp.getMinioUrl(), user.getVideo());
+            String videoUrl = String.format("%s/%s/%s",
+                    ossConfProp.getMinioUrl(),
+                    ossConfProp.getUserProfileBucket(),
+                    user.getVideo());
             user.setVideoUrl(videoUrl);
         }
 
