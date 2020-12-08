@@ -4,6 +4,7 @@ import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.User;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 public interface UserService {
@@ -17,5 +18,8 @@ public interface UserService {
                        Map<String, MultipartFile> multipartFileMap) throws ApiException;
     User updatePhotos(User user, Map<String, MultipartFile> multipartFileMap) throws ApiException;
     User updateVerifyImage(User user, Map<String, MultipartFile> multipartFileMap) throws ApiException;
+    User updateVideo(User user, Map<String, MultipartFile> multipartFileMap) throws ApiException;
     int logout(User user) throws ApiException;
+
+    List<User> getAnchorList(int type, int pageIndex, int pageSize) throws ApiException;
 }

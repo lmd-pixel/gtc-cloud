@@ -28,6 +28,26 @@
 
 4. 打包成docker
     设置docker地址  export DOCKER_HOST=tcp://42.192.212.67:2375
-    打包  mvn docker:build
+    打包  mvn docker:build (如果设置了防火墙，先打开该端口)
 
 5. 统一打包  mvn clean package -Dmaven.test.skip=true
+
+6. 打开centos防火墙 防止 docker 打开2375端口后被植入其他容器
+
+   systemctl start firewalld (打开防火墙后，docker需要重启，否则内部网络存在联通问题)
+
+   打开http和https端口
+   firewall-cmd --zone=public --add-port=80/tcp --permanent
+   firewall-cmd --zone=public --add-port=443/tcp --permanent
+
+   打开应用端口
+   firewall-cmd --zone=public --add-port=8001-8005/tcp --permanent
+   firewall-cmd --zone=public --add-port=8088/tcp --permanent
+   firewall-cmd --zone=public --add-port=8089/tcp --permanent
+   firewall-cmd --reload
+
+   2375端口只有自己使用的时候再去打开，不用的时候关闭
+
+   firewall-cmd --zone=public --add-port=2375/tcp --permanent
+   firewall-cmd --zone=public --remove-port=2375/tcp --permanent
+   firewall-cmd --reload

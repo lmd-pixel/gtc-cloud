@@ -93,6 +93,11 @@ public class User {
     @Column
     private String selfie;
 
+    @JsonIgnore
+    // 视频资料
+    @Column
+    private String video;
+
     // 语音呼叫价格
     @Column
     private BigDecimal callPrice;
@@ -173,4 +178,7 @@ public class User {
 
     @Transient
     private String voiceUrl;
+
+    @Transient
+    private String videoUrl;
 }

@@ -10,10 +10,13 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.Size;
+import java.security.Principal;
 
 @Api(description = "管理账户中心")
 @RestController
@@ -39,6 +42,13 @@ public class CmsController {
     public ApiResp<TokenDto> login(@RequestParam("username")  String username,
                                    @RequestParam("password") String password) throws ApiException {
         return ApiResp.succeed(userService.login(username, password));
+    }
+
+    @ApiOperation(value = "获取当前用户信息以及权限")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @RequestMapping(value = "/current-user", method = RequestMethod.GET)
+    public ApiResp<Principal> getCurrentUser(Principal principal) {
+        return ApiResp.succeed(principal);
     }
 
     @ApiOperation(value = "创建管理员角色账户(需要超管权限)")

@@ -223,22 +223,31 @@ public class UserManagerServiceImpl implements UserManagerService {
 
         identityAuditRepository.save(identityAudit);
 
-        // 判断是否不同的审核都已满足,如果都通过，则完成了认证
-        // 如果已认证则更新用户认证
         if (operate == 1) {
             User user = userRepository.findById(identityAudit.getUserId()).get();
 
             if (user.getIdentity() == 1) {
                 // TODO: 2020/11/30  已完成身份认证, 更新此次认证的数据
             } else {
-                // 身份认证判断
-                int type = identityAudit.getType() == 1 ? 2 : 1;
-                Optional<IdentityAudit> identityAuditAnother = identityAuditRepository
-                        .findTopByUserIdAndTypeOrderByCreateTimeDesc(identityAudit.getUserId(), type);
+                // 判断是否不同的审核都已满足,如果都通过，则完成了认证
+                boolean allPass = true;
+                for (int type = 0; type < 3; type++) {
+                    if (type == identityAudit.getType()) {
+                        continue;
+                    }
 
-                if (identityAuditAnother.isPresent() &&
-                        identityAuditAnother.get().getStatus() == 30) {
-                    // 两个都通过认证，则认为身份认证通过, 更新用户信息里的身份认证字段
+                    Optional<IdentityAudit> identityAuditOther = identityAuditRepository
+                            .findTopByUserIdAndTypeOrderByCreateTimeDesc(identityAudit.getUserId(), type);
+
+                    if (identityAuditOther.isPresent() &&
+                            identityAuditOther.get().getStatus() != 30) {
+                        allPass = false;
+                    }
+                }
+
+                if (allPass) {
+                    // 都通过认证，则认为身份认证通过, 更新用户信息里的身份认证字段
+                    // TODO: 2020/12/5 主播认证通过
                     user.setIdentity(1);
                     userRepository.save(user);
                 }

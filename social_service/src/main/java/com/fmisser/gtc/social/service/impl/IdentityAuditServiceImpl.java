@@ -12,6 +12,7 @@ import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 
@@ -41,9 +42,16 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
     }
 
     @Override
+    public Optional<IdentityAudit> getLastVideoAudit(User user) throws ApiException {
+        return identityAuditRepository
+                .findTopByUserIdAndTypeOrderByCreateTimeDesc(user.getId(), 3);
+    }
+
+    @Override
     public int requestIdentityAudit(User user) throws ApiException {
         if (!_checkProfileCompleted(user) ||
-                !_checkPhotosCompleted(user)) {
+                !_checkPhotosCompleted(user) ||
+                !_checkVideoCompleted(user)) {
             throw new ApiException(-1, "资料尚未完善，请先完善资料再提交审核");
         }
 
@@ -51,6 +59,7 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
             throw new ApiException(-1, "已完成了所有认证，无需再次认证");
         }
 
+        // 资料审核
         Optional<IdentityAudit> optionalIdentityAudit = getLastProfileAudit(user);
         if (optionalIdentityAudit.isPresent() &&
                 optionalIdentityAudit.get().getStatus() == 10) {
@@ -63,6 +72,7 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
             identityAuditRepository.save(audit);
         }
 
+        // 照片审核
         optionalIdentityAudit = getLastPhotosAudit(user);
         if (optionalIdentityAudit.isPresent() &&
                 optionalIdentityAudit.get().getStatus() == 10) {
@@ -71,6 +81,19 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
             IdentityAudit audit = new IdentityAudit();
             audit.setUserId(user.getId());
             audit.setType(2);
+            audit.setStatus(10);
+            identityAuditRepository.save(audit);
+        }
+
+        // 视频审核
+        optionalIdentityAudit = getLastVideoAudit(user);
+        if (optionalIdentityAudit.isPresent() &&
+                optionalIdentityAudit.get().getStatus() == 10) {
+            throw new ApiException(-1, "用户视频仍在审核中，无法再次提交");
+        } else {
+            IdentityAudit audit = new IdentityAudit();
+            audit.setUserId(user.getId());
+            audit.setType(3);
             audit.setStatus(10);
             identityAuditRepository.save(audit);
         }
@@ -114,13 +137,35 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
 
         // 判断是否不同的审核都已满足,如果都通过，则完成了认证
         if (pass == 1) {
-            int type = identityAudit.getType() == 1 ? 2 : 1;
-            Optional<IdentityAudit> identityAuditAnother = identityAuditRepository
+//            int type = identityAudit.getType() == 1 ? 2 : 1;
+//            Optional<IdentityAudit> identityAuditAnother = identityAuditRepository
+//                    .findTopByUserIdAndTypeOrderByCreateTimeDesc(identityAudit.getUserId(), type);
+//
+//            if (identityAuditAnother.isPresent() &&
+//                    identityAuditAnother.get().getStatus() == 30) {
+//                // 两个都通过认证，则认为身份认证通过, 更新用户信息里的身份认证字段
+//                Optional<User> user = userRepository.findById(identityAudit.getUserId());
+//                user.get().setIdentity(1);
+//                userRepository.save(user.get());
+//            }
+
+            boolean allPass = true;
+            for (int type = 0; type < 3; type++) {
+                if (type == identityAudit.getType()) {
+                    continue;
+                }
+
+                Optional<IdentityAudit> identityAuditOther = identityAuditRepository
                     .findTopByUserIdAndTypeOrderByCreateTimeDesc(identityAudit.getUserId(), type);
 
-            if (identityAuditAnother.isPresent() &&
-                    identityAuditAnother.get().getStatus() == 30) {
-                // 两个都通过认证，则认为身份认证通过, 更新用户信息里的身份认证字段
+                if (identityAuditOther.isPresent() &&
+                        identityAuditOther.get().getStatus() != 30) {
+                    allPass = false;
+                }
+            }
+
+            if (allPass) {
+                // 都通过认证，则认为身份认证通过, 更新用户信息里的身份认证字段
                 Optional<User> user = userRepository.findById(identityAudit.getUserId());
                 user.get().setIdentity(1);
                 userRepository.save(user.get());
@@ -134,12 +179,12 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
      * 判断资料是否已全部完善
      */
     private boolean _checkProfileCompleted(User user) {
-        return !user.getHead().isEmpty() &&
-                !user.getVoice().isEmpty() &&
-                !user.getLabels().isEmpty() &&
-                !user.getProfession().isEmpty() &&
-                !user.getIntro().isEmpty() &&
-                !user.getCity().isEmpty() &&
+        return !StringUtils.isEmpty(user.getHead()) &&
+                !StringUtils.isEmpty(user.getVoice()) &&
+                !StringUtils.isEmpty(user.getLabels()) &&
+                !StringUtils.isEmpty(user.getProfession()) &&
+                !StringUtils.isEmpty(user.getIntro()) &&
+                !StringUtils.isEmpty(user.getCity()) &&
                 user.getVideoPrice() != null &&
                 user.getCallPrice() != null;
     }
@@ -148,6 +193,10 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
      * 检查照片是否已完善
      */
     private boolean _checkPhotosCompleted(User user) {
-        return !user.getPhotos().isEmpty();
+        return !StringUtils.isEmpty(user.getPhotos());
+    }
+
+    private boolean _checkVideoCompleted(User user) {
+        return !StringUtils.isEmpty(user.getVideo());
     }
 }

@@ -70,6 +70,34 @@ public class UserController {
         return ApiResp.succeed(user);
     }
 
+    @ApiOperation(value = "更新用户照片")
+    @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
+    @PostMapping(value = "/update-photos")
+    ApiResp<User> uploadPhotos(MultipartHttpServletRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+        //
+        // TODO: 2020/11/10 check params
+        User user = userService.updatePhotos(userDo, request.getFileMap());
+
+        return ApiResp.succeed(user);
+    }
+
+    @ApiOperation(value = "更新用户视频")
+    @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
+    @PostMapping(value = "/update-video")
+    ApiResp<User> uploadVideo(MultipartHttpServletRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+        //
+        // TODO: 2020/11/10 check params
+        User user = userService.updateVideo(userDo, request.getFileMap());
+
+        return ApiResp.succeed(user);
+    }
+
     @ApiOperation(value = "获取用户信息")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @GetMapping(value = "/profile")

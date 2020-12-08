@@ -17,6 +17,9 @@ public interface IdentityAuditService {
     // 获取最近的照片资料的审核，可能为空，表示未进行过审核
     Optional<IdentityAudit> getLastPhotosAudit(User user) throws ApiException;
 
+    // 获取最近的视频资料的审核，可能为空，表示未进行过审核
+    Optional<IdentityAudit> getLastVideoAudit(User user) throws ApiException;
+
     // 请求身份认证审核
     int requestIdentityAudit(User user) throws ApiException;
 

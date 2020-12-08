@@ -16,8 +16,11 @@ import com.fmisser.gtc.social.utils.MinioUtils;
 import io.minio.ObjectWriteResponse;
 import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
@@ -218,26 +221,7 @@ public class UserServiceImpl implements UserService {
 
                 user.setHead(response.object());
             }
-//            else if (name.equals("video")) {
-//                InputStream inputStream = file.getInputStream();
-//                String filename = file.getOriginalFilename();
-//                String suffixName = filename.substring(filename.lastIndexOf("."));
-//                // TODO: 2020/11/9 判断文件类型是否满足需要
-//                // TODO: 2020/11/9 压缩并分别存储压缩后和原始文件
-//                String objectName = String.format("media/video/%s/min_video_%s%s",
-//                        userDo.getUsername(), String.valueOf(new Date().getTime()), suffixName);
-//                ObjectWriteResponse response = minioUtils.put("user-profiles", objectName,
-//                        inputStream, file.getSize(), "video/mp4");
-//                System.out.println(response);
-//            }
         }
-
-        // 判断资料是否完全录入
-//        if (_checkProfileCompleted(userDo)) {
-//            userDo.getVerifyStatus().setProfileStatus(10);
-//        } else {
-//            userDo.getVerifyStatus().setProfileStatus(0);
-//        }
 
         user = userRepository.save(user);
 
@@ -248,7 +232,12 @@ public class UserServiceImpl implements UserService {
     @SneakyThrows
     public User updatePhotos(User user,
                              Map<String, MultipartFile> multipartFileMap) throws ApiException {
+        if (user.getIdentity() == 1) {
+            // TODO: 2020/11/30 如果是主播身份，不能随意更改资料，需要审核
+        }
+
         Optional<IdentityAudit> identityAudit = identityAuditService.getLastPhotosAudit(user);
+
         if (identityAudit.isPresent() &&
                 identityAudit.get().getStatus() == 10) {
             // 资料审核中不能修改
@@ -285,15 +274,14 @@ public class UserServiceImpl implements UserService {
                     file.getSize(),
                     "image/png");
 
-            photoList.add(response.object());
+            if (!StringUtils.isEmpty(response.object())) {
+                photoList.add(response.object());
+            }
         }
 
-        if (user.getPhotos() == null || user.getPhotos().isEmpty()) {
-            throw new ApiException(-1, "上传信息不正确");
+        if (photoList.size() == 0 ) {
+            throw new ApiException(-1, "上传信息出错,请稍后重试");
         }
-
-        // 更新照片更新状态
-//        userDo.getVerifyStatus().setPhotosStatus(10);   // 照片资料完善
 
         user.setPhotos(photoList.toString());
         user = userRepository.save(user);
@@ -305,6 +293,11 @@ public class UserServiceImpl implements UserService {
     @SneakyThrows
     public User updateVerifyImage(User user,
                                   Map<String, MultipartFile> multipartFileMap) throws ApiException {
+
+        if (user.getIdentity() == 1) {
+            // TODO: 2020/11/30 如果是主播身份，不能随意更改资料，需要审核
+        }
+
         for (MultipartFile file: multipartFileMap.values()) {
             if (file.isEmpty()) {
                 continue;
@@ -343,8 +336,54 @@ public class UserServiceImpl implements UserService {
             throw new ApiException(-1, "上传信息不正确");
         }
 
-        // 更新照片更新状态
-//        userDo.getVerifyStatus().setSelfieStatus(10);   // 照片资料完善
+        user = userRepository.save(user);
+
+        return _prepareResponse(user);
+    }
+
+    @SneakyThrows
+    @Override
+    public User updateVideo(User user, Map<String, MultipartFile> multipartFileMap) throws ApiException {
+
+        if (user.getIdentity() == 1) {
+            // TODO: 2020/11/30 如果是主播身份，不能随意更改资料，需要审核
+        }
+
+        for (MultipartFile file: multipartFileMap.values()) {
+            if (file.isEmpty()) {
+                continue;
+            }
+
+            String randomUUID = UUID.randomUUID().toString();
+
+            InputStream inputStream = file.getInputStream();
+            String filename = file.getOriginalFilename();
+            String suffixName = filename.substring(filename.lastIndexOf("."));
+
+            if (!isVideoSupported(suffixName)) {
+                throw new ApiException(-1, "视频格式不支持!");
+            }
+
+            // 视频暂不提供压缩
+            String objectName = String.format("%s%s_%s_%s%s",
+                    ossConfProp.getUserProfileVideoPrefix(),
+                    CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
+                    new Date().getTime(),
+                    randomUUID,
+                    suffixName);
+
+            ObjectWriteResponse response = minioUtils.put(ossConfProp.getUserProfileBucket(), objectName,
+                    inputStream, file.getSize(), "video/mp4");
+
+            user.setVideo(response.object());
+
+            // 只处理第一个能处理的视频
+            break;
+        }
+
+        if (user.getVideo() == null || user.getVideo().isEmpty()) {
+            throw new ApiException(-1, "上传信息不正确");
+        }
 
         user = userRepository.save(user);
 
@@ -356,6 +395,16 @@ public class UserServiceImpl implements UserService {
         // TODO: 2020/11/21 考虑登出im相关服务
         // TODO: 2020/11/26 记录登出
         return 1;
+    }
+
+    @Override
+    public List<User> getAnchorList(int type, int pageIndex, int pageSize) throws ApiException {
+        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+        List<User> userList =
+                userRepository.findByIdentityOrderByCreateTimeDesc(1, pageable).getContent();
+        return userList.stream()
+                .map(this::_prepareResponse)
+                .collect(Collectors.toList());
     }
 
     // minio 存储原始图片和缩略图
@@ -463,6 +512,12 @@ public class UserServiceImpl implements UserService {
 //            user.setSelfieUrl(selfieUrl);
 //            user.setSelfieThumbnailUrl(selfieThumbnailUrl);
 //        }
+
+        // 返回完整的视频链接
+        if (user.getVideo() != null && !user.getVideo().isEmpty()) {
+            String videoUrl = String.format("%s/%s",ossConfProp.getMinioUrl(), user.getVideo());
+            user.setVideoUrl(videoUrl);
+        }
 
         return user;
     }

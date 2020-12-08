@@ -7,7 +7,6 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 @Data
-@Component
 @Configuration
 @PropertySource(value = "classpath:config/oss-conf-${base.profiles.active}.properties", encoding = "UTF-8")
 public class OssConfProp {
@@ -38,6 +37,9 @@ public class OssConfProp {
 
     @Value("${user_profile.verify_image.prefix}")
     private String userProfileVerifyImagePrefix;
+
+    @Value("${user_profile.video.prefix}")
+    private String userProfileVideoPrefix;
 
     @Value("${oss.minio.bucket.user_dynamic}")
     private String userDynamicBucket;

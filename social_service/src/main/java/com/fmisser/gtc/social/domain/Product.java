@@ -15,30 +15,47 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
 
+/**
+ * 用户购买的商品
+ */
+
 @Entity
-@Table(name = "t_gift")
+@Table(name = "t_product")
 @Data
 @EntityListeners(AuditingEntityListener.class)
 @DynamicInsert
 @DynamicUpdate
-public class Gift {
+public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 唯一标识一个产品的名称
     @Column(nullable = false, unique = true)
     private String name;
 
     @Column
     private String message;
 
-    // 礼物的级别，用来排序等
+    // 商品级别，用来排序等
     @Column(nullable = false, columnDefinition = "int default 0")
     private int level = 0;
 
-    // 礼物的价格（聊币）
+    // 充值的币种 0: 人民币
+    @Column(nullable = false)
+    private int type;
+
+    // 充值价格
     @Column(nullable = false)
     private BigDecimal price;
+
+    // 充值获得的聊币
+    @Column(nullable = false)
+    private BigDecimal coin;
+
+    // 充值的平台 0：苹果支付
+    @Column(nullable = false)
+    private int plt;
 
     // 有效期开始
     @Column

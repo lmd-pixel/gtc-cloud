@@ -51,4 +51,21 @@ SELECT SQL_NO_CACHE identity FROM t_active GROUP BY identity;
 SELECT SQL_NO_CACHE distinct (user_id) FROM t_active;
 SELECT SQL_NO_CACHE user_id FROM t_active GROUP BY user_id;
 
+-- 事务RR级别下，快照读和当前读的问题
+-- T1：如果使用 select .. for update 则使用当前读，并和update、delete一样会锁定相关行，
+-- 慎用 for update, 尤其 where 的条件不是主键和唯一索引的时候，使用不当会导致死锁
+begin;
+select money from rr_test where name = 'iomd' for update ;
+update rr_test set money = 200 where name = 'iomd';
+select * from rr_test;
+commit ;
+
+-- T2：
+begin;
+update rr_test set money = 1000 where name = 'iomd';
+commit ;
+
+-- T3
+select * from rr_test;
+
 

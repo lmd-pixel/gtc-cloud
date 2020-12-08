@@ -57,7 +57,7 @@ public class IdentityAudit {
     private int age;
 
     /**
-     * 审核类型 1： 资料审核  2： 相册审核
+     * 审核类型 1： 资料审核  2： 相册审核  3：视频审核
      */
     @Column(nullable = false)
     private int type;

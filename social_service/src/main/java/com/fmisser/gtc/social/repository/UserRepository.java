@@ -19,6 +19,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByCreateTimeBetween(Date start, Date end);
     Optional<User> findByUsername(String username);
     Optional<User> findByDigitId(String digitId);
+    Page<User> findByIdentityOrderByCreateTimeDesc(int identity, Pageable pageable);
+
+    // 获取主播列表
+    @Query(value = "SELECT * FROM t_user WHERE identity = 1 ORDER BY create_time DESC ",
+            nativeQuery = true)
+    Page<Long> getAnchorList(Pageable pageable);
 
     // 获取总注册人数，给定时间内的注册人数，认证用户总人数，给定时间内认证用户人数
     @Query(value = "SELECT COUNT(*) FROM t_user UNION ALL " +
