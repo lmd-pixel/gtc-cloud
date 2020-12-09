@@ -15,6 +15,7 @@ import java.util.Map;
  */
 
 public class AutoLoginTokenGranter extends AbstractTokenGranter {
+    // TODO: 2020/12/8 使用配置
     private static final String GRANT_TYPE = "auto_login";
 
     private final UserDetailServiceImpl userDetailsService;
@@ -46,6 +47,7 @@ public class AutoLoginTokenGranter extends AbstractTokenGranter {
 
     private UserDetails getUser(Map<String, String> params) {
         // 获取 phone 和 token 字段
+        // TODO: 2020/12/8 使用配置
         return userDetailsService.loadUserByPhoneAuto(params.get("phone"), params.get("token"));
     }
 }

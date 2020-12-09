@@ -1,42 +1,80 @@
 package com.fmisser.gtc.auth.service.impl;
 
-import com.fmisser.gtc.auth.feign.JPushVerifyService;
+import com.fmisser.gtc.auth.domain.PhoneTokenRequest;
+import com.fmisser.gtc.auth.feign.JPushVerifyFeign;
+import com.fmisser.gtc.auth.repository.PhoneTokenRequestRepository;
 import com.fmisser.gtc.auth.service.AutoLoginService;
 import com.fmisser.gtc.base.dto.jpush.LoginTokenVerifyDto;
+import com.fmisser.gtc.base.dto.jpush.RequestLoginTokenVerifyDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.JPushConfProp;
 import com.fmisser.gtc.base.utils.JPushUtils;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
+/**
+ * 极光一键认证登录
+ */
 @Service
 public class AutoLoginServiceImpl implements AutoLoginService {
 
     private final JPushConfProp jPushConfProp;
 
-    private final JPushVerifyService jPushVerifyService;
+    private final JPushVerifyFeign jPushVerifyFeign;
 
+    private final PhoneTokenRequestRepository phoneTokenRequestRepository;
 
     public AutoLoginServiceImpl(JPushConfProp jPushConfProp,
-                                JPushVerifyService jPushVerifyService) {
+                                JPushVerifyFeign jPushVerifyFeign,
+                                PhoneTokenRequestRepository phoneTokenRequestRepository) {
         this.jPushConfProp = jPushConfProp;
-        this.jPushVerifyService = jPushVerifyService;
+        this.jPushVerifyFeign = jPushVerifyFeign;
+        this.phoneTokenRequestRepository = phoneTokenRequestRepository;
     }
 
     @Override
+    @SneakyThrows
     public boolean checkPhoneToken(String phone, String token) throws ApiException {
-        String basicAuthString = JPushUtils.genAuthString(jPushConfProp.getAppKey(), jPushConfProp.getMasterSecret());
-        LoginTokenVerifyDto loginTokenVerifyDto = jPushVerifyService.loginTokenVerify(basicAuthString, token, phone);
+        String basicAuthString = JPushUtils
+                .genAuthString(jPushConfProp.getAppKey(), jPushConfProp.getMasterSecret());
+
+        // phone 作为exID 传递
+        RequestLoginTokenVerifyDto requestLoginTokenVerifyDto = new RequestLoginTokenVerifyDto(token, phone);
+
+        // 先保存请求信息
+        PhoneTokenRequest phoneTokenRequest = new PhoneTokenRequest();
+        phoneTokenRequest.setPhone(phone);
+        phoneTokenRequest.setToken(token);
+        phoneTokenRequest = phoneTokenRequestRepository.save(phoneTokenRequest);
+
+        LoginTokenVerifyDto loginTokenVerifyDto =
+                jPushVerifyFeign.loginTokenVerify(basicAuthString, requestLoginTokenVerifyDto);
+
         if (loginTokenVerifyDto == null) {
-            return false;
+            throw new ApiException(-1, "获取数据异常，验证失败!");
         }
 
+        // 继续记录到数据库
+        phoneTokenRequest.setRequestId(loginTokenVerifyDto.getId());
+        phoneTokenRequest.setExId(loginTokenVerifyDto.getExID());
+        phoneTokenRequest.setCode(loginTokenVerifyDto.getCode());
+        phoneTokenRequest.setContent(loginTokenVerifyDto.getContent());
+        phoneTokenRequest.setEncodePhone(loginTokenVerifyDto.getPhone());
+        phoneTokenRequestRepository.save(phoneTokenRequest);
+
         if (loginTokenVerifyDto.getCode() == 8000) {
-            // TODO: 2020/11/6 记录用户认证到数据库
+
+            // 认证 phone 是否相同
+            String encodePhone = loginTokenVerifyDto.getPhone();
+            String decodePhone = JPushUtils.rsaDecrypt(encodePhone, jPushConfProp.getRsaPri());
+            if (!decodePhone.equals(loginTokenVerifyDto.getExID())) {
+                // error
+                throw new ApiException(-1, "手机号验证失败!");
+            }
 
             return true;
         } else {
-            // TODO: 2020/11/6 记录错误信息
-            return false;
+            throw new ApiException(-1, "认证失败!");
         }
     }
 }

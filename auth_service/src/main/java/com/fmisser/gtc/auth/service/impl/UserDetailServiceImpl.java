@@ -2,7 +2,7 @@ package com.fmisser.gtc.auth.service.impl;
 
 import com.fmisser.gtc.auth.domain.Role;
 import com.fmisser.gtc.auth.domain.User;
-import com.fmisser.gtc.auth.feign.OAuthService;
+import com.fmisser.gtc.auth.feign.OAuthFeign;
 import com.fmisser.gtc.auth.repository.RoleRepository;
 import com.fmisser.gtc.auth.repository.UserRepository;
 import com.fmisser.gtc.auth.service.AutoLoginService;
@@ -10,23 +10,15 @@ import com.fmisser.gtc.auth.service.SmsService;
 import com.fmisser.gtc.auth.service.UserService;
 import com.fmisser.gtc.base.dto.auth.TokenDto;
 import com.fmisser.gtc.base.exception.ApiException;
-import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.base.utils.AuthUtils;
-import com.fmisser.gtc.base.utils.JPushUtils;
-import io.swagger.annotations.Api;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -46,20 +38,20 @@ public class UserDetailServiceImpl implements UserService {
 
     private final AutoLoginService autoLoginService;
 
-    private final OAuthService oAuthService;
+    private final OAuthFeign oAuthFeign;
 
     public UserDetailServiceImpl(UserRepository userRepository,
                                  RoleRepository roleRepository,
                                  PasswordEncoder passwordEncoder,
                                  SmsService smsService,
                                  AutoLoginService autoLoginService,
-                                 OAuthService oAuthService) {
+                                 OAuthFeign oAuthFeign) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.smsService = smsService;
         this.autoLoginService = autoLoginService;
-        this.oAuthService = oAuthService;
+        this.oAuthFeign = oAuthFeign;
     }
 
     @Override
@@ -121,20 +113,23 @@ public class UserDetailServiceImpl implements UserService {
 
     @Override
     public TokenDto autoLogin(String phone, String token) throws ApiException {
+        // TODO: 2020/12/8 client client secret scope 使用配置
         String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
-        return oAuthService.autoLogin(basicAuth, phone, token, "test", "auto_login");
+        return oAuthFeign.autoLogin(basicAuth, phone, token, "test", "auto_login");
     }
 
     @Override
     public TokenDto smsLogin(String phone, String code) throws ApiException {
+        // TODO: 2020/12/8 client client secret scope 使用配置
         String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
-        return oAuthService.smsLogin(basicAuth, phone, code, "test", "sms_login");
+        return oAuthFeign.smsLogin(basicAuth, phone, code, "test", "sms_login");
     }
 
     @Override
     public TokenDto login(String username, String password) throws ApiException {
+        // TODO: 2020/12/8 client client secret scope 使用配置
         String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
-        return oAuthService.login(basicAuth, username, password, "test", "password");
+        return oAuthFeign.login(basicAuth, username, password, "test", "password");
     }
 
     /**

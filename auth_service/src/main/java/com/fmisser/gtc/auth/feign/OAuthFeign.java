@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * 调用内部的oauth认证
+ * 调用内部的oauth2认证
  */
 @FeignClient(name = "auth")
 @Service
-public interface OAuthService {
+public interface OAuthFeign {
     @PostMapping(value = "/oauth/token")
     TokenDto autoLogin(@RequestHeader("Authorization") String basicAuth,
                               @RequestParam("phone") String phone,

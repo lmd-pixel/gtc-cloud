@@ -1,30 +1,37 @@
 package com.fmisser.gtc.auth.service.impl;
 
 import com.fmisser.gtc.auth.domain.PhoneCodeRequest;
-import com.fmisser.gtc.auth.feign.JPushSmsService;
+import com.fmisser.gtc.auth.feign.JPushSmsFeign;
 import com.fmisser.gtc.auth.repository.PhoneCodeRequestRepository;
 import com.fmisser.gtc.auth.service.SmsService;
 import com.fmisser.gtc.base.dto.auth.PhoneCodeRequestDto;
 import com.fmisser.gtc.base.dto.jpush.PhoneCodeDto;
 import com.fmisser.gtc.base.dto.jpush.PhoneCodeVerifyDto;
+import com.fmisser.gtc.base.dto.jpush.RequestCodeDto;
+import com.fmisser.gtc.base.dto.jpush.RequestVerifyCodeDto;
 import com.fmisser.gtc.base.prop.JPushConfProp;
 import com.fmisser.gtc.base.utils.JPushUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-@Service
-public class SmsServiceImpl implements SmsService {
+/**
+ * 目前用的极光
+ * step1： 调用极光请求到验证码，返回msg_id
+ * step2： 验证验证码需要拿msg_id 和 code 去调用极光api 验证
+ */
 
-    private final JPushSmsService jPushSmsService;
+@Service
+public class JPushSmsService implements SmsService {
+
+    private final JPushSmsFeign jPushSmsFeign;
 
     private final JPushConfProp jPushConfProp;
 
     private PhoneCodeRequestRepository phoneCodeRequestRepository;
 
-    public SmsServiceImpl(JPushSmsService jPushSmsService,
-                          JPushConfProp jPushConfProp,
-                          PhoneCodeRequestRepository phoneCodeRequestRepository) {
-        this.jPushSmsService = jPushSmsService;
+    public JPushSmsService(JPushSmsFeign jPushSmsFeign,
+                           JPushConfProp jPushConfProp,
+                           PhoneCodeRequestRepository phoneCodeRequestRepository) {
+        this.jPushSmsFeign = jPushSmsFeign;
         this.jPushConfProp = jPushConfProp;
         this.phoneCodeRequestRepository = phoneCodeRequestRepository;
     }
@@ -47,9 +54,11 @@ public class SmsServiceImpl implements SmsService {
         }
 
         // 调用 jpush rest api去认证
-        String basicAuthString = JPushUtils.genAuthString(jPushConfProp.getAppKey(), jPushConfProp.getMasterSecret());
+        String basicAuthString = JPushUtils
+                .genAuthString(jPushConfProp.getAppKey(), jPushConfProp.getMasterSecret());
+        RequestVerifyCodeDto requestVerifyCodeDto = new RequestVerifyCodeDto(code);
         PhoneCodeVerifyDto phoneCodeVerifyDto =
-                jPushSmsService.verifyPhoneCode(basicAuthString, phoneCodeRequestDto.getMsgId(), code, jPushConfProp.getTemplateId());
+                jPushSmsFeign.verifyPhoneCode(basicAuthString, phoneCodeRequestDto.getMsgId(), requestVerifyCodeDto);
 
         if (phoneCodeVerifyDto == null || !phoneCodeVerifyDto.is_valid()) {
             return false;
@@ -61,7 +70,8 @@ public class SmsServiceImpl implements SmsService {
     @Override
     public boolean sendPhoneCode(String phone, int type) {
         String basicAuthString = JPushUtils.genAuthString(jPushConfProp.getAppKey(), jPushConfProp.getMasterSecret());
-        PhoneCodeDto phoneCodeDto = jPushSmsService.sendPhoneCode(basicAuthString, phone, jPushConfProp.getTemplateId());
+        RequestCodeDto requestCodeDto = new RequestCodeDto(phone, jPushConfProp.getTemplateId());
+        PhoneCodeDto phoneCodeDto = jPushSmsFeign.sendPhoneCode(basicAuthString, requestCodeDto);
         if (phoneCodeDto == null) {
             return false;
         }
