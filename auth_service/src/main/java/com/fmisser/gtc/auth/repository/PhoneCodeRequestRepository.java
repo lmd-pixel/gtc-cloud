@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PhoneCodeRequestRepository extends JpaRepository<PhoneCodeRequest, Long> {
-    PhoneCodeRequestDto findByPhoneAndTypeOrderByCreateTimeDesc(String phone, int type);
+    PhoneCodeRequestDto findTopByPhoneAndTypeOrderByCreateTimeDesc(String phone, int type);
 }

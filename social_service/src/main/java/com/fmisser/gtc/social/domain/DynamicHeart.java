@@ -24,20 +24,20 @@ import java.util.Date;
 @EntityListeners(AuditingEntityListener.class)
 public class DynamicHeart {
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "dynamic_id", referencedColumnName = "id")
-    private Dynamic dynamic;
+//    @JsonIgnore
+//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "dynamic_id", referencedColumnName = "id")
+//    private Dynamic dynamic;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long userId;
+    @Column(nullable = false, name = "dynamic_id")
+    private Long dynamicId;
 
     @Column(nullable = false)
-    private String nickname;
+    private Long userId;
 
     @CreatedDate
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
@@ -55,14 +55,13 @@ public class DynamicHeart {
     private int isCancel = 0;
 
     // 防止嵌套调用引起的堆栈溢出
-    @Override
-    public String toString() {
-        return "DynamicHeart{" +
-                "id=" + id +
-                ",userId=" + userId +
-                ",nickname=" + nickname +
-                ",createTime=" + createTime.toString() +
-                ",modifyTime=" + modifyTime.toString() +
-                ",isDelete=" + isCancel;
-    }
+//    @Override
+//    public String toString() {
+//        return "DynamicHeart{" +
+//                "id=" + id +
+//                ",userId=" + userId +
+//                ",createTime=" + createTime.toString() +
+//                ",modifyTime=" + modifyTime.toString() +
+//                ",isDelete=" + isCancel;
+//    }
 }

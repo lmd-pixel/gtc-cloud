@@ -26,7 +26,7 @@ import java.util.List;
 @DynamicInsert
 @DynamicUpdate
 public class User {
-    @JsonIgnore
+//    @JsonIgnore
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -85,7 +85,7 @@ public class User {
      * 上传的照片,多张照片逗号隔开
      */
     @JsonIgnore
-    @Column
+    @Column(length = 4096)
     private String photos;
 
     @JsonIgnore

@@ -21,26 +21,28 @@ import java.util.Date;
 @EntityListeners(AuditingEntityListener.class)
 public class DynamicComment {
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "dynamic_id", referencedColumnName = "id")
-    private Dynamic dynamic;
+//    @JsonIgnore
+//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "dynamic_id", referencedColumnName = "id")
+//    private Dynamic dynamic;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "dynamic_id")
+    private Long dynamicId;
+
+    // 关联的哪条评论
+    @Column(name = "comment_id_to")
+    private Long commentIdTo;
+
     @Column(nullable = false)
     private Long userIdFrom;
 
-    @Column(nullable = false)
-    private String nicknameFrom;
-
+    // 回复谁
     @Column
     private Long userIdTo;
-
-    @Column
-    private String nicknameTo;
 
     @Column
     private String content;
@@ -61,17 +63,15 @@ public class DynamicComment {
     private int isDelete = 0;
 
     // 防止嵌套调用引起的堆栈溢出
-    @Override
-    public String toString() {
-        return "DynamicComment{" +
-                "id=" + id +
-                ",userIdFrom=" + userIdFrom +
-                ",nicknameFrom=" + nicknameFrom +
-                ",userIdTo=" + userIdTo +
-                ",nicknameTo=" + nicknameTo +
-                ",content=" + content +
-                ",createTime=" + createTime.toString() +
-                ",modifyTime=" + modifyTime.toString() +
-                ",isDelete=" + isDelete;
-    }
+//    @Override
+//    public String toString() {
+//        return "DynamicComment{" +
+//                "id=" + id +
+//                ",userIdFrom=" + userIdFrom +
+//                ",userIdTo=" + userIdTo +
+//                ",content=" + content +
+//                ",createTime=" + createTime.toString() +
+//                ",modifyTime=" + modifyTime.toString() +
+//                ",isDelete=" + isDelete;
+//    }
 }

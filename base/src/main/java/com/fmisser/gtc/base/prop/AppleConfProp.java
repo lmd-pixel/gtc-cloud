@@ -16,4 +16,13 @@ public class AppleConfProp {
 
     @Value("${apple.iap.prod.verify.url}")
     private String prodVerifyUrl;
+
+    @Value("${apple.auth.keys.url}")
+    private String authKeysUrl;
+
+    @Value("${apple.auth.issuer.url}")
+    private String authIssuerUrl;
+
+    @Value("${apple.auth.audience}")
+    private String authAudience;
 }

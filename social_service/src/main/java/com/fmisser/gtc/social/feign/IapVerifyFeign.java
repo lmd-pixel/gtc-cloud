@@ -17,6 +17,6 @@ import java.net.URI;
 @FeignClient(url = "", name = "iap-verify")
 @Service
 public interface IapVerifyFeign {
-    @PostMapping(value = "/verifyReceipt", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     IapReceiptDto verifyReceipt(URI uri, @RequestParam("receipt-data") String receiptData);
 }

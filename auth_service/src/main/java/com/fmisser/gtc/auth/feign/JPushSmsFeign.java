@@ -22,7 +22,7 @@ public interface JPushSmsFeign {
                                @RequestBody RequestCodeDto requestCodeDto);
 
     // 验证短信
-    @PostMapping(value = "/codes/{msg_id}/verify", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/codes/{msg_id}/valid", produces = MediaType.APPLICATION_JSON_VALUE)
     PhoneCodeVerifyDto verifyPhoneCode(@RequestHeader("Authorization") String basicAuth,
                                               @PathVariable("msg_id")  String msgId,
                                               @RequestBody RequestVerifyCodeDto requestVerifyCodeDto);

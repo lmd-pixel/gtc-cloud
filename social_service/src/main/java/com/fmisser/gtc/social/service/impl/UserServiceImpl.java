@@ -216,8 +216,8 @@ public class UserServiceImpl implements UserService {
                         randomUUID,
                         suffixName);
 
-                ObjectWriteResponse response = _minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
-                        objectName, inputStream, file.getSize(), "image/png");
+                ObjectWriteResponse response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
+                                objectName, inputStream, file.getSize(), "image/png", minioUtils);
 
                 user.setHead(response.object());
             }
@@ -268,11 +268,12 @@ public class UserServiceImpl implements UserService {
                     randomUUID,
                     suffixName);
 
-            ObjectWriteResponse response = _minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
+            ObjectWriteResponse response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
                     objectName,
                     inputStream,
                     file.getSize(),
-                    "image/png");
+                    "image/png",
+                    minioUtils);
 
             if (!StringUtils.isEmpty(response.object())) {
                 photoList.add(response.object());
@@ -320,11 +321,12 @@ public class UserServiceImpl implements UserService {
                     randomUUID,
                     suffixName);
 
-            ObjectWriteResponse response = _minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
+            ObjectWriteResponse response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
                     objectName,
                     inputStream,
                     file.getSize(),
-                    "image/png");
+                    "image/png",
+                    minioUtils);
 
             user.setSelfie(response.object());
 
@@ -409,11 +411,12 @@ public class UserServiceImpl implements UserService {
 
     // minio 存储原始图片和缩略图
     @SneakyThrows
-    private ObjectWriteResponse _minioPutImageAndThumbnail(String bucketName,
-                                                           String objectName,
-                                                           InputStream inputStream,
-                                                           Long size,
-                                                           String contentType) throws ApiException {
+    public static ObjectWriteResponse minioPutImageAndThumbnail(String bucketName,
+                                                                String objectName,
+                                                                InputStream inputStream,
+                                                                Long size,
+                                                                String contentType,
+                                                                MinioUtils minioUtils) throws ApiException {
         BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
         // mark top
         bufferedInputStream.mark(Integer.MAX_VALUE);
@@ -471,17 +474,17 @@ public class UserServiceImpl implements UserService {
 
         // 返回完整的照片的链接和缩略图的链接
         if (user.getPhotos() != null) {
-            List<String> photosName = _changePhotosToList(user.getPhotos());
-            List<String> photosUrl = photosName.stream()
+            List<String> photosNameList = changePhotosToList(user.getPhotos());
+            List<String> photosUrlList = photosNameList.stream()
                     .map( name -> String.format("%s/%s/%s",
                             ossConfProp.getMinioUrl(), ossConfProp.getUserProfileBucket(), name))
                     .collect(Collectors.toList());
-            List<String> photosThumbnailUrl = photosName.stream()
+            List<String> photosThumbnailUrlList = photosNameList.stream()
                     .map( name -> String.format("%s/%s/thumbnail_%s",
                             ossConfProp.getMinioUrl(), ossConfProp.getUserProfileBucket(), name))
                     .collect(Collectors.toList());
-            user.setPhotoUrlList(photosUrl);
-            user.setPhotoThumbnailUrlList(photosThumbnailUrl);
+            user.setPhotoUrlList(photosUrlList);
+            user.setPhotoThumbnailUrlList(photosThumbnailUrlList);
         }
 
         // 返回完整的头像的链接和缩略图的链接
@@ -530,7 +533,7 @@ public class UserServiceImpl implements UserService {
     /**
      * 讲photos字符串转化成list
      */
-    private List<String> _changePhotosToList(String photos) {
+    public static List<String> changePhotosToList(String photos) {
         return Arrays.stream(photos.split("\\[|\\]|,"))
                 .filter(s -> !s.isEmpty())
                 .map(String::trim)
@@ -583,18 +586,18 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    protected static boolean isPictureSupported(String stuff) {
+    public static boolean isPictureSupported(String stuff) {
         return stuff.toLowerCase().equals(".jpg") ||
                 stuff.toLowerCase().equals(".jpeg") ||
                 stuff.toLowerCase().equals(".png");
     }
 
-    protected static boolean isVideoSupported(String stuff) {
+    public static boolean isVideoSupported(String stuff) {
         return stuff.toLowerCase().equals(".mp4") ||
                 stuff.toLowerCase().equals(".avi");
     }
 
-    protected static boolean isAudioSupported(String stuff) {
+    public static boolean isAudioSupported(String stuff) {
         return stuff.toLowerCase().equals(".mp3");
     }
 }

@@ -52,6 +52,12 @@ public class UserController {
         return ApiResp.succeed(userService.smsLogin(phone, code));
     }
 
+    @PostMapping("/apple-login")
+    public ApiResp<TokenDto> appleLogin(@RequestParam("subject") String subject,
+                                            @RequestParam("token") String token) throws ApiException {
+        return ApiResp.succeed(userService.appleLogin(subject, token));
+    }
+
     @PostMapping("/phone-code")
     public ApiResp<String> sendPhoneCode(@RequestParam("phone") @Size(min = 11, max = 11, message = "请输入有效的手机号") String phone,
                                    @RequestParam("type") int type) throws ApiException {

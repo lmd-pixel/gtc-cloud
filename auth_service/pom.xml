@@ -73,6 +73,12 @@
         </dependency>
 
         <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>0.9.1</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.fmisser.gtc</groupId>
             <artifactId>base</artifactId>
             <version>0.0.1-SNAPSHOT</version>

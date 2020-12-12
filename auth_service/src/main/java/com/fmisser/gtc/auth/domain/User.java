@@ -30,6 +30,7 @@ public class User implements UserDetails {
      * 0: 通过账号密码方式创建的账户,username 可以是手机号也可以是其他
      * 1: 通过手机号验证码创建的账户,username 是手机号
      * 2：通过手机号一键登录创建的账户，username 是手机号
+     * 11：第三方苹果登录
      */
     @Column(nullable = false, columnDefinition = "int default 0")
     private int type = 0;

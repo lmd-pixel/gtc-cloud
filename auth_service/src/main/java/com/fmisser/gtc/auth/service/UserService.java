@@ -36,5 +36,10 @@ public interface UserService extends UserDetailsService {
      */
     TokenDto login(String username, String password) throws ApiException;
 
+    /**
+     * 苹果一键登录
+     */
+    TokenDto appleLogin(String subject, String token) throws ApiException;
+
 
 }

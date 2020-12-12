@@ -33,4 +33,11 @@ public interface OAuthFeign {
                        @RequestParam("password") String password,
                        @RequestParam("scope") String scope,
                        @RequestParam(value = "grant_type") String grant_type);
+
+    @PostMapping(value = "/oauth/token")
+    TokenDto appleLogin(@RequestHeader("Authorization") String basicAuth,
+                   @RequestParam("subject") String subject,
+                   @RequestParam("token") String token,
+                   @RequestParam("scope") String scope,
+                   @RequestParam(value = "grant_type") String grant_type);
 }

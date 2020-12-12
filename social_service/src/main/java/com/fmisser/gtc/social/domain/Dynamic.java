@@ -37,10 +37,12 @@ public class Dynamic {
     @Column(nullable = false)
     private int type = 0;
 
+    @JsonIgnore
     @Column
     private String video;
 
-    @Column
+    @JsonIgnore
+    @Column(length = 4096)
     private String pictures;
 
     @CreatedDate
@@ -64,22 +66,14 @@ public class Dynamic {
     @Column(nullable = false, columnDefinition = "int default 0")
     private int isDelete = 0;
 
-    @OneToMany(mappedBy = "dynamic", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    private List<DynamicComment> comments = new ArrayList<>();
+//    @OneToMany(mappedBy = "dynamic", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+//    private List<DynamicComment> comments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "dynamic", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    private Set<DynamicHeart> hearts = new LinkedHashSet<>();
+//    @OneToMany(mappedBy = "dynamic", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+//    private Set<DynamicHeart> hearts = new LinkedHashSet<>();
 
-    @JsonIgnore
-    @Version
-    private Long version;
+//    @JsonIgnore
+//    @Version
+//    private Long version;
 
-    @Transient
-    private int heartCount = 0;
-
-    @Transient
-    private int selfHeart = 0;
-
-    @Transient
-    private int commentCount = 0;
 }

@@ -46,6 +46,18 @@ public class CryptoUtils {
         return Base64Utils.decodeFromUrlSafeString(content);
     }
 
+    public static String base64EncodeOrigin(String content) {
+        return Base64Utils.encodeToString(content.getBytes());
+    }
+
+    public static String base64DecodeOrigin(String content) {
+        return new String(Base64Utils.decodeFromString(content));
+    }
+
+    public static byte[] base64DecodeOriginToByteArray(String content) {
+        return Base64Utils.decodeFromString(content);
+    }
+
     // aes 加密 再 base64 encode
     public static String base64AesSecret(String content, String key) throws Exception {
         return base64Encode(aesEncrypt(content.getBytes(), key, false));

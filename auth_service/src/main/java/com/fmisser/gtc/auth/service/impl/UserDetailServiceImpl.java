@@ -7,6 +7,7 @@ import com.fmisser.gtc.auth.repository.RoleRepository;
 import com.fmisser.gtc.auth.repository.UserRepository;
 import com.fmisser.gtc.auth.service.AutoLoginService;
 import com.fmisser.gtc.auth.service.SmsService;
+import com.fmisser.gtc.auth.service.ThirdPartyLoginService;
 import com.fmisser.gtc.auth.service.UserService;
 import com.fmisser.gtc.base.dto.auth.TokenDto;
 import com.fmisser.gtc.base.exception.ApiException;
@@ -40,18 +41,22 @@ public class UserDetailServiceImpl implements UserService {
 
     private final OAuthFeign oAuthFeign;
 
+    private final ThirdPartyLoginService thirdPartyLoginService;
+
     public UserDetailServiceImpl(UserRepository userRepository,
                                  RoleRepository roleRepository,
                                  PasswordEncoder passwordEncoder,
                                  SmsService smsService,
                                  AutoLoginService autoLoginService,
-                                 OAuthFeign oAuthFeign) {
+                                 OAuthFeign oAuthFeign,
+                                 ThirdPartyLoginService thirdPartyLoginService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.smsService = smsService;
         this.autoLoginService = autoLoginService;
         this.oAuthFeign = oAuthFeign;
+        this.thirdPartyLoginService = thirdPartyLoginService;
     }
 
     @Override
@@ -132,6 +137,13 @@ public class UserDetailServiceImpl implements UserService {
         return oAuthFeign.login(basicAuth, username, password, "test", "password");
     }
 
+    @Override
+    public TokenDto appleLogin(String subject, String token) throws ApiException {
+        // TODO: 2020/12/8 client client secret scope 使用配置
+        String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
+        return oAuthFeign.appleLogin(basicAuth, subject, token, "test", "apple_login");
+    }
+
     /**
      * 自定义手机号验证码登录模式
      * 注册，登录一体
@@ -148,7 +160,7 @@ public class UserDetailServiceImpl implements UserService {
         }
 
         // 认证过后，如果数据库没有这条数据，则创建一条
-        return _innerCreateByPhone(phone, 1);
+        return _innerCreateByUsername(phone, 1);
     }
 
     /**
@@ -167,14 +179,32 @@ public class UserDetailServiceImpl implements UserService {
         }
 
         // 认证过后，如果数据库没有这条数据，则创建一条
-        return _innerCreateByPhone(phone, 2);
+        return _innerCreateByUsername(phone, 2);
     }
 
-    private User _innerCreateByPhone(String phone, int type) {
+    /**
+     * 自定义苹果一键登录
+     * 注册。登录一体
+     */
+    public UserDetails loadUserByAppleAuto(String subject, String token) {
+        if (!thirdPartyLoginService.checkAppleIdentityToken(token, subject)) {
+            return null;
+        }
+
+        User user = userRepository.findByUsername(subject);
+        if (user != null) {
+            return user;
+        }
+
+        // 认证过后，如果数据库没有这条数据，则创建一条
+        return _innerCreateByUsername(subject, 11);
+    }
+
+    private User _innerCreateByUsername(String username, int type) {
         User newUser = new User();
         newUser.setId(0L);  // 因为存在多对多，必须要设置个值
-        newUser.setUsername(phone);
-        newUser.setType(1); // 手机号类型
+        newUser.setUsername(username);
+        newUser.setType(type); // 类型
         String encodePwd = passwordEncoder.encode(new Date().toString());   // 随机创建一个密码
         newUser.setPassword(encodePwd);
 
