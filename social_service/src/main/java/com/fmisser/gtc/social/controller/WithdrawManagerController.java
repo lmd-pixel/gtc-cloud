@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -22,6 +23,7 @@ import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Digits;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Api(description = "提现管理")
@@ -42,7 +44,7 @@ public class WithdrawManagerController {
             @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query", required = false),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
     @PreAuthorize("hasAnyRole('MANAGER')")
@@ -52,11 +54,11 @@ public class WithdrawManagerController {
             @RequestParam(value = "nick", required = false) String nick,
             @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
-            @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+            @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
-        List<WithdrawAuditDto> withdrawAuditDtoList =
+        Pair<List<WithdrawAuditDto>, Map<String, Object>> withdrawAuditDtoList =
                 withdrawManagerService.getWithdrawAuditList(digitId, nick, startTime, endTime, pageIndex, pageSize);
-        return ApiResp.succeed(withdrawAuditDtoList);
+        return ApiResp.succeed(withdrawAuditDtoList.getFirst(), withdrawAuditDtoList.getSecond());
     }
 
     @ApiOperation(value = "获取打款审核列表")
@@ -67,7 +69,7 @@ public class WithdrawManagerController {
             @ApiImplicitParam(name = "type", value = "打款账户类型 0：支付宝， 1：银行卡", paramType = "query", required = false, dataType = "Integer"),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
     @PreAuthorize("hasAnyRole('MANAGER')")
@@ -78,11 +80,11 @@ public class WithdrawManagerController {
             @RequestParam(value = "type", required = false) Integer type,
             @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
-            @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+            @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
-        List<PayAuditDto> payAuditDtoList =
+        Pair<List<PayAuditDto>, Map<String, Object>> payAuditDtoList =
                 withdrawManagerService.getPayAuditList(digitId, nick, type, startTime, endTime, pageIndex, pageSize);
-        return ApiResp.succeed(payAuditDtoList);
+        return ApiResp.succeed(payAuditDtoList.getFirst(), payAuditDtoList.getSecond());
     }
 
     @ApiOperation(value = "审核操作")
@@ -132,7 +134,7 @@ public class WithdrawManagerController {
             @ApiImplicitParam(name = "status", value = "提现状态： 0:待审核 1:待打款 2: 审核未通过 3：打款完成 4：全部（默认）", paramType = "query", dataType = "Integer"),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
     @PreAuthorize("hasAnyRole('MANAGER')")
@@ -143,10 +145,10 @@ public class WithdrawManagerController {
             @RequestParam(value = "status", required = false, defaultValue = "4") @Range(min = 0, max = 4) Integer status,
             @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
-            @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+            @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
-        List<WithdrawAuditDto> withdrawAuditDtoList =
+        Pair<List<WithdrawAuditDto>, Map<String, Object>> withdrawAuditDtoList =
                 withdrawManagerService.getWithdrawList(digitId, nick, startTime, endTime, status, pageIndex, pageSize);
-        return ApiResp.succeed(withdrawAuditDtoList);
+        return ApiResp.succeed(withdrawAuditDtoList.getFirst(), withdrawAuditDtoList.getSecond());
     }
 }

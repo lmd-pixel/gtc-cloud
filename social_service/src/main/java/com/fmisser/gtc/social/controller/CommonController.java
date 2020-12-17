@@ -1,15 +1,14 @@
 package com.fmisser.gtc.social.controller;
 
 import com.fmisser.gtc.base.response.ApiResp;
+import com.fmisser.gtc.social.domain.Product;
 import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.social.service.ProductService;
 import com.fmisser.gtc.social.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -19,9 +18,12 @@ import java.util.List;
 @Validated
 public class CommonController {
     private final UserService userService;
+    private final ProductService productService;
 
-    public CommonController(UserService userService) {
+    public CommonController(UserService userService,
+                            ProductService productService) {
         this.userService = userService;
+        this.productService = productService;
     }
 
     @ApiOperation(value = "获取主播列表")
@@ -31,5 +33,12 @@ public class CommonController {
                                       @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
         List<User> userList = userService.getAnchorList(type, pageIndex, pageSize);
         return ApiResp.succeed(userList);
+    }
+
+    @ApiOperation(value = "获取苹果支付商品列表")
+    @GetMapping(value = "/list-iap-products")
+    public ApiResp<List<Product>> getIapProducts() {
+        List<Product> products = this.productService.getIapProductList();
+        return ApiResp.succeed(products);
     }
 }

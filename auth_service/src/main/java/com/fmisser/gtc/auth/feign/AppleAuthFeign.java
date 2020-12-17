@@ -14,7 +14,7 @@ import java.net.URI;
  * 苹果认证
  */
 
-@FeignClient(url = "", name = "apple-auth")
+@FeignClient(url = "https://www.apple.com", name = "apple-auth")
 @Service
 public interface AppleAuthFeign {
     // 获取public keys

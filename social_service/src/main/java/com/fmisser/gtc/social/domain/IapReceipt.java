@@ -30,7 +30,6 @@ public class IapReceipt {
     @Column
     private Long rechargeId;
 
-    // 用户 id, 有则关联
     @Column
     private Long userId;
 
@@ -38,25 +37,20 @@ public class IapReceipt {
     @Column
     private int env;
 
-    // 返回的票据结果
+    // 0: 未完成 1：已完成
     @Column
     private int status;
 
-    @CreatedDate
-    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column
-    private Date createTime;
+    private String remark;
 
-    // 以下为iap receipt 数据
+    @Column(length = 10240, updatable = false)
+    private String receipt;
 
-    @Column
-    private int quantity;
-
-    @Column(name = "product_id")
+    @Column(name = "product_id", updatable = false)
     private String productId;
 
-    @Column(name = "transaction_id")
+    @Column(name = "transaction_id", unique = true)
     private String transactionId;
 
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
@@ -72,15 +66,9 @@ public class IapReceipt {
     @Column(name = "original_purchase_date")
     private Date originalPurchaseDate;
 
-    @Column(name = "app_item_id")
-    private String appItemId;
-
-    @Column(name = "version_external_identifier")
-    private String versionExternalIdentifier;
-
+    @CreatedDate
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column
-    private String bid;
-
-    @Column
-    private String bvrs;
+    private Date createTime;
 }

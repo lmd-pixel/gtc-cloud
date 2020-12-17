@@ -9,5 +9,5 @@ import com.fmisser.gtc.social.domain.IapReceipt;
  */
 public interface TransactionService {
     // iap 支付成功
-    String iapPaySuccess(IapReceipt iapReceipt) throws ApiException;
+    String iapPaySuccess(String transactionId) throws ApiException;
 }

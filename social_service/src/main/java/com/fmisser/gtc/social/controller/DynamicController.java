@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import java.util.List;
+import java.util.Objects;
 
 @Api(description = "动态API")
 @RestController
@@ -75,7 +76,10 @@ public class DynamicController {
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
 
-        User userDoTo = userService.getUserByDigitId(digitIdTo);
+        User userDoTo = null;
+        if (Objects.nonNull(digitIdTo)) {
+            userDoTo = userService.getUserByDigitId(digitIdTo);
+        }
 
         int ret = dynamicService.newDynamicComment(dynamicId, commentIdTo, userDo, userDoTo, content);
         return ApiResp.succeed(ret);

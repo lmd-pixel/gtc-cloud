@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -26,6 +27,7 @@ import java.util.Date;
 @DynamicInsert
 @DynamicUpdate
 public class Product {
+    @JsonIgnore
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -53,6 +55,7 @@ public class Product {
     @Column(nullable = false)
     private BigDecimal coin;
 
+    @JsonIgnore
     // 充值的平台 0：苹果支付
     @Column(nullable = false)
     private int plt;
@@ -72,22 +75,26 @@ public class Product {
     @Column(nullable = false, columnDefinition = "int default 0")
     private int disable = 0;
 
+    @JsonIgnore
     @CreatedDate
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column
     private Date creatTime;
 
+    @JsonIgnore
     @LastModifiedDate
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column
     private Date modifyTime;
 
+    @JsonIgnore
     @CreatedBy
     @Column
     private String createBy;
 
+    @JsonIgnore
     @LastModifiedBy
     @Column
     private String modifyBy;

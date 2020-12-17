@@ -3,6 +3,7 @@ package com.fmisser.gtc.social.repository;
 import com.fmisser.gtc.social.domain.Asset;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -22,10 +23,12 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     // 如果在获取当前金币后其他地方修改了金币，这时候再加减充值的金币，此时数据则错误了
     // 除了使用以下两个update set 函数方法外
     // 还可以在获取金币的函数上通过加锁: @Lock(value = LockModeType.PESSIMISTIC_WRITE) 这将锁定该数据直到事务提交
+    @Modifying(clearAutomatically = true)
     @Query(value = "UPDATE t_asset set coin = coin + ?2 WHERE user_id = ?1", nativeQuery = true)
-    Asset addCoin(Long userId, BigDecimal coin);
+    int addCoin(Long userId, BigDecimal coin);
 
     // 减金币
+    @Modifying(clearAutomatically = true)
     @Query(value = "UPDATE t_asset set coin = coin - ?2 WHERE user_id = ?1", nativeQuery = true)
-    Asset subCoin(Long userId, BigDecimal coin);
+    int subCoin(Long userId, BigDecimal coin);
 }

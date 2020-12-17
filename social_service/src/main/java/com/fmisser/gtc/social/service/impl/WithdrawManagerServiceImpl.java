@@ -7,8 +7,10 @@ import com.fmisser.gtc.social.domain.WithdrawAudit;
 import com.fmisser.gtc.social.repository.WithdrawAuditRepository;
 import com.fmisser.gtc.social.service.WithdrawManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,23 +28,38 @@ public class WithdrawManagerServiceImpl implements WithdrawManagerService {
     }
 
     @Override
-    public List<WithdrawAuditDto> getWithdrawAuditList(String digitId, String nick,
-                                                       Date startTime, Date endTime,
-                                                       int pageIndex, int pageSize) throws ApiException {
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        return withdrawAuditRepository
-                .getWithdrawAuditList(digitId, nick, startTime, endTime, pageable)
-                .getContent();
+    public Pair<List<WithdrawAuditDto>, Map<String, Object>> getWithdrawAuditList(String digitId, String nick,
+                                                             Date startTime, Date endTime,
+                                                             int pageIndex, int pageSize) throws ApiException {
+        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
+        Page<WithdrawAuditDto> withdrawAuditDtoPage =  withdrawAuditRepository
+                .getWithdrawAuditList(digitId, nick, startTime, endTime, pageable);
+
+        int totalPage = withdrawAuditDtoPage.getTotalPages();
+        long totalEle = withdrawAuditDtoPage.getTotalElements();
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", totalPage);
+        extra.put("totalEle", totalEle);
+        extra.put("currPage", pageIndex);
+
+        return Pair.of(withdrawAuditDtoPage.getContent(), extra);
     }
 
     @Override
-    public List<PayAuditDto> getPayAuditList(String digitId, String nick, Integer type,
+    public Pair<List<PayAuditDto>, Map<String, Object>> getPayAuditList(String digitId, String nick, Integer type,
                                              Date startTime, Date endTime,
                                              int pageIndex, int pageSize) throws ApiException {
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        return withdrawAuditRepository
-                .getPayAuditList(digitId, nick, type, startTime, endTime, pageable)
-                .getContent();
+        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
+        Page<PayAuditDto> payAuditDtoPage = withdrawAuditRepository
+                .getPayAuditList(digitId, nick, type, startTime, endTime, pageable);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", payAuditDtoPage.getTotalPages());
+        extra.put("totalEle", payAuditDtoPage.getTotalElements());
+        extra.put("currPage", pageIndex);
+
+        return Pair.of(payAuditDtoPage.getContent(), extra);
     }
 
     @Transactional
@@ -111,11 +128,11 @@ public class WithdrawManagerServiceImpl implements WithdrawManagerService {
     }
 
     @Override
-    public List<WithdrawAuditDto> getWithdrawList(String digitId, String nick,
+    public Pair<List<WithdrawAuditDto>, Map<String, Object>> getWithdrawList(String digitId, String nick,
                                                   Date startTime, Date endTime,
                                                   Integer status,
                                                   int pageIndex, int pageSize) throws ApiException {
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
 
         // status: 0:待审核 1:待打款 2: 审核未通过 3：打款完成 4：全部
         List<Integer> statusList = new ArrayList<>();
@@ -134,8 +151,14 @@ public class WithdrawManagerServiceImpl implements WithdrawManagerService {
             statusList.add(40);
         }
 
-        return withdrawAuditRepository
-                .getWithdrawList(digitId, nick, startTime, endTime, statusList, pageable)
-                .getContent();
+        Page<WithdrawAuditDto> withdrawAuditDtoPage = withdrawAuditRepository
+                .getWithdrawList(digitId, nick, startTime, endTime, statusList, pageable);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", withdrawAuditDtoPage.getTotalPages());
+        extra.put("totalEle", withdrawAuditDtoPage.getTotalElements());
+        extra.put("currPage", pageIndex);
+
+        return Pair.of(withdrawAuditDtoPage.getContent(), extra);
     }
 }

@@ -1,14 +1,22 @@
 package com.fmisser.gtc.social.controller;
 
+import com.fmisser.gtc.base.exception.ApiException;
+import com.fmisser.gtc.base.response.ApiResp;
+import com.fmisser.gtc.social.domain.Product;
+import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.service.RechargeService;
+import com.fmisser.gtc.social.service.UserService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Date;
+import java.util.List;
 
 @Api(description = "支付API")
 @RestController
@@ -17,25 +25,32 @@ import org.springframework.web.bind.annotation.RestController;
 public class RechargeController {
 
     private final RechargeService rechargeService;
+    private final UserService userService;
 
-    public RechargeController(RechargeService rechargeService) {
+    public RechargeController(RechargeService rechargeService,
+                              UserService userService) {
         this.rechargeService = rechargeService;
+        this.userService = userService;
     }
 
-    @GetMapping(value = "/setIapCertificate")
-    public String setIapCertificate(@RequestParam("userId") String userId,
-                                    @RequestParam("receipt") String receipt,
-                                    @RequestParam("chooseEnv") boolean chooseEnv) {
+    @PostMapping(value = "/iap-receipt-verify")
+    public ApiResp<String> setIapCertificate(@RequestParam("receipt") String receipt,
+                                             @RequestParam("env") int env,
+                                             @RequestParam("productId") String productId,
+                                             @RequestParam("transactionId") String transactionId,
+                                             @RequestParam("purchaseDate") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date purchaseDate) {
 
-        if (StringUtils.isEmpty(userId) || StringUtils.isEmpty(receipt)) {
-            return "failed";
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        if (StringUtils.isEmpty(receipt)) {
+            throw new ApiException(-1, "invalid receipt!");
         }
 
-        try {
-            return rechargeService.IapVerifyReceipt(userId, receipt, chooseEnv);
-        } catch (Exception e) {
-            // TODO: 2020/12/7 记录错误
-            return "failed";
-        }
+        String ret = rechargeService.IapVerifyReceipt(userDo, receipt,
+                env,
+                productId, transactionId, purchaseDate);
+        return ApiResp.succeed(ret);
     }
 }
