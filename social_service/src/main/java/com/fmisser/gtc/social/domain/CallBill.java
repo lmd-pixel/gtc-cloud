@@ -30,7 +30,7 @@ public class CallBill {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 流水号，保留
+    // 流水号
     @Column(nullable = false, unique = true)
     private String serialNumber;
 
@@ -40,7 +40,7 @@ public class CallBill {
     @Column(nullable = false)
     private Long userIdTo;
 
-    // 房间id
+    //
     @Column(nullable = false)
     private String callId;
 

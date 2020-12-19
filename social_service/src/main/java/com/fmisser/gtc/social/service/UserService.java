@@ -20,6 +20,5 @@ public interface UserService {
     User updateVerifyImage(User user, Map<String, MultipartFile> multipartFileMap) throws ApiException;
     User updateVideo(User user, Map<String, MultipartFile> multipartFileMap) throws ApiException;
     int logout(User user) throws ApiException;
-
-    List<User> getAnchorList(int type, int pageIndex, int pageSize) throws ApiException;
+    List<User> getAnchorList(Integer type, Integer gender, int pageIndex, int pageSize) throws ApiException;
 }

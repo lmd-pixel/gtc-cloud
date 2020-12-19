@@ -18,7 +18,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
 //    @Lock(value = LockModeType.PESSIMISTIC_WRITE)
 //    Asset findByUserId(Long userId);
 
-    // 加金币,
+    // 加金币, 在没有乐观锁的机制下（如果使用jpa乐观锁，请保证整个实体的逻辑都使用jpa方式操作，不要自定义update，delete等操作）
     // 加减金币请使用下面两个函数操作，请勿在事务中先获取当前用户的金币，然后加减充值的金币，最后save到数据库
     // 如果在获取当前金币后其他地方修改了金币，这时候再加减充值的金币，此时数据则错误了
     // 除了使用以下两个update set 函数方法外
@@ -31,4 +31,9 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     @Modifying(clearAutomatically = true)
     @Query(value = "UPDATE t_asset set coin = coin - ?2 WHERE user_id = ?1", nativeQuery = true)
     int subCoin(Long userId, BigDecimal coin);
+
+    // 购买vip
+    @Modifying(clearAutomatically = true)
+    @Query(value = "UPDATE t_asset set coin = coin - ?2, vip_level = 1 WHERE user_id = ?1 AND coin >= ?2", nativeQuery = true)
+    int buyVip(Long userId, BigDecimal coin);
 }

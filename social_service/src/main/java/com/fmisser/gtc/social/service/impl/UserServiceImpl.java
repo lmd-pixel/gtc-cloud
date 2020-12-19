@@ -16,6 +16,7 @@ import com.fmisser.gtc.social.utils.MinioUtils;
 import io.minio.ObjectWriteResponse;
 import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -400,11 +401,27 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getAnchorList(int type, int pageIndex, int pageSize) throws ApiException {
+    public List<User> getAnchorList(Integer type, Integer gender, int pageIndex, int pageSize) throws ApiException {
+
+        // 根据不同的type 做不同处理
+        // type = 0 先拿推荐主播数据 如果数据不够再拿粉丝数多少排序
+
+        // type = 1 按照总收益排序
+
+        // type = 2 按照注册时间倒叙
+
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        List<User> userList =
-                userRepository.findByIdentityOrderByCreateTimeDesc(1, pageable).getContent();
-        return userList.stream()
+        Page<User> userPage;
+//        List<User> userList =
+//                userRepository.getAnchorListByCreateTime(gender, pageable).getContent();
+        if (type == 0) {
+            userPage = userRepository.getAnchorListBySystemAndFollow(gender, pageable);
+        } else if (type == 1) {
+            userPage = userRepository.getAnchorListByProfit(gender, pageable);
+        } else {
+            userPage = userRepository.getAnchorListByCreateTime(gender, pageable);
+        }
+        return userPage.stream()
                 .map(this::_prepareResponse)
                 .collect(Collectors.toList());
     }
@@ -593,8 +610,10 @@ public class UserServiceImpl implements UserService {
     }
 
     public static boolean isVideoSupported(String stuff) {
-        return stuff.toLowerCase().equals(".mp4") ||
-                stuff.toLowerCase().equals(".avi");
+//        return stuff.toLowerCase().equals(".mp4") ||
+//                stuff.toLowerCase().equals(".avi");
+
+        return true;
     }
 
     public static boolean isAudioSupported(String stuff) {

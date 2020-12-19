@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.dto.social.*;
+import com.fmisser.gtc.base.dto.social.calc.CalcCallProfitDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.repository.CallBillRepository;
 import com.fmisser.gtc.social.repository.GiftBillRepository;
@@ -10,10 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ProfitManagerServiceImpl implements ProfitManagerService {
@@ -33,14 +37,37 @@ public class ProfitManagerServiceImpl implements ProfitManagerService {
     }
 
     @Override
-    public List<AnchorCallBillDto> getAnchorCallProfitList(String digitId, String nick,
-                                                           Date startTime, Date endTime, Integer type,
-                                                           int pageIndex, int pageSize) throws ApiException {
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        return callBillRepository
-                .getAnchorCallBillList(digitId, nick, startTime, endTime, type, pageable)
-                .getContent();
+    public Pair<List<AnchorCallBillDto>, Map<String, Object>> getAnchorCallProfitList(String digitId, String nick,
+                                                                                      Date startTime, Date endTime, Integer type,
+                                                                                      int pageIndex, int pageSize) throws ApiException {
+        // 如果要使用Page，
+        // 要提供countQuery，如果不提供countQuery，jpa会根据query的语句尝试去改造成countQuery，
+        // 然后去掉 group by 、order by 等，但不会改变你的查询条件
+        // 因为我们这里还要统计其他数据，所以直接重新调用一个新的sql，
+        // 注意：countQuery 也会执行一次，除非query查询的行数还不够pageSize, 那不会执行
+//        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
+//        Page<AnchorCallBillDto> anchorCallBillDtoPage = callBillRepository
+//                .getAnchorCallBillList(digitId, nick, startTime, endTime, type, pageable);
 
+//        anchorCallBillDtoPage.getTotalElements();
+//        anchorCallBillDtoPage.getTotalPages();
+
+        List<AnchorCallBillDto> anchorCallBillDtoPage = callBillRepository
+                .getAnchorCallBillList(digitId, nick, startTime, endTime, type, pageSize, (pageIndex - 1) * pageSize);
+
+        CalcCallProfitDto calcCallProfitDto =
+                callBillRepository.calcCallProfit(null, null, digitId, nick, startTime, endTime, type);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", (calcCallProfitDto.getCount() / pageSize) + 1 );
+        extra.put("totalEle", calcCallProfitDto.getCount());
+        extra.put("currPage", pageIndex);
+        extra.put("duration", calcCallProfitDto.getDuration());
+        extra.put("profit", calcCallProfitDto.getProfit());
+        extra.put("commission", calcCallProfitDto.getCommission());
+        extra.put("consume", calcCallProfitDto.getConsume());
+
+        return Pair.of(anchorCallBillDtoPage, extra);
     }
 
     @Override

@@ -181,4 +181,7 @@ public class User {
 
     @Transient
     private String videoUrl;
+
+    @Transient
+    private BigDecimal coin;
 }

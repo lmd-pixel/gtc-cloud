@@ -11,7 +11,7 @@ import java.math.BigDecimal;
  */
 
 @Entity
-@Table(name = "t_asset", indexes = {@Index(columnList = "userId")})
+@Table(name = "t_asset")
 @Data
 public class Asset {
 
@@ -36,6 +36,9 @@ public class Asset {
 
     @Column(nullable = false, columnDefinition = "int default 0")
     private int freeAnswerDuration = 0;
+
+    @Column(name = "vip_level", nullable = false, columnDefinition = "int default 0")
+    private int vipLevel = 0;
 
     @JsonIgnore
     @Version

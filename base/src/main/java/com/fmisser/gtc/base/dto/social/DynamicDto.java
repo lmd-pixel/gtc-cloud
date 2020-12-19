@@ -20,12 +20,13 @@ public class DynamicDto {
 //
 //    }
 
-    public DynamicDto(Long id, Long userId, String content, int type, String video, String pictures,
+    public DynamicDto(Long id, Long userId, String digitId, String content, int type, String video, String pictures,
                       Date createTime, Date modifyTime, BigDecimal longitude, BigDecimal latitude,
                       Long heartCount, Long selfHeart, Long commentCount,
                       String nick, Date birth, int gender, String head) {
         this.id = id;
         this.userId = userId;
+        this.digitId = digitId;
         this.content = content;
         this.type = type;
         this.video = video;
@@ -37,6 +38,32 @@ public class DynamicDto {
         this.heartCount = heartCount;
         this.selfHeart = selfHeart;
         this.commentCount = commentCount;
+        this.follow = 1L;   // 表示已关注
+        this.nick = nick;
+        this.birth = birth;
+        this.gender = gender;
+        this.head = head;
+    }
+
+    public DynamicDto(Long id, Long userId, String digitId, String content, int type, String video, String pictures,
+                      Date createTime, Date modifyTime, BigDecimal longitude, BigDecimal latitude,
+                      Long heartCount, Long selfHeart, Long commentCount, Long follow,
+                      String nick, Date birth, int gender, String head) {
+        this.id = id;
+        this.userId = userId;
+        this.digitId = digitId;
+        this.content = content;
+        this.type = type;
+        this.video = video;
+        this.pictures = pictures;
+        this.createTime = createTime;
+        this.modifyTime = modifyTime;
+        this.longitude = longitude;
+        this.latitude = latitude;
+        this.heartCount = heartCount;
+        this.selfHeart = selfHeart;
+        this.commentCount = commentCount;
+        this.follow = follow;
         this.nick = nick;
         this.birth = birth;
         this.gender = gender;
@@ -45,6 +72,7 @@ public class DynamicDto {
 
     private Long id;
     private Long userId;
+    private String digitId;
     private String content;
     private int type;
     @JsonIgnore
@@ -60,6 +88,7 @@ public class DynamicDto {
     private Long heartCount;
     private Long selfHeart;
     private Long commentCount;
+    private Long follow;
     private List<String> pictureUrlList; // 图片列表
     private List<String> pictureThumbnailUrlList; // 图片缩略图列表
     private String videoUrl;    // 视频

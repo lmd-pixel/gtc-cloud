@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Api(description = "收益管理")
 @RestController
@@ -33,10 +35,10 @@ public class ProfitManagerController {
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
             @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query", required = false),
             @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query", required = false),
-            @ApiImplicitParam(name = "type", value = "通话类型： 0: 语音通话， 1：视频通话",  required = true, paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "type", value = "通话类型： 0: 语音通话， 1：视频通话",  paramType = "query", defaultValue = "0", dataType = "Integer"),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
     @PreAuthorize("hasAnyRole('MANAGER')")
@@ -47,11 +49,11 @@ public class ProfitManagerController {
             @RequestParam(value = "type") @Range(min = 0, max = 1) Integer type,
             @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
-            @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+            @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
-        List<AnchorCallBillDto> anchorCallBillDtoList = profitManagerService
+        Pair<List<AnchorCallBillDto>, Map<String, Object>> anchorCallBillDtoList = profitManagerService
                 .getAnchorCallProfitList(digitId, nick, startTime, endTime, type, pageIndex, pageSize);
-        return ApiResp.succeed(anchorCallBillDtoList);
+        return ApiResp.succeed(anchorCallBillDtoList.getFirst(), anchorCallBillDtoList.getSecond());
     }
 
     @ApiOperation(value = "获取主播私信收益列表")

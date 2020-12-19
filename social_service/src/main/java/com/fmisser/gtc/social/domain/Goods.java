@@ -17,48 +17,47 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 用户花钱购买的商品
+ * 用户用游戏内资产购买的消费品
  */
 
 @Entity
-@Table(name = "t_product")
+@Table(name = "t_goods")
 @Data
 @EntityListeners(AuditingEntityListener.class)
 @DynamicInsert
 @DynamicUpdate
-public class Product {
+public class Goods {
     @JsonIgnore
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 唯一标识一个产品的名称
+    // 唯一标识一个消费品的名称
     @Column(nullable = false, unique = true)
     private String name;
 
     @Column
     private String message;
 
-    // 商品级别，用来排序等
+    // 消费品级别，用来排序等
     @Column(nullable = false, columnDefinition = "int default 0")
     private int level = 0;
 
-    // 充值的币种 0: 人民币
+    // 消费品类型 0： 使用聊币
     @Column(nullable = false)
     private int type;
 
-    // 充值价格
+    // 购买的价格
     @Column(nullable = false)
     private BigDecimal price;
 
-    // 充值获得的聊币
-    @Column(nullable = false)
-    private BigDecimal coin;
+    // 购买限制 0: 不限制， 其他按数量多少限制
+    @Column(name = "limit_count", nullable = false)
+    private int limitCount;
 
-    @JsonIgnore
-    // 充值的平台 0：苹果支付
-    @Column(nullable = false)
-    private int plt;
+    // 限制周期 0: 无期限 1：每天（0点刷新库存） 2：每天（5点刷新库存） 3：每周（0点刷新） 4：每月
+    @Column(nullable = false, name = "limit_type")
+    private int limitType;
 
     // 有效期开始
     @Column

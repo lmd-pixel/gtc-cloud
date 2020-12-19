@@ -2,13 +2,11 @@ package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.dto.social.*;
 import com.fmisser.gtc.base.exception.ApiException;
+import com.fmisser.gtc.social.domain.Asset;
 import com.fmisser.gtc.social.domain.IdentityAudit;
 import com.fmisser.gtc.social.domain.Recommend;
 import com.fmisser.gtc.social.domain.User;
-import com.fmisser.gtc.social.repository.IdentityAuditRepository;
-import com.fmisser.gtc.social.repository.RecommendRepository;
-import com.fmisser.gtc.social.repository.UserRepository;
-import com.fmisser.gtc.social.repository.WithdrawAuditRepository;
+import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.UserManagerService;
 import com.fmisser.gtc.social.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,15 +25,18 @@ public class UserManagerServiceImpl implements UserManagerService {
     private final UserRepository userRepository;
     private final RecommendRepository recommendRepository;
     private final IdentityAuditRepository identityAuditRepository;
+    private final AssetRepository assetRepository;
 
     public UserManagerServiceImpl(UserService userService,
                                   UserRepository userRepository,
                                   RecommendRepository recommendRepository,
-                                  IdentityAuditRepository identityAuditRepository) {
+                                  IdentityAuditRepository identityAuditRepository,
+                                  AssetRepository assetRepository) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.recommendRepository = recommendRepository;
         this.identityAuditRepository = identityAuditRepository;
+        this.assetRepository = assetRepository;
     }
 
     @Override
@@ -142,6 +143,9 @@ public class UserManagerServiceImpl implements UserManagerService {
     @Override
     public User getUserProfile(String digitId) throws ApiException {
         User user = userService.getUserByDigitId(digitId);
+        // 附带用户金币数据
+        Asset asset = assetRepository.findByUserId(user.getId());
+        user.setCoin(asset.getCoin());
         return userService.profile(user);
     }
 

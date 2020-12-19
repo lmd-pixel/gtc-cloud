@@ -4,19 +4,26 @@ import com.fmisser.gtc.base.dto.social.FollowDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.Follow;
+import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.repository.FollowRepository;
+import com.fmisser.gtc.social.repository.UserRepository;
 import com.fmisser.gtc.social.service.FollowService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FollowServiceImpl implements FollowService {
 
     private final FollowRepository followRepository;
+    private final UserRepository userRepository;
 
-    public FollowServiceImpl(FollowRepository followRepository) {
+    public FollowServiceImpl(FollowRepository followRepository,
+                             UserRepository userRepository) {
         this.followRepository = followRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -29,6 +36,7 @@ public class FollowServiceImpl implements FollowService {
         return ApiResp.succeed(followRepository.getFollowsTo(userId));
     }
 
+    @Transactional
     @Override
     public ApiResp<FollowDto> follow(Long userIdFrom, Long userIdTo, boolean bFollow) throws ApiException {
         Follow follow = followRepository.findByUserIdFromAndUserIdTo(userIdFrom, userIdTo);
@@ -38,10 +46,18 @@ public class FollowServiceImpl implements FollowService {
             follow.setUserIdTo(userIdTo);
         }
 
+//        Optional<User> userOptional = userRepository.findById(userIdTo);
+//        if (!userOptional.isPresent()) {
+//            throw new ApiException(-1, "被关注的用户不存在");
+//        }
+//        User userTo = userOptional.get();
+
         if (bFollow) {
             follow.setStatus(1);
+            userRepository.addUserFollow(userIdTo);
         } else {
             follow.setStatus(0);
+            userRepository.subUserFollow(userIdTo);
         }
 
         follow = followRepository.save(follow);

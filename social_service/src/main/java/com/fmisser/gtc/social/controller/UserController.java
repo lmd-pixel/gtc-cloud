@@ -2,7 +2,11 @@ package com.fmisser.gtc.social.controller;
 
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.response.ApiResp;
+import com.fmisser.gtc.social.domain.Asset;
+import com.fmisser.gtc.social.domain.IdentityAudit;
 import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.social.service.AssetService;
+import com.fmisser.gtc.social.service.IdentityAuditService;
 import com.fmisser.gtc.social.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -15,10 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.ws.rs.DELETE;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Api(description = "用户API")
 @RestController
@@ -27,9 +28,15 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final AssetService assetService;
+    private final IdentityAuditService identityAuditService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService,
+                          AssetService assetService,
+                          IdentityAuditService identityAuditService) {
         this.userService = userService;
+        this.assetService = assetService;
+        this.identityAuditService = identityAuditService;
     }
 
     @ApiOperation(value = "创建用户")
@@ -119,4 +126,56 @@ public class UserController {
         int ret = userService.logout(userDo);
         return ApiResp.succeed(ret);
     }
+
+    @ApiOperation(value = "判断用户是否已经存在")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @GetMapping(value = "/exist")
+    ApiResp<Integer> getUserExist() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+        if (Objects.nonNull(userDo)) {
+            return ApiResp.succeed(1);
+        } else {
+            return ApiResp.succeed(0);
+        }
+    }
+
+    @ApiOperation(value = "获取用户资产信息")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @GetMapping(value = "/asset")
+    ApiResp<Asset> getUserAsset() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+        Asset asset = assetService.getAsset(userDo);
+        return ApiResp.succeed(asset);
+    }
+
+    @ApiOperation(value = "请求身份审核")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @PostMapping(value = "/request-identity")
+    ApiResp<Integer> requestIdentity() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        int ret = identityAuditService.requestIdentityAudit(userDo);
+        return ApiResp.succeed(ret);
+    }
+
+    @ApiOperation(value = "获取最新的身份审核信息")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @GetMapping(value = "/get-identity-info")
+    ApiResp<List<IdentityAudit>> getIdentityInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+        List<IdentityAudit> identityAuditList = identityAuditService.getLatestAuditAllType(userDo);
+        return ApiResp.succeed(identityAuditList);
+    }
+
+
+
+
 }

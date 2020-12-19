@@ -14,7 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 public class IdentityAuditServiceImpl implements IdentityAuditService {
@@ -66,6 +69,7 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
             throw new ApiException(-1, "用户资料仍在审核中，无法再次提交");
         } else {
             IdentityAudit audit = new IdentityAudit();
+            audit.setSerialNumber(createAuditSerialNumber(user.getId(), 1));
             audit.setUserId(user.getId());
             audit.setType(1);
             audit.setStatus(10);
@@ -79,6 +83,7 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
             throw new ApiException(-1, "用户照片仍在审核中，无法再次提交");
         } else {
             IdentityAudit audit = new IdentityAudit();
+            audit.setSerialNumber(createAuditSerialNumber(user.getId(), 2));
             audit.setUserId(user.getId());
             audit.setType(2);
             audit.setStatus(10);
@@ -92,6 +97,7 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
             throw new ApiException(-1, "用户视频仍在审核中，无法再次提交");
         } else {
             IdentityAudit audit = new IdentityAudit();
+            audit.setSerialNumber(createAuditSerialNumber(user.getId(), 3));
             audit.setUserId(user.getId());
             audit.setType(3);
             audit.setStatus(10);
@@ -99,6 +105,11 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
         }
 
         return 1;
+    }
+
+    @Override
+    public List<IdentityAudit> getLatestAuditAllType(User user) throws ApiException {
+        return identityAuditRepository.getLatestWithAllType(user.getId());
     }
 
     /**
@@ -180,13 +191,13 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
      */
     private boolean _checkProfileCompleted(User user) {
         return !StringUtils.isEmpty(user.getHead()) &&
-                !StringUtils.isEmpty(user.getVoice()) &&
+//                !StringUtils.isEmpty(user.getVoice()) &&
                 !StringUtils.isEmpty(user.getLabels()) &&
                 !StringUtils.isEmpty(user.getProfession()) &&
                 !StringUtils.isEmpty(user.getIntro()) &&
-                !StringUtils.isEmpty(user.getCity()) &&
-                user.getVideoPrice() != null &&
-                user.getCallPrice() != null;
+                !StringUtils.isEmpty(user.getCity()) ;
+//                user.getVideoPrice() != null &&
+//                user.getCallPrice() != null;
     }
 
     /**
@@ -198,5 +209,14 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
 
     private boolean _checkVideoCompleted(User user) {
         return !StringUtils.isEmpty(user.getVideo());
+    }
+
+    // 创建审核编号
+    private String createAuditSerialNumber(long userId, int type) {
+        // 编号号 = 当前时间戳 + 用户id（格式化成10位） + type 格式话成两位
+        return String.format("%d%010d%02d",
+                new Date().getTime(),
+                userId,
+                type);
     }
 }

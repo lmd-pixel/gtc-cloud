@@ -2,9 +2,11 @@ package com.fmisser.gtc.social.service;
 
 import com.fmisser.gtc.base.dto.social.*;
 import com.fmisser.gtc.base.exception.ApiException;
+import org.springframework.data.util.Pair;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 收益管理服务
@@ -12,10 +14,10 @@ import java.util.List;
 
 public interface ProfitManagerService {
     // 获取主播通话收益列表
-    List<AnchorCallBillDto> getAnchorCallProfitList(String digitId, String nick,
-                                                    Date startTime, Date endTime,
-                                                    Integer type,
-                                                    int pageIndex, int pageSize) throws ApiException;
+    Pair<List<AnchorCallBillDto>, Map<String, Object>> getAnchorCallProfitList(String digitId, String nick,
+                                                                               Date startTime, Date endTime,
+                                                                               Integer type,
+                                                                               int pageIndex, int pageSize) throws ApiException;
 
     // 获取主播消息收益列表
     List<AnchorMessageBillDto> getAnchorMessageProfitList(String digitId, String nick,

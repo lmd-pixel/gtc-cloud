@@ -41,7 +41,7 @@ public class FollowController {
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/op")
     ApiResp<FollowDto> followOp(@RequestParam("userIdFrom") Long userIdFrom,
-                                @RequestParam("userIdFrom") Long userIdTo,
+                                @RequestParam("userIdTo") Long userIdTo,
                                 @RequestParam("follow") int follow) {
         return followService.follow(userIdFrom, userIdTo, follow == 1);
     }

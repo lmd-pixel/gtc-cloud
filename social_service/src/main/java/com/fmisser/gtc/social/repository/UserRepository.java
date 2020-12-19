@@ -6,8 +6,10 @@ import com.fmisser.gtc.social.domain.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -21,10 +23,81 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByDigitId(String digitId);
     Page<User> findByIdentityOrderByCreateTimeDesc(int identity, Pageable pageable);
 
-    // 获取主播列表
-    @Query(value = "SELECT * FROM t_user WHERE identity = 1 ORDER BY create_time DESC ",
+    // 注意 要开启事务, service 开启了的话这里不用开启
+//    @Transactional
+    @Modifying(clearAutomatically = true)
+    @Query(value = "UPDATE t_user set follows = follows + 1 WHERE id = ?1", nativeQuery = true)
+    int addUserFollow(Long userId);
+
+    @Modifying(clearAutomatically = true)
+    @Query(value = "UPDATE t_user set follows = follows + 1 WHERE id = ?1", nativeQuery = true)
+    int subUserFollow(Long userId);
+
+    // 获取主播列表,根据创建时间排序
+    @Query(value = "SELECT * FROM t_user " +
+            "WHERE identity = 1 " +
+            "AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
+            "ORDER BY create_time DESC ",
+            countQuery = "SELECT COUNT(*) FROM t_user " +
+                    "WHERE identity = 1 " +
+                    "AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL)",
             nativeQuery = true)
-    Page<Long> getAnchorList(Pageable pageable);
+    Page<User> getAnchorListByCreateTime(Integer gender, Pageable pageable);
+
+    // 获取主播列表，根据总收益排序
+    @Query(value = "SELECT tu.*, " +
+            "IFNULL(SUM(tmb.profit_coin), 0) + " +
+            "IFNULL(SUM(tgb.profit_coin), 0) + " +
+            "IFNULL(SUM(tcb.profit_coin), 0) AS profit " +
+            "FROM t_user tu " +
+            "LEFT JOIN t_message_bill tmb ON tu.id = tmb.user_id_to " +
+            "LEFT JOIN t_gift_bill tgb ON tu.id = tgb.user_id_to " +
+            "LEFT JOIN t_call_bill tcb ON tu.id = tcb.user_id_to " +
+            "WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
+            "GROUP BY tu.id ORDER BY profit DESC ",
+    countQuery = "SELECT COUNT(*) FROM t_user " +
+            "WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " ,
+    nativeQuery = true)
+    Page<User> getAnchorListByProfit(Integer gender, Pageable pageable);
+
+    // 获取主播列表，根据系统推荐
+    @Query(value = "SELECT tu.* " +
+            "FROM t_user tu " +
+            "INNER JOIN t_recommend tr ON tr.type = 0 AND tr.recommend = 1 AND tr.user_id = tu.id " +
+            "WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
+            "ORDER BY tr.level",
+            countQuery = "SELECT COUNT(*) " +
+            "FROM t_user tu " +
+            "INNER JOIN t_recommend tr ON tr.type = 0 AND tr.recommend = 1 AND tr.user_id = tu.id " +
+            "WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) ",
+            nativeQuery = true)
+    Page<User> getAnchorListBySystem(Integer gender, Pageable pageable);
+
+    // 获取主播列表，根据关注排序
+    @Query(value = "SELECT * FROM t_user " +
+            "WHERE identity = 1 " +
+            "AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
+            "ORDER BY follows DESC ",
+            countQuery = "SELECT COUNT(*) FROM t_user " +
+                    "WHERE identity = 1 " +
+                    "AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL)",
+            nativeQuery = true)
+    Page<User> getAnchorListByFollow(Integer gender, Pageable pageable);
+
+    // 根据推荐+关注排序
+    @Query(value = "(SELECT tu.*, 1 AS sort1, tu.follows AS sort2 FROM t_user tu " +
+            "INNER JOIN t_recommend tr ON tr.type = 0 AND tr.recommend = 1 AND tr.user_id = tu.id " +
+            "WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
+            "ORDER BY tr.level) UNION ALL " +
+            "(SELECT tu2.*, 0 AS sort1, tu2.follows AS sort2 FROM t_user tu2 " +
+            "LEFT JOIN t_recommend tr2 ON tr2.type = 0 AND tr2.recommend = 1 AND tr2.user_id = tu2.id " +
+            "WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND tr2.id IS NULL) " +
+            "ORDER BY sort1 DESC , sort2 DESC",
+            countQuery = "SELECT COUNT(*) FROM t_user " +
+                    "WHERE identity = 1 " +
+                    "AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL)",
+            nativeQuery = true)
+    Page<User> getAnchorListBySystemAndFollow(Integer gender, Pageable pageable);
 
     // 获取总注册人数，给定时间内的注册人数，认证用户总人数，给定时间内认证用户人数
     @Query(value = "SELECT COUNT(*) FROM t_user UNION ALL " +

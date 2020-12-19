@@ -15,54 +15,58 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
 
-/**
- * 通用账单
- */
+// 用户购买消费品的账单
 
 @Entity
-@Table(name = "t_common_bill",
+@Table(name = "t_consume_bill",
         indexes = {@Index(columnList = "userId")})
 @Data
 @EntityListeners(AuditingEntityListener.class)
 @DynamicInsert
 @DynamicUpdate
-public class CommonBill {
+public class ConsumeBill {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 流水号
+    @Column(nullable = false, unique = true)
+    private String serialNumber;
+
     @Column(nullable = false)
     private Long userId;
 
-    // 流水号，保留
+    // 购买的消费品id
     @Column
-    private String serialNumber;
+    private Long goodId;
 
+    // 商品具体充值币
+    @Column
+    private BigDecimal coin;
+
+    // 充值前币
     @Column
     private BigDecimal coinBefore;
 
+    // 充值后币
     @Column
     private BigDecimal coinAfter;
 
-    @Column
-    private BigDecimal coinDelta;
-
     /**
-     * 0： 入账
-     * 1： 出账
+     * 购买状态
+     * 10: 购买成功
+     * 20：购买失败
      */
     @Column
-    private int type;
+    private int status;
 
-    /**
-     * 出入帐的行为
-     * 1： 充值
-     * 21：奖励
-     * 61: 提现
-     * 71: 购买vip
-     */
     @Column
-    private int action;
+    private String remark;
+
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column
+    private Date finishTime;
 
     @CreatedDate
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")

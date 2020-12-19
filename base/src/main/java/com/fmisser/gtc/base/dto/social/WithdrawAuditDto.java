@@ -13,6 +13,10 @@ public interface WithdrawAuditDto {
     String getNick();
     String getOrderNumber();
     BigDecimal getDrawActual();
+    BigDecimal getDrawCurr();
+    BigDecimal getDrawMax();
+    BigDecimal getFee();
+    BigDecimal getFeeRatio();
     BigDecimal getCoinAfter();
     Integer getStatus();
     String getRemark();

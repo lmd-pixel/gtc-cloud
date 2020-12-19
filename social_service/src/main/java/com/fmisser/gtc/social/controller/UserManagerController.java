@@ -150,8 +150,8 @@ public class UserManagerController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
             @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query", required = true),
-            @ApiImplicitParam(name = "type", value = "推荐模块 0: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人", required = true, paramType = "query", dataType = "Integer"),
-            @ApiImplicitParam(name = "recommend", value = "是否推荐 0：取消推荐 1：设置成推荐", paramType = "query", required = true, dataType = "Integer"),
+            @ApiImplicitParam(name = "type", value = "推荐模块 0: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "recommend", value = "是否推荐 0：取消推荐 1：设置成推荐", paramType = "query", defaultValue = "0", dataType = "Integer"),
             @ApiImplicitParam(name = "level", value = "推荐排序数值 如果取消推荐，这个字段可以不填", paramType = "query", dataType = "Integer")
     })
     @PutMapping(value = "/config-recommend")
@@ -200,7 +200,7 @@ public class UserManagerController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
             @ApiImplicitParam(name = "serialNumber", value = "申请编号", paramType = "query", required = true),
-            @ApiImplicitParam(name = "operate", value = "审核操作： 0: 审核不通过 1：审核通过", required = true, paramType = "query", dataType = "Integer"),
+            @ApiImplicitParam(name = "operate", value = "审核操作： 0: 审核不通过 1：审核通过", paramType = "query", defaultValue = "0", dataType = "Integer"),
             @ApiImplicitParam(name = "message", value = "审核备注信息", paramType = "query")
     })
     @PutMapping(value = "/anchor-audit")

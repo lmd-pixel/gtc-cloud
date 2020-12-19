@@ -37,9 +37,11 @@ public class Recommend {
     @Column
     private int type;
 
+    // 等级 排序用
     @Column
     private Long level;
 
+    // 是否推荐 0：否， 1：是
     @Column
     private int recommend;
 

@@ -20,6 +20,7 @@ import io.minio.ObjectWriteResponse;
 import lombok.SneakyThrows;
 import org.hibernate.PessimisticLockException;
 import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -150,11 +151,15 @@ public class DynamicServiceImpl implements DynamicService {
         }
 
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        List<DynamicDto> dynamicDtos =  dynamicRepository
-                .getUserDynamicList(user.getId(), selfUserId, pageable)
-                .getContent();
+        Page<DynamicDto> dynamicDtos = dynamicRepository
+                .getUserDynamicList(user.getId(), selfUserId, pageable);
 
-        return _prepareDynamicDtoResponse(dynamicDtos);
+//        long totalEle = dynamicDtos.getTotalElements();
+//        System.out.println(totalEle);
+//        long totalPage = dynamicDtos.getTotalPages();
+//        System.out.println(totalPage);
+
+        return _prepareDynamicDtoResponse(dynamicDtos.getContent());
     }
 
     @Override
@@ -362,7 +367,7 @@ public class DynamicServiceImpl implements DynamicService {
 
     private DynamicDto _prepareDynamicResponse(Dynamic dynamic, User user) {
         DynamicDto dynamicDto = new DynamicDto(
-                dynamic.getId(), dynamic.getUserId(),
+                dynamic.getId(), dynamic.getUserId(), user.getDigitId(),
                 dynamic.getContent(), dynamic.getType(),
                 dynamic.getVideo(), dynamic.getPictures(),
                 dynamic.getCreateTime(), dynamic.getModifyTime(),

@@ -20,9 +20,9 @@ import java.util.Date;
 @DynamicInsert
 @DynamicUpdate
 public class Call {
-            @Id
-            @GeneratedValue(strategy = GenerationType.IDENTITY)
-            private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     // 房间id
     @Column(nullable = false, unique = true)

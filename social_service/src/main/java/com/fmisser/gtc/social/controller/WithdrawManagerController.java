@@ -40,10 +40,10 @@ public class WithdrawManagerController {
     @ApiOperation(value = "获取提现审核列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
-            @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query", required = false),
-            @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query", required = false),
-            @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
-            @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
+            @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query"),
+            @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query"),
+            @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date"),
+            @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date"),
             @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
@@ -64,11 +64,11 @@ public class WithdrawManagerController {
     @ApiOperation(value = "获取打款审核列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
-            @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query", required = false),
-            @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query", required = false),
-            @ApiImplicitParam(name = "type", value = "打款账户类型 0：支付宝， 1：银行卡", paramType = "query", required = false, dataType = "Integer"),
-            @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
-            @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
+            @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query"),
+            @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query"),
+            @ApiImplicitParam(name = "type", value = "打款账户类型 0：支付宝， 1：银行卡", paramType = "query", dataType = "Integer"),
+            @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date"),
+            @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date"),
             @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
@@ -91,11 +91,11 @@ public class WithdrawManagerController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
             @ApiImplicitParam(name = "orderNumber", value = "订单号", paramType = "query", required = true),
-            @ApiImplicitParam(name = "operate", value = "审核操作 0：不通过， 1：通过", paramType = "query", required = true, dataType = "Integer"),
-            @ApiImplicitParam(name = "message", value = "备注信息", paramType = "query", required = false)
+            @ApiImplicitParam(name = "operate", value = "审核操作 0：不通过， 1：通过", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "message", value = "备注信息", paramType = "query")
     })
     @PreAuthorize("hasAnyRole('MANAGER')")
-    @RequestMapping(value = "/withdraw-audit", method = RequestMethod.PUT)
+    @RequestMapping(value = "/withdraw-audit", method = RequestMethod.POST)
     public ApiResp<Integer> withdrawAudit(@RequestParam(value = "orderNumber") String orderNumber,
                                           @RequestParam(value = "operate") @Range(min = 0, max = 1, message = "参数范围不合法!") int operate,
                                           @RequestParam(value = "message", required = false) String message) {
@@ -107,12 +107,12 @@ public class WithdrawManagerController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
             @ApiImplicitParam(name = "orderNumber", value = "订单号", paramType = "query", required = true),
-            @ApiImplicitParam(name = "operate", value = "打款操作 0：打款失败， 1：打款成功， 2： 部分打款（保留）", paramType = "query", required = true, dataType = "Integer"),
-            @ApiImplicitParam(name = "payActual", value = "实际打款金额, 如果是部分打款，此参数必须", paramType = "query", required = false, dataType = "number"),
-            @ApiImplicitParam(name = "message", value = "备注信息", paramType = "query", required = false)
+            @ApiImplicitParam(name = "operate", value = "打款操作 0：打款失败， 1：打款成功， 2： 部分打款（保留）", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "payActual", value = "实际打款金额, 如果是部分打款，此参数必须", paramType = "query", dataType = "number"),
+            @ApiImplicitParam(name = "message", value = "备注信息", paramType = "query")
     })
     @PreAuthorize("hasAnyRole('MANAGER')")
-    @RequestMapping(value = "/pay-audit", method = RequestMethod.PUT)
+    @RequestMapping(value = "/pay-audit", method = RequestMethod.POST)
     public ApiResp<Integer> payAudit(@RequestParam(value = "orderNumber") String orderNumber,
                                      @RequestParam(value = "operate") @Range(min = 0, max = 1, message = "参数范围不合法!") int operate,
                                      @RequestParam(value = "payActual", required = false) /*@DecimalMin(value = "0")*/ Double payActual,
@@ -129,11 +129,11 @@ public class WithdrawManagerController {
     @ApiOperation(value = "获取提现记录")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
-            @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query", required = false),
-            @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query", required = false),
+            @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query"),
+            @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query"),
             @ApiImplicitParam(name = "status", value = "提现状态： 0:待审核 1:待打款 2: 审核未通过 3：打款完成 4：全部（默认）", paramType = "query", dataType = "Integer"),
-            @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
-            @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
+            @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date"),
+            @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date"),
             @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })

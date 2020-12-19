@@ -4,6 +4,7 @@ import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.IdentityAudit;
 import com.fmisser.gtc.social.domain.User;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -22,6 +23,9 @@ public interface IdentityAuditService {
 
     // 请求身份认证审核
     int requestIdentityAudit(User user) throws ApiException;
+
+    // 一次性获得最近的一次审核数据
+    List<IdentityAudit> getLatestAuditAllType(User user) throws ApiException;
 
     // 响应身份认证审核结果
     // 由满足权限的审核角色操作

@@ -17,6 +17,12 @@ public interface IdentityAuditRepository extends JpaRepository<IdentityAudit, Lo
     // 获取最新的指定类型的审核
     Optional<IdentityAudit> findTopByUserIdAndTypeOrderByCreateTimeDesc(Long userId, int type);
 
+    @Query(value = "(SELECT * FROM t_identity_audit WHERE user_id = ?1 AND type = 1 ORDER BY create_time DESC LIMIT 1) " +
+            "UNION ALL (SELECT * FROM t_identity_audit WHERE user_id = ?1 AND type = 2 ORDER BY create_time DESC LIMIT 1) " +
+            "UNION ALL (SELECT * FROM t_identity_audit WHERE user_id = ?1 AND type = 3 ORDER BY create_time DESC LIMIT 1)",
+            nativeQuery = true)
+    List<IdentityAudit> getLatestWithAllType(Long userId);
+
     // 通过审核编号获取
     IdentityAudit findBySerialNumber(String serialNumber);
 
