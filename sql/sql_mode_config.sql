@@ -75,3 +75,24 @@ commit ;
 select * from rr_test;
 
 
+-- 考虑一个复杂查询：获取主播列表，推荐表中数据（level排序）+粉丝数排序
+-- 方案1： union 联合，但每个子select语句无法 order by，如果需要order by 必须结合limit，
+--        问题是limit的值不太好具体指定，可以指定个很大的值，也不太好结合jpa去使用
+
+-- 方案2： union 联合，每个子select语句增加需要排序的字段，最后统一order by，
+--        问题是增加了自定义排序字段后，两个子查询的结果集无法再通过union 去重，因为排序字段的值不同
+
+-- 方案3： union all 联合查询，不实用union 去重，对比方案2，自己去重，
+--        第二个select子句使用left join(a join b 不包含交集部分：通过最后判断 b.key is null)
+
+-- 结合jpa的分页，countQuery可以直接使用条件筛选部分，因为最终都是t_user的筛选用户
+(SELECT tu.*, 1 AS sort1, tu.follows AS sort2 FROM `gtc-social-db`.t_user tu
+INNER JOIN t_recommend tr ON tr.type = 0 AND tr.recommend = 1 AND tr.user_id = tu.id
+WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL)
+ORDER BY tr.level) UNION ALL
+(SELECT tu2.*, 0 AS sort1, tu2.follows AS sort2 FROM `gtc-social-db`.t_user tu2
+LEFT JOIN t_recommend tr2 ON tr2.type = 0 AND tr2.recommend = 1 AND tr2.user_id = tu2.id
+WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND tr2.id IS NULL)
+ORDER BY sort1 DESC , sort2 DESC
+
+
