@@ -22,7 +22,7 @@ public class ConsumeServiceImpl implements ConsumeService {
     @Override
     public int buyVip(User user) throws ApiException {
 
-        final BigDecimal vipPrice = BigDecimal.valueOf(888);
+        final BigDecimal vipPrice = BigDecimal.valueOf(8888);
 
         Asset asset = assetRepository.findByUserId(user.getId());
 //        if (asset.getVipLevel() > 0) {
