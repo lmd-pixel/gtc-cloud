@@ -21,4 +21,5 @@ public interface UserService {
     User updateVideo(User user, Map<String, MultipartFile> multipartFileMap) throws ApiException;
     int logout(User user) throws ApiException;
     List<User> getAnchorList(Integer type, Integer gender, int pageIndex, int pageSize) throws ApiException;
+    User getAnchorProfile(User user, User selfUser) throws ApiException;
 }

@@ -2,6 +2,7 @@ package com.fmisser.gtc.social.controller;
 
 import com.fmisser.gtc.base.dto.social.DynamicCommentDto;
 import com.fmisser.gtc.base.dto.social.DynamicDto;
+import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.Dynamic;
 import com.fmisser.gtc.social.domain.User;

@@ -184,4 +184,12 @@ public class User {
 
     @Transient
     private BigDecimal coin;
+
+    // 是否被别人屏蔽动态
+    @Transient
+    private int blockDynamic;
+
+    // 是否被别人屏蔽聊天
+    @Transient
+    private int blockChat;
 }

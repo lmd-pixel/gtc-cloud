@@ -15,15 +15,15 @@ import com.fmisser.gtc.base.utils.AuthUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service("top")
 public class UserDetailServiceImpl implements UserService {
@@ -98,6 +98,41 @@ public class UserDetailServiceImpl implements UserService {
     }
 
     @Override
+    public User editUser(String username, String password, String roleName) throws ApiException {
+        Optional<User> userOptional = Optional.ofNullable(userRepository.findByUsername(username));
+        if (!userOptional.isPresent()) {
+            throw new ApiException(-1, "用户不存在存在");
+        }
+
+        User user = userOptional.get();
+
+        if (Objects.nonNull(password)) {
+            String encodePwd = passwordEncoder.encode(password);
+            user.setPassword(encodePwd);
+        }
+
+        if (Objects.nonNull(roleName)) {
+//            List<String> roleList = user.getAuthorities().stream()
+//                .map(GrantedAuthority::getAuthority)
+//                .collect(Collectors.toList());
+//            if (roleList.contains(roleName)) {
+//                throw new ApiException(-1, "用户角色已存在");
+//            }
+
+            Role role = roleRepository.findByName(roleName);
+            if (role == null) {
+                throw new ApiException(-1, "不存在该权限");
+            }
+
+            user.setAuthorities(_innerCreteRole(role));
+        }
+
+        User savedUser = userRepository.save(user);
+        logger.info("user has been updated: {}", savedUser.getUsername());
+        return savedUser;
+    }
+
+    @Override
     public int enableUser(String username, int enable) throws ApiException {
         Optional<User> userOptional = Optional.ofNullable(userRepository.findByUsername(username));
         if (!userOptional.isPresent()) {
@@ -113,7 +148,17 @@ public class UserDetailServiceImpl implements UserService {
 
     @Override
     public int deleteUser(String username) throws ApiException {
-        throw new ApiException(-1,"危险操作，已禁止");
+//        throw new ApiException(-1,"危险操作，已禁止");
+        Optional<User> userOptional = Optional.ofNullable(userRepository.findByUsername(username));
+        if (!userOptional.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+
+        User user = userOptional.get();
+        user.setLocked(1);
+        userRepository.save(user);
+
+        return 1;
     }
 
     @Override

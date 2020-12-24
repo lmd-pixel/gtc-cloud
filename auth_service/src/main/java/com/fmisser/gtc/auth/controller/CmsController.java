@@ -7,7 +7,9 @@ import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.response.ApiResp;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.Size;
 import java.security.Principal;
+import java.util.Objects;
 
 @Api(description = "管理账户中心")
 @RestController
@@ -85,6 +88,75 @@ public class CmsController {
     public ApiResp<User> createOperate(@RequestParam("username") String username,
                               @RequestParam("password") @Size(min = 6, max = 16) String password) {
         return ApiResp.succeed(userService.create(username, password, "ROLE_OPERATE"));
+    }
+
+    @ApiOperation(value = "禁用/启用账号")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @RequestMapping(value = "/create-operate", method = RequestMethod.POST)
+    public ApiResp<Integer> disableAccount(@RequestParam("username") String username,
+                                       @RequestParam("enable") int enable) {
+        return ApiResp.succeed(userService.enableUser(username, enable));
+    }
+
+    @ApiOperation(value = "删除账号")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @RequestMapping(value = "/create-operate", method = RequestMethod.POST)
+    public ApiResp<Integer> deleteAccount(@RequestParam("username") String username) {
+        return ApiResp.succeed(userService.deleteUser(username));
+    }
+
+    @ApiOperation(value = "编辑业务账号")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
+            @ApiImplicitParam(name = "username", value = "用户名", required = true, dataType = "String", paramType = "query"),
+            @ApiImplicitParam(name = "password", value = "密码", dataType = "String", paramType = "query"),
+            @ApiImplicitParam(name = "password", value = "角色 1：客服， 2：财务， 3：运营", dataType = "Integer", paramType = "query"),
+    })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @RequestMapping(value = "/edit-account", method = RequestMethod.POST)
+    public ApiResp<User> editAccount(@RequestParam("username") String username,
+                                        @RequestParam(value = "password", required = false) @Size(min = 6, max = 16) String password,
+                                        @RequestParam(value = "role", required = false) Integer role) {
+        String roleName = null;
+        if (Objects.nonNull(role)) {
+            if (role == 1) {
+                roleName = "ROLE_CUSTOMER_SERVICE";
+            } else if (role == 2) {
+                roleName = "ROLE_FINANCE";
+            } else if (role == 3) {
+                roleName = "ROLE_OPERATE";
+            }
+        }
+
+        return ApiResp.succeed(userService.editUser(username, password, roleName));
+    }
+
+    @ApiOperation(value = "创建业务账号")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
+            @ApiImplicitParam(name = "username", value = "用户名", required = true, dataType = "String", paramType = "query"),
+            @ApiImplicitParam(name = "password", value = "密码", dataType = "String", paramType = "query"),
+            @ApiImplicitParam(name = "password", value = "角色 1：客服， 2：财务， 3：运营", dataType = "Integer", paramType = "query"),
+    })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @RequestMapping(value = "/create-account", method = RequestMethod.POST)
+    public ApiResp<User> createAccount(@RequestParam("username") String username,
+                                     @RequestParam(value = "password") @Size(min = 6, max = 16) String password,
+                                     @RequestParam(value = "role") @Range(min = 1, max = 3) Integer role) {
+        String roleName = null;
+        if (Objects.nonNull(role)) {
+            if (role == 1) {
+                roleName = "ROLE_CUSTOMER_SERVICE";
+            } else if (role == 2) {
+                roleName = "ROLE_FINANCE";
+            } else if (role == 3) {
+                roleName = "ROLE_OPERATE";
+            }
+        }
+
+        return ApiResp.succeed(userService.create(username, password, roleName));
     }
 }
 

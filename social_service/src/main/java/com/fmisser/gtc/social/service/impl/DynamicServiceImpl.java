@@ -147,7 +147,7 @@ public class DynamicServiceImpl implements DynamicService {
         // 如果不提供自己的 user id 则默认设置为0
         Long selfUserId = 0L;
         if (selfUser != null) {
-            selfUserId = user.getId();
+            selfUserId = selfUser.getId();
         }
 
         Pageable pageable = PageRequest.of(pageIndex, pageSize);

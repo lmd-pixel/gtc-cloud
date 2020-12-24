@@ -17,6 +17,8 @@ public interface UserService extends UserDetailsService {
      */
     User create(String username, String password, String roleName) throws ApiException;
 
+    User editUser(String username, String password, String roleName) throws ApiException;
+
     int enableUser(String username, int enable) throws ApiException;
 
     int deleteUser(String username) throws ApiException;

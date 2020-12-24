@@ -6,8 +6,10 @@ import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.base.response.ApiRespHelper;
 import com.fmisser.gtc.base.utils.CryptoUtils;
 import com.fmisser.gtc.base.utils.DateUtils;
+import com.fmisser.gtc.social.controller.BlockController;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.repository.AssetRepository;
+import com.fmisser.gtc.social.repository.BlockRepository;
 import com.fmisser.gtc.social.repository.LabelRepository;
 import com.fmisser.gtc.social.repository.UserRepository;
 import com.fmisser.gtc.social.service.IdentityAuditService;
@@ -46,18 +48,22 @@ public class UserServiceImpl implements UserService {
 
     private final AssetRepository assetRepository;
 
+    private final BlockRepository blockRepository;
+
     public UserServiceImpl(UserRepository userRepository,
                            MinioUtils minioUtils,
                            LabelRepository labelRepository,
                            OssConfProp ossConfProp,
                            IdentityAuditService identityAuditService,
-                           AssetRepository assetRepository) {
+                           AssetRepository assetRepository,
+                           BlockRepository blockRepository) {
         this.userRepository = userRepository;
         this.minioUtils = minioUtils;
         this.labelRepository = labelRepository;
         this.ossConfProp = ossConfProp;
         this.identityAuditService = identityAuditService;
         this.assetRepository = assetRepository;
+        this.blockRepository = blockRepository;
     }
 
     @Transactional
@@ -424,6 +430,37 @@ public class UserServiceImpl implements UserService {
         return userPage.stream()
                 .map(this::_prepareResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public User getAnchorProfile(User user, User selfUser) throws ApiException {
+        Long selfUserId = 0L;
+        if (Objects.nonNull(selfUser)) {
+            selfUserId = selfUser.getId();
+        }
+
+        User finalUser = profile(user);
+
+        // 获取屏蔽相关信息
+        List<Integer> types = Arrays.asList(10, 20);;
+        List<Block> blockList = blockRepository
+                .findByUserIdAndBlockUserIdAndTypeIsIn(selfUserId, finalUser.getId(), types);
+
+        blockList.forEach(block -> {
+            if (block.getBlock() == 1 && block.getType() == 10) {
+                finalUser.setBlockDynamic(1);
+            } else {
+                finalUser.setBlockDynamic(0);
+            }
+
+            if (block.getBlock() == 1 && block.getType() == 20) {
+                finalUser.setBlockChat(1);
+            } else {
+                finalUser.setBlockChat(0);
+            }
+        });
+
+        return finalUser;
     }
 
     // minio 存储原始图片和缩略图

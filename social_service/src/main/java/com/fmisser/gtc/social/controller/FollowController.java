@@ -33,6 +33,7 @@ public class FollowController {
     @ApiOperation(value = "获取用户关注的人")
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
     @GetMapping(value = "/from-list")
+        // TODO: 2020/12/21 不要使用用户自己传的user id
     ApiResp<List<FollowDto>> getFollowFromList(@RequestParam("userId") Long userId) {
         return followService.getFollowsFrom(userId);
     }
@@ -40,6 +41,7 @@ public class FollowController {
     @ApiOperation(value = "关注或者取消关注某人")
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/op")
+        // TODO: 2020/12/21 不要使用用户自己传的user id
     ApiResp<FollowDto> followOp(@RequestParam("userIdFrom") Long userIdFrom,
                                 @RequestParam("userIdTo") Long userIdTo,
                                 @RequestParam("follow") int follow) {

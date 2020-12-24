@@ -66,6 +66,16 @@ public class Dynamic {
     @Column(nullable = false, columnDefinition = "int default 0")
     private int isDelete = 0;
 
+    @Column
+    private String message;
+
+    // 状态：
+    // 1： 审核中
+    // 10： 审核通过
+    // column 创建的时候默认10，兼容以前的数据，新创建的默认审核中
+    @Column(nullable = false, columnDefinition = "int default 10")
+    private int status = 1;
+
 //    @OneToMany(mappedBy = "dynamic", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 //    private List<DynamicComment> comments = new ArrayList<>();
 

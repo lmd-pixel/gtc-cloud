@@ -41,10 +41,21 @@ public class CommonController {
     }
 
     @ApiOperation(value = "获取主播详情")
+    @ApiImplicitParam(name = "Authorization", required = false, dataType = "String", paramType = "header")
     @GetMapping(value = "/anchor-profile")
     ApiResp<User> getAnchorInfo(@RequestParam("digitId") String digitId) {
         User user = userService.getUserByDigitId(digitId);
-        return ApiResp.succeed(userService.profile(user));
+        User selfUser = null;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.isAuthenticated()) {
+            String username = authentication.getPrincipal().toString();
+            // 未授权默认登录的账户名字未 anonymousUser
+            if (!username.equals("anonymousUser")) {
+                selfUser = userService.getUserByUsername(username);
+            }
+        }
+
+        return ApiResp.succeed(userService.getAnchorProfile(user, selfUser));
     }
 
     @ApiOperation(value = "获取苹果支付商品列表")

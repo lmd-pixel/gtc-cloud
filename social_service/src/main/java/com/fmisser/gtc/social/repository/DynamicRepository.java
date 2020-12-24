@@ -25,11 +25,13 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
             "COUNT(DISTINCT tdh.id), COUNT(DISTINCT tdh2.id), COUNT(DISTINCT tdc.id), COUNT(DISTINCT tf.id), " +
             "tu.nick, tu.birth, tu.gender, tu.head) FROM Dynamic td " +
             "INNER JOIN User tu ON tu.id = td.userId " +
+            "LEFT JOIN Block tb ON tb.block = 1 AND tb.type = 10 AND tb.userId = :selfUserId AND tb.blockUserId = td.userId " +
+            "LEFT JOIN Block tb2 ON tb2.block = 1 AND tb2.type = 12 AND tb2.userId = :selfUserId AND tb2.blockUserId = td.userId AND tb2.blockDynamicId = td.id " +
             "LEFT JOIN DynamicHeart tdh ON tdh.dynamicId = td.id AND tdh.isCancel = 0 " +
             "LEFT JOIN DynamicHeart tdh2 ON tdh2.dynamicId = td.id AND tdh2.isCancel = 0 AND tdh2.userId = :selfUserId " +
             "LEFT JOIN DynamicComment tdc ON tdc.dynamicId = td.id AND tdc.isDelete = 0 " +
             "LEFT JOIN Follow tf ON tf.userIdFrom = :selfUserId AND tf.userIdTo = td.userId AND tf.status = 1 " +
-            "WHERE td.isDelete = 0 AND td.userId = :userId GROUP BY td.id " +
+            "WHERE td.isDelete = 0 AND td.status = 10 AND td.userId = :userId AND tb.id IS NULL AND tb2.id IS NULL GROUP BY td.id " +
             "ORDER BY td.id DESC")
     Page<DynamicDto> getUserDynamicList(@Param("userId") Long userId, @Param("selfUserId") Long selfUserId, Pageable pageable);
 
@@ -40,11 +42,13 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
             "COUNT(DISTINCT tdh.id), COUNT(DISTINCT tdh2.id), COUNT(DISTINCT tdc.id), COUNT(DISTINCT tf.id), " +
             "tu.nick, tu.birth, tu.gender, tu.head) FROM Dynamic td " +
             "INNER JOIN User tu ON tu.id = td.userId " +
+            "LEFT JOIN Block tb ON tb.block = 1 AND tb.type = 10 AND tb.userId = :selfUserId AND tb.blockUserId = td.userId " +
+            "LEFT JOIN Block tb2 ON tb2.block = 1 AND tb2.type = 12 AND tb2.userId = :selfUserId AND tb2.blockUserId = td.userId AND tb2.blockDynamicId = td.id " +
             "LEFT JOIN DynamicHeart tdh ON tdh.dynamicId = td.id AND tdh.isCancel = 0 " +
             "LEFT JOIN DynamicHeart tdh2 ON tdh2.dynamicId = td.id AND tdh2.isCancel = 0 AND tdh2.userId = :selfUserId " +
             "LEFT JOIN DynamicComment tdc ON tdc.dynamicId = td.id AND tdc.isDelete = 0 " +
             "LEFT JOIN Follow tf ON tf.userIdFrom = :selfUserId AND tf.userIdTo = td.userId AND tf.status = 1 " +
-            "WHERE td.isDelete = 0 GROUP BY td.id " +
+            "WHERE td.isDelete = 0 AND td.status = 10 AND tb.id IS NULL AND tb2.id IS NULL GROUP BY td.id " +
             "ORDER BY td.id DESC")
     Page<DynamicDto> getLatestDynamicList(@Param("selfUserId") Long selfUserId, Pageable pageable);
 
@@ -54,12 +58,14 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
             "td.createTime, td.modifyTime, td.longitude, td.latitude, " +
             "COUNT(DISTINCT tdh.id), COUNT(DISTINCT tdh2.id), COUNT(DISTINCT tdc.id), " +
             "tu.nick, tu.birth, tu.gender, tu.head) FROM Follow tf " +
-            "INNER JOIN Dynamic td ON td.userId = tf.userIdTo AND td.isDelete = 0 " +
+            "INNER JOIN Dynamic td ON td.userId = tf.userIdTo AND td.isDelete = 0 AND td.status = 10 " +
             "INNER JOIN User tu ON tu.id = tf.userIdTo " +
+            "LEFT JOIN Block tb ON tb.block = 1 AND tb.type = 10 AND tb.userId = :selfUserId AND tb.blockUserId = td.userId " +
+            "LEFT JOIN Block tb2 ON tb2.block = 1 AND tb2.type = 12 AND tb2.userId = :selfUserId AND tb2.blockUserId = td.userId AND tb2.blockDynamicId = td.id " +
             "LEFT JOIN DynamicHeart tdh ON tdh.dynamicId = td.id AND tdh.isCancel = 0 " +
             "LEFT JOIN DynamicHeart tdh2 ON tdh2.dynamicId = td.id AND tdh2.isCancel = 0 AND tdh2.userId = tf.userIdFrom " +
             "LEFT JOIN DynamicComment tdc ON tdc.dynamicId = td.id AND tdc.isDelete = 0 " +
-            "WHERE tf.status = 1 AND tf.userIdFrom = :selfUserId GROUP BY td.id " +
+            "WHERE tf.status = 1 AND tf.userIdFrom = :selfUserId AND tb.id IS NULL AND tb2.id IS NULL GROUP BY td.id " +
             "ORDER BY td.id DESC")
     Page<DynamicDto> getDynamicListByFollow(@Param("selfUserId") Long selfUserId, Pageable pageable);
 }
