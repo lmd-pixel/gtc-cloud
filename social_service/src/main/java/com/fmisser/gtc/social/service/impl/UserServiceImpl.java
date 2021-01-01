@@ -8,10 +8,7 @@ import com.fmisser.gtc.base.utils.CryptoUtils;
 import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.controller.BlockController;
 import com.fmisser.gtc.social.domain.*;
-import com.fmisser.gtc.social.repository.AssetRepository;
-import com.fmisser.gtc.social.repository.BlockRepository;
-import com.fmisser.gtc.social.repository.LabelRepository;
-import com.fmisser.gtc.social.repository.UserRepository;
+import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.IdentityAuditService;
 import com.fmisser.gtc.social.service.UserService;
 import com.fmisser.gtc.social.utils.MinioUtils;
@@ -50,13 +47,16 @@ public class UserServiceImpl implements UserService {
 
     private final BlockRepository blockRepository;
 
+    private final FollowRepository followRepository;
+
     public UserServiceImpl(UserRepository userRepository,
                            MinioUtils minioUtils,
                            LabelRepository labelRepository,
                            OssConfProp ossConfProp,
                            IdentityAuditService identityAuditService,
                            AssetRepository assetRepository,
-                           BlockRepository blockRepository) {
+                           BlockRepository blockRepository,
+                           FollowRepository followRepository) {
         this.userRepository = userRepository;
         this.minioUtils = minioUtils;
         this.labelRepository = labelRepository;
@@ -64,6 +64,7 @@ public class UserServiceImpl implements UserService {
         this.identityAuditService = identityAuditService;
         this.assetRepository = assetRepository;
         this.blockRepository = blockRepository;
+        this.followRepository = followRepository;
     }
 
     @Transactional
@@ -442,7 +443,7 @@ public class UserServiceImpl implements UserService {
         User finalUser = profile(user);
 
         // 获取屏蔽相关信息
-        List<Integer> types = Arrays.asList(10, 20);;
+        List<Integer> types = Arrays.asList(10, 20);
         List<Block> blockList = blockRepository
                 .findByUserIdAndBlockUserIdAndTypeIsIn(selfUserId, finalUser.getId(), types);
 
@@ -460,9 +461,17 @@ public class UserServiceImpl implements UserService {
             }
         });
 
+        Follow follow = followRepository.findByUserIdFromAndUserIdTo(selfUserId, finalUser.getId());
+        if (Objects.nonNull(follow) && follow.getStatus() == 1) {
+            finalUser.setIsFollow(1);
+        } else {
+            finalUser.setIsFollow(0);
+        }
+
         return finalUser;
     }
 
+    // TODO: 2020/12/30 整理到其他地方
     // minio 存储原始图片和缩略图
     @SneakyThrows
     public static ObjectWriteResponse minioPutImageAndThumbnail(String bucketName,

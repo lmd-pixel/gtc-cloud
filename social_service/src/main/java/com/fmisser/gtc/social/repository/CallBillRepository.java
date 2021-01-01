@@ -63,11 +63,15 @@ public interface CallBillRepository extends JpaRepository<CallBill, Long> {
             "LEFT JOIN t_call_bill tcb ON tcb.call_id = tc.id AND valid = 1 " +
             "WHERE tc.is_finished = 1 AND tc.type = ?7 AND " +
             "(tc.created_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL) " +
-            "GROUP BY tc.id ORDER BY tc.id DESC ", nativeQuery = true)
-    Page<ConsumerCallBillDto> getConsumerCallBillList(String consumerDigitId, String consumerNick,
+            "GROUP BY tc.id ORDER BY tc.id DESC LIMIT ?8 OFFSET ?9", nativeQuery = true)
+//    Page<ConsumerCallBillDto> getConsumerCallBillList(String consumerDigitId, String consumerNick,
+//                                                      String anchorDigitId, String anchorNick,
+//                                                      Date startTime, Date endTime,
+//                                                      Integer type, Pageable pageable);
+    List<ConsumerCallBillDto> getConsumerCallBillList(String consumerDigitId, String consumerNick,
                                                       String anchorDigitId, String anchorNick,
                                                       Date startTime, Date endTime,
-                                                      Integer type, Pageable pageable);
+                                                      Integer type, int limit, int offset);
 
 
     // 统计通话收益相关数据： 数据总条数，收益总额等
@@ -76,7 +80,9 @@ public interface CallBillRepository extends JpaRepository<CallBill, Long> {
             "COUNT(DISTINCT tc.id) AS count, " +
             "SUM(tcb.origin_coin) AS consume, " +
             "SUM(tcb.profit_coin) AS profit, " +
-            "SUM(tcb.commission_coin) AS commission " +
+            "SUM(tcb.commission_coin) AS commission, " +
+            "SUM(DISTINCT tc.user_id_from) AS users, " +
+            "SUM(DISTINCT tc.user_id_to) AS anchors " +
             "FROM t_call tc " +
             "INNER JOIN t_user tu ON tu.id = tc.user_id_from AND " +
             "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +

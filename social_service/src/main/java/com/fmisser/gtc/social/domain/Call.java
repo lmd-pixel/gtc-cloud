@@ -12,6 +12,11 @@ import org.springframework.format.annotation.DateTimeFormat;
 import javax.persistence.*;
 import java.util.Date;
 
+/**
+ * 通话信息
+ * todo: 考虑和 CallBill 合并成一个表
+ */
+
 @Entity
 @Table(name = "t_call",
         indexes = {@Index(columnList = "createdTime")})

@@ -1,8 +1,12 @@
 package com.fmisser.gtc.social.controller;
 
 import com.fmisser.gtc.base.response.ApiResp;
+import com.fmisser.gtc.social.domain.District;
+import com.fmisser.gtc.social.domain.Label;
 import com.fmisser.gtc.social.domain.Product;
 import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.social.service.DistrictService;
+import com.fmisser.gtc.social.service.LabelService;
 import com.fmisser.gtc.social.service.ProductService;
 import com.fmisser.gtc.social.service.UserService;
 import io.swagger.annotations.Api;
@@ -13,8 +17,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Objects;
+import java.math.BigDecimal;
+import java.util.*;
 
 @Api(description = "通用API")
 @RestController
@@ -23,11 +27,17 @@ import java.util.Objects;
 public class CommonController {
     private final UserService userService;
     private final ProductService productService;
+    private final DistrictService districtService;
+    private final LabelService labelService;
 
     public CommonController(UserService userService,
-                            ProductService productService) {
+                            ProductService productService,
+                            DistrictService districtService,
+                            LabelService labelService) {
         this.userService = userService;
         this.productService = productService;
+        this.districtService = districtService;
+        this.labelService = labelService;
     }
 
     @ApiOperation(value = "获取主播列表")
@@ -81,5 +91,41 @@ public class CommonController {
         } else {
             return ApiResp.succeed(0);
         }
+    }
+
+    @ApiOperation(value = "获取城市数据")
+    @GetMapping(value = "/district")
+    public ApiResp<List<District>> getDistrictList() {
+        List<District> districtList = districtService.getDistrictList();
+        return ApiResp.succeed(districtList);
+    }
+
+    @ApiOperation(value = "获取标签数据")
+    @GetMapping(value = "/labels")
+    public ApiResp<List<Label>> getLabelList() {
+        List<Label> labels = labelService.getLabelList();
+        return ApiResp.succeed(labels);
+    }
+
+    @ApiOperation(value = "获取收费区间")
+    @GetMapping(value = "/profit-price")
+    public ApiResp<Object> getProfitPrice() {
+        Map<String, List<BigDecimal>> resultMap = new HashMap<>();
+        List<BigDecimal> msgPrice = Arrays.asList(BigDecimal.ZERO, BigDecimal.ONE);
+        List<BigDecimal> callPrice = Arrays.asList(
+                BigDecimal.valueOf(100),
+                BigDecimal.valueOf(150),
+                BigDecimal.valueOf(200),
+                BigDecimal.valueOf(250),
+                BigDecimal.valueOf(300),
+                BigDecimal.valueOf(350),
+                BigDecimal.valueOf(400),
+                BigDecimal.valueOf(450),
+                BigDecimal.valueOf(500)
+                );
+        resultMap.put("msgPrice", msgPrice);
+        resultMap.put("voicePrice", callPrice);
+        resultMap.put("videoPrice", callPrice);
+        return ApiResp.succeed(resultMap);
     }
 }

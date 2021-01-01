@@ -2,6 +2,8 @@ package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.dto.social.*;
 import com.fmisser.gtc.base.dto.social.calc.CalcCallProfitDto;
+import com.fmisser.gtc.base.dto.social.calc.CalcGiftProfitDto;
+import com.fmisser.gtc.base.dto.social.calc.CalcMessageProfitDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.repository.CallBillRepository;
 import com.fmisser.gtc.social.repository.GiftBillRepository;
@@ -71,60 +73,149 @@ public class ProfitManagerServiceImpl implements ProfitManagerService {
     }
 
     @Override
-    public List<AnchorMessageBillDto> getAnchorMessageProfitList(String digitId, String nick,
+    public Pair<List<AnchorMessageBillDto>,Map<String, Object>> getAnchorMessageProfitList(String digitId, String nick,
                                                                  Date startTime, Date endTime,
                                                                  int pageIndex, int pageSize) throws ApiException {
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        return messageBillRepository
-                .getAnchorMessageBillList(digitId, nick, startTime, endTime, pageable)
-                .getContent();
+//        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+//        return messageBillRepository
+//                .getAnchorMessageBillList(digitId, nick, startTime, endTime, pageable)
+//                .getContent();
+
+        List<AnchorMessageBillDto> messageBillDtoList = messageBillRepository
+                .getAnchorMessageBillList(digitId, nick, startTime, endTime, pageSize, (pageIndex - 1) * pageSize);
+
+        CalcMessageProfitDto calcMessageProfitDto = messageBillRepository
+                .calcMessageProfit(null, null, digitId, nick, startTime, endTime);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", (calcMessageProfitDto.getCount() / pageSize) + 1 );
+        extra.put("totalEle", calcMessageProfitDto.getCount());
+        extra.put("currPage", pageIndex);
+        extra.put("messageCount", calcMessageProfitDto.getMessageCount());
+        extra.put("profit", calcMessageProfitDto.getProfit());
+        extra.put("commission", calcMessageProfitDto.getCommission());
+        extra.put("consume", calcMessageProfitDto.getConsume());
+
+        return Pair.of(messageBillDtoList, extra);
     }
 
     @Override
-    public List<AnchorGiftBillDto> getAnchorGiftProfitList(String digitId, String nick,
+    public Pair<List<AnchorGiftBillDto>, Map<String,Object>> getAnchorGiftProfitList(String digitId, String nick,
                                                            Date startTime, Date endTime,
                                                            int pageIndex, int pageSize) throws ApiException {
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        return giftBillRepository
-                .getAnchorGiftBillList(digitId, nick, startTime, endTime, pageable)
-                .getContent();
+//        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+//        return giftBillRepository
+//                .getAnchorGiftBillList(digitId, nick, startTime, endTime, pageable)
+//                .getContent();
+
+        List<AnchorGiftBillDto> anchorGiftBillDtoList = giftBillRepository
+                .getAnchorGiftBillList(digitId, nick, startTime, endTime, pageSize, (pageIndex - 1) * pageSize);
+
+        CalcGiftProfitDto calcGiftProfitDto = giftBillRepository
+                .calcGiftProfit(null, null, digitId, nick, startTime, endTime);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", (calcGiftProfitDto.getCount() / pageSize) + 1 );
+        extra.put("totalEle", calcGiftProfitDto.getCount());
+        extra.put("currPage", pageIndex);
+        extra.put("giftCount", calcGiftProfitDto.getGiftCount());
+        extra.put("profit", calcGiftProfitDto.getProfit());
+        extra.put("commission", calcGiftProfitDto.getCommission());
+        extra.put("consume", calcGiftProfitDto.getConsume());
+
+        return Pair.of(anchorGiftBillDtoList, extra);
     }
 
     @Override
-    public List<ConsumerCallBillDto> getConsumerCallBillList(String consumerDigitId, String consumerNick,
+    public Pair<List<ConsumerCallBillDto>, Map<String, Object>> getConsumerCallBillList(String consumerDigitId, String consumerNick,
                                                              String anchorDigitId, String anchorNick,
                                                              Date startTime, Date endTime,
                                                              Integer type,
                                                              int pageIndex, int pageSize) throws ApiException {
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        Page<ConsumerCallBillDto> consumerCallBillDtoPage =
+//        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+//        Page<ConsumerCallBillDto> consumerCallBillDtoPage =
+//                callBillRepository.getConsumerCallBillList(consumerDigitId, consumerNick,
+//                        anchorDigitId, anchorNick, startTime, endTime, type, pageable);
+//        // TODO: 2020/12/1 统计总的数据
+//        return consumerCallBillDtoPage.getContent();
+
+        List<ConsumerCallBillDto> consumerCallBillDtoList =
                 callBillRepository.getConsumerCallBillList(consumerDigitId, consumerNick,
-                        anchorDigitId, anchorNick, startTime, endTime, type, pageable);
-        // TODO: 2020/12/1 统计总的数据
-        return consumerCallBillDtoPage.getContent();
+                        anchorDigitId, anchorNick, startTime, endTime, type, pageSize, (pageIndex - 1) * pageSize);
+
+        CalcCallProfitDto calcCallProfitDto =
+                callBillRepository.calcCallProfit(consumerDigitId, consumerNick, anchorDigitId, anchorNick
+                        , startTime, endTime, type);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", (calcCallProfitDto.getCount() / pageSize) + 1 );
+        extra.put("totalEle", calcCallProfitDto.getCount());
+        extra.put("currPage", pageIndex);
+        extra.put("duration", calcCallProfitDto.getDuration());
+        extra.put("profit", calcCallProfitDto.getProfit());
+        extra.put("commission", calcCallProfitDto.getCommission());
+        extra.put("consume", calcCallProfitDto.getConsume());
+
+        return Pair.of(consumerCallBillDtoList, extra);
+
     }
 
     @Override
-    public List<ConsumerMessageBillDto> getConsumerMsgBillList(String consumerDigitId, String consumerNick,
+    public Pair<List<ConsumerMessageBillDto>,Map<String, Object>> getConsumerMsgBillList(String consumerDigitId, String consumerNick,
                                                                String anchorDigitId, String anchorNick,
                                                                Date startTime, Date endTime,
                                                                int pageIndex, int pageSize) throws ApiException {
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        Page<ConsumerMessageBillDto> consumerMessageBillDtoPage =
+//        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+//        Page<ConsumerMessageBillDto> consumerMessageBillDtoPage =
+//                messageBillRepository.getConsumerMessageBillList(consumerDigitId, consumerNick,
+//                        anchorDigitId, anchorNick, startTime, endTime, pageable);
+//        return consumerMessageBillDtoPage.getContent();
+
+        List<ConsumerMessageBillDto> consumerMessageBillDtoList =
                 messageBillRepository.getConsumerMessageBillList(consumerDigitId, consumerNick,
-                        anchorDigitId, anchorNick, startTime, endTime, pageable);
-        return consumerMessageBillDtoPage.getContent();
+                        anchorDigitId, anchorNick, startTime, endTime, pageSize, (pageIndex - 1) * pageSize);
+
+        CalcMessageProfitDto calcMessageProfitDto = messageBillRepository
+                .calcMessageProfit(consumerDigitId, consumerNick, anchorDigitId, anchorNick, startTime, endTime);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", (calcMessageProfitDto.getCount() / pageSize) + 1 );
+        extra.put("totalEle", calcMessageProfitDto.getCount());
+        extra.put("currPage", pageIndex);
+        extra.put("messageCount", calcMessageProfitDto.getMessageCount());
+        extra.put("profit", calcMessageProfitDto.getProfit());
+        extra.put("commission", calcMessageProfitDto.getCommission());
+        extra.put("consume", calcMessageProfitDto.getConsume());
+
+        return Pair.of(consumerMessageBillDtoList, extra);
     }
 
     @Override
-    public List<ConsumerGiftBillDto> getConsumerGiftBillList(String consumerDigitId, String consumerNick,
+    public Pair<List<ConsumerGiftBillDto>, Map<String, Object>> getConsumerGiftBillList(String consumerDigitId, String consumerNick,
                                                                 String anchorDigitId, String anchorNick,
                                                                 Date startTime, Date endTime,
                                                                 int pageIndex, int pageSize) throws ApiException {
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        Page<ConsumerGiftBillDto> consumerGiftBillDtoPage =
-                giftBillRepository.getConsumerGiftBillList(consumerDigitId, consumerNick,
-                        anchorDigitId, anchorNick, startTime, endTime, pageable);
-        return consumerGiftBillDtoPage.getContent();
+//        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+//        Page<ConsumerGiftBillDto> consumerGiftBillDtoPage =
+//                giftBillRepository.getConsumerGiftBillList(consumerDigitId, consumerNick,
+//                        anchorDigitId, anchorNick, startTime, endTime, pageable);
+//        return consumerGiftBillDtoPage.getContent();
+
+        List<ConsumerGiftBillDto> consumerGiftBillDtoList = giftBillRepository
+                .getConsumerGiftBillList(consumerDigitId, consumerNick, anchorDigitId, anchorNick, startTime, endTime, pageSize, (pageIndex - 1) * pageSize);
+
+        CalcGiftProfitDto calcGiftProfitDto = giftBillRepository
+                .calcGiftProfit(consumerDigitId, consumerNick, anchorDigitId, anchorNick, startTime, endTime);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", (calcGiftProfitDto.getCount() / pageSize) + 1 );
+        extra.put("totalEle", calcGiftProfitDto.getCount());
+        extra.put("currPage", pageIndex);
+        extra.put("giftCount", calcGiftProfitDto.getGiftCount());
+        extra.put("profit", calcGiftProfitDto.getProfit());
+        extra.put("commission", calcGiftProfitDto.getCommission());
+        extra.put("consume", calcGiftProfitDto.getConsume());
+
+        return Pair.of(consumerGiftBillDtoList, extra);
     }
 }

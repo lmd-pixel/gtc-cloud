@@ -93,8 +93,8 @@ public class CmsController {
     @ApiOperation(value = "禁用/启用账号")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    @RequestMapping(value = "/create-operate", method = RequestMethod.POST)
-    public ApiResp<Integer> disableAccount(@RequestParam("username") String username,
+    @RequestMapping(value = "/enable-account", method = RequestMethod.POST)
+    public ApiResp<Integer> enableAccount(@RequestParam("username") String username,
                                        @RequestParam("enable") int enable) {
         return ApiResp.succeed(userService.enableUser(username, enable));
     }
@@ -102,7 +102,7 @@ public class CmsController {
     @ApiOperation(value = "删除账号")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    @RequestMapping(value = "/create-operate", method = RequestMethod.POST)
+    @RequestMapping(value = "/delete-account", method = RequestMethod.POST)
     public ApiResp<Integer> deleteAccount(@RequestParam("username") String username) {
         return ApiResp.succeed(userService.deleteUser(username));
     }

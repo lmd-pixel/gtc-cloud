@@ -3,6 +3,7 @@ package com.fmisser.gtc.social.controller;
 import com.fmisser.gtc.base.dto.social.AnchorDto;
 import com.fmisser.gtc.base.dto.social.ConsumerDto;
 import com.fmisser.gtc.base.dto.social.RecommendDto;
+import com.fmisser.gtc.base.dto.social.calc.CalcUserDto;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.IdentityAudit;
 import com.fmisser.gtc.social.domain.User;
@@ -12,6 +13,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.hibernate.validator.constraints.Range;
+import org.springframework.data.util.Pair;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -210,4 +212,26 @@ public class UserManagerController {
         int ret = userManagerService.anchorAudit(serialNumber, operate, message);
         return ApiResp.succeed(ret, "设置成功");
     }
+
+    @ApiOperation(value = "获取用户统计数据")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
+            @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date"),
+            @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
+    })
+    @GetMapping(value = "/calc-user-list")
+    @PreAuthorize("hasAnyRole('MANAGER')")
+    ApiResp<List<CalcUserDto>> getCalcUser(
+            @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
+            @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
+            @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
+        Pair<List<CalcUserDto>, Map<String, Object>> calcUserDtoPair = userManagerService
+                .getCalcUser(startTime, endTime, pageIndex, pageSize);
+
+        return ApiResp.succeed(calcUserDtoPair.getFirst(), calcUserDtoPair.getSecond());
+    }
+
 }

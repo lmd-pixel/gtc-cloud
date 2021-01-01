@@ -29,8 +29,14 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
 
     // 减金币
     @Modifying(clearAutomatically = true)
-    @Query(value = "UPDATE t_asset set coin = coin - ?2 WHERE user_id = ?1", nativeQuery = true)
+    @Query(value = "UPDATE t_asset set coin = coin - ?2 WHERE user_id = ?1 AND coin >= ?2", nativeQuery = true)
     int subCoin(Long userId, BigDecimal coin);
+
+    // 减免费聊天券
+    @Modifying(clearAutomatically = true)
+    @Query(value = "UPDATE t_asset set msg_free_coupon = msg_free_coupon - ?2 WHERE user_id = ?1 AND msg_free_coupon >= ?2",
+            nativeQuery = true)
+    int subMsgFreeCoupon(Long userId, int count);
 
     // 购买vip
     @Modifying(clearAutomatically = true)

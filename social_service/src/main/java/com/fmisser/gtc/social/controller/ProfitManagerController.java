@@ -63,7 +63,7 @@ public class ProfitManagerController {
             @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query", required = false),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
     @PreAuthorize("hasAnyRole('MANAGER')")
@@ -73,11 +73,11 @@ public class ProfitManagerController {
             @RequestParam(value = "nick", required = false) String nick,
             @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
-            @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+            @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
-        List<AnchorMessageBillDto> anchorMessageBillDtoList = profitManagerService
+        Pair<List<AnchorMessageBillDto>, Map<String, Object>> anchorMessageBillDtoList = profitManagerService
                 .getAnchorMessageProfitList(digitId, nick, startTime, endTime, pageIndex, pageSize);
-        return ApiResp.succeed(anchorMessageBillDtoList);
+        return ApiResp.succeed(anchorMessageBillDtoList.getFirst(), anchorMessageBillDtoList.getSecond());
     }
 
     @ApiOperation(value = "获取主播礼物收益列表")
@@ -87,7 +87,7 @@ public class ProfitManagerController {
             @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query", required = false),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
     @PreAuthorize("hasAnyRole('MANAGER')")
@@ -97,11 +97,11 @@ public class ProfitManagerController {
             @RequestParam(value = "nick", required = false) String nick,
             @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
-            @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+            @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
-        List<AnchorGiftBillDto> anchorGiftBillDtoList = profitManagerService
+        Pair<List<AnchorGiftBillDto>, Map<String, Object>> anchorGiftBillDtoList = profitManagerService
                 .getAnchorGiftProfitList(digitId, nick, startTime, endTime, pageIndex, pageSize);
-        return ApiResp.succeed(anchorGiftBillDtoList);
+        return ApiResp.succeed(anchorGiftBillDtoList.getFirst(), anchorGiftBillDtoList.getSecond());
     }
 
     @ApiOperation(value = "获取用户通话消费列表")
@@ -114,7 +114,7 @@ public class ProfitManagerController {
             @ApiImplicitParam(name = "type", value = "通话类型： 0: 语音通话， 1：视频通话",  required = true, paramType = "query", defaultValue = "0", dataType = "Integer"),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
     @PreAuthorize("hasAnyRole('MANAGER')")
@@ -127,12 +127,12 @@ public class ProfitManagerController {
             @RequestParam(value = "type") @Range(min = 0, max = 1) Integer type,
             @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
-            @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+            @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
-        List<ConsumerCallBillDto> consumerCallBillDtoList = profitManagerService
+        Pair<List<ConsumerCallBillDto>, Map<String, Object>> consumerCallBillDtoList = profitManagerService
                 .getConsumerCallBillList(consumerDigitId, consumerNick,
                         anchorDigitId, anchorNick, startTime, endTime, type, pageIndex, pageSize);
-        return ApiResp.succeed(consumerCallBillDtoList);
+        return ApiResp.succeed(consumerCallBillDtoList.getFirst(), consumerCallBillDtoList.getSecond());
     }
 
     @ApiOperation(value = "获取用户私信消费列表")
@@ -158,12 +158,12 @@ public class ProfitManagerController {
             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
             @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
-        List<ConsumerMessageBillDto> consumerMessageBillDtoList = profitManagerService
+        Pair<List<ConsumerMessageBillDto>, Map<String,Object>> consumerMessageBillDtoList = profitManagerService
                 .getConsumerMsgBillList(consumerDigitId, consumerNick,
                         anchorDigitId, anchorNick,
                         startTime, endTime,
                         pageIndex, pageSize);
-        return ApiResp.succeed(consumerMessageBillDtoList);
+        return ApiResp.succeed(consumerMessageBillDtoList.getFirst(), consumerMessageBillDtoList.getSecond());
     }
 
     @ApiOperation(value = "获取用户礼物消费列表")
@@ -189,9 +189,9 @@ public class ProfitManagerController {
             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
             @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
-        List<ConsumerGiftBillDto> consumerGiftBillDtoList = profitManagerService
+        Pair<List<ConsumerGiftBillDto>, Map<String,Object>> consumerGiftBillDtoList = profitManagerService
                 .getConsumerGiftBillList(consumerDigitId, consumerNick,
                         anchorDigitId, anchorNick, startTime, endTime, pageIndex, pageSize);
-        return ApiResp.succeed(consumerGiftBillDtoList);
+        return ApiResp.succeed(consumerGiftBillDtoList.getFirst(), consumerGiftBillDtoList.getSecond());
     }
 }

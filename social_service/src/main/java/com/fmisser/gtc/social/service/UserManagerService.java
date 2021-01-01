@@ -1,12 +1,16 @@
 package com.fmisser.gtc.social.service;
 
 import com.fmisser.gtc.base.dto.social.*;
+import com.fmisser.gtc.base.dto.social.calc.CalcTotalProfitDto;
+import com.fmisser.gtc.base.dto.social.calc.CalcUserDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.IdentityAudit;
 import com.fmisser.gtc.social.domain.User;
+import org.springframework.data.util.Pair;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户管理服务
@@ -43,4 +47,12 @@ public interface UserManagerService {
 
     // 审核主播资料/相册/视频
     int anchorAudit(String serialNumber, int operate, String message) throws ApiException;
+
+    // 获取统计用户数据
+    Pair<List<CalcUserDto>, Map<String, Object>> getCalcUser(Date startTime, Date endTime,
+                                                             int pageIndex, int pageSize) throws ApiException;
+
+    // 获取统计收益数据
+    Pair<List<CalcTotalProfitDto>, Map<String, Object>> getCalcTotalProfit(Date startTime, Date endTime,
+                                                                           int pageIndex, int pageSize) throws ApiException;
 }

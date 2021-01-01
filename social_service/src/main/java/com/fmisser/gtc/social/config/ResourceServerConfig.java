@@ -30,6 +30,7 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
                 .antMatchers("/test/**").permitAll()
                 .antMatchers("/dynamic/**").permitAll()
                 .antMatchers("/comm/**").permitAll()
+                .antMatchers("/im_cb/**").permitAll()
 //                swagger
                 .antMatchers("/swagger-ui.html").permitAll()
                 .antMatchers("/webjars/**").permitAll()

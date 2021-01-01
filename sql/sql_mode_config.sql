@@ -93,6 +93,150 @@ ORDER BY tr.level) UNION ALL
 (SELECT tu2.*, 0 AS sort1, tu2.follows AS sort2 FROM `gtc-social-db`.t_user tu2
 LEFT JOIN t_recommend tr2 ON tr2.type = 0 AND tr2.recommend = 1 AND tr2.user_id = tu2.id
 WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND tr2.id IS NULL)
-ORDER BY sort1 DESC , sort2 DESC
+ORDER BY sort1 DESC , sort2 DESC;
+
+# 统计查询
+SELECT days,
+       SUM(newUser) as newUser,
+       SUM(newAnchor) AS newAnchor,
+       SUM(totalRecharge) AS totalRecharge,
+       SUM(newRecharge) AS newRecharge,
+       SUM(totalConsume) AS totalConsume,
+       SUM(newConsume) AS newConsume
+FROM(
+
+        SELECT DATE_FORMAT(tu.create_time, '%Y-%m-%d') days, 0 AS newUser, 0 AS newAnchor, 0 AS totalRecharge, 0 AS newRecharge, 0 AS totalConsume, 0 AS newConsume
+        FROM `gtc-social-db`.t_user tu WHERE tu.create_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00' GROUP BY days
+
+        UNION ALL
+        SELECT DATE_FORMAT(tu2.create_time, '%Y-%m-%d') days, COUNT(tu2.id) AS newUser, 0 AS newAnchor, 0 AS totalRecharge, 0 AS newRecharge, 0 AS totalConsume, 0 AS newConsume
+        FROM `gtc-social-db`.t_user tu2 WHERE tu2.create_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00' GROUP BY days
+
+        UNION ALL
+        SELECT DATE_FORMAT(tu3.create_time, '%Y-%m-%d') days, 0 AS newUser, COUNT(tu3.id) AS newAnchor, 0 AS totalRecharge, 0 AS newRecharge, 0 AS totalConsume, 0 AS newConsume
+        FROM `gtc-social-db`.t_user tu3 WHERE tu3.identity = 1 AND tu3.create_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00' GROUP BY days
+
+        UNION ALL
+        SELECT DATE_FORMAT(tr.creat_time, '%Y-%m-%d') days, 0 AS newUser, 0 AS newAnchor, COUNT(DISTINCT tr.user_id) AS totalRecharge, 0 AS newRecharge, 0 AS totalConsume, 0 AS newConsume
+        FROM `gtc-social-db`.t_recharge tr WHERE tr.status = 20 AND tr.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00' GROUP BY days
+
+        UNION ALL
+        SELECT DATE_FORMAT(tr2.creat_time, '%Y-%m-%d') days, 0 AS newUser, 0 AS newAnchor, 0 AS totalRecharge, COUNT(DISTINCT tr2.user_id) AS newRecharge, 0 AS totalConsume, 0 AS newConsume
+        FROM `gtc-social-db`.t_recharge tr2 WHERE tr2.status = 20 AND tr2.is_first = 1 AND tr2.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00' GROUP BY days
+
+        UNION ALL
+        SELECT DATE_FORMAT(bill.creat_time, '%Y-%m-%d') days, 0 AS newUser, 0 AS newAnchor, 0 AS totalRecharge, 0 AS newRecharge, COUNT(DISTINCT bill.user_id_from) AS totalConsume, 0 AS newConsume
+        FROM (
+                 SELECT tcb.creat_time, tcb.user_id_from FROM t_call_bill tcb WHERE tcb.valid = 1 AND tcb.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00'
+                 UNION ALL
+                 SELECT tmb.creat_time, tmb.user_id_from FROM t_message_bill tmb WHERE tmb.valid = 1 AND tmb.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00'
+                 UNION ALL
+                 SELECT tgb.creat_time, tgb.user_id_from FROM t_gift_bill tgb WHERE tgb.valid = 1 AND tgb.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00'
+             ) bill
+        GROUP BY days
+
+        UNION ALL
+        SELECT DATE_FORMAT(bill2.creat_time, '%Y-%m-%d') days, 0 AS newUser, 0 AS newAnchor, 0 AS totalRecharge, 0 AS newRecharge, 0 AS totalConsume, COUNT(DISTINCT bill2.user_id_from) AS newConsume
+        FROM (
+                 SELECT tcb.creat_time, tcb.user_id_from FROM t_call_bill tcb WHERE tcb.valid = 1 AND tcb.is_first = 1 AND tcb.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00'
+                 UNION ALL
+                 SELECT tmb.creat_time, tmb.user_id_from FROM t_message_bill tmb WHERE tmb.valid = 1 AND tmb.is_first = 1 AND tmb.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00'
+                 UNION ALL
+                 SELECT tgb.creat_time, tgb.user_id_from FROM t_gift_bill tgb WHERE tgb.valid = 1 AND tgb.is_first = 1 AND tgb.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00'
+             ) bill2
+        GROUP BY days
+
+    ) t GROUP BY days;
+
+
+#统计查询
+SELECT days,
+       SUM(newUser) as newUser,
+       SUM(newAnchor) AS newAnchor,
+       SUM(totalRecharge) AS totalRecharge,
+       SUM(newRecharge) AS newRecharge,
+       SUM(totalConsume) AS totalConsume,
+       SUM(newConsume) AS newConsume
+FROM(
+
+        SELECT DATE_FORMAT(tu.create_time, '%Y-%m-%d') days,
+               0 AS newUser, 0 AS newAnchor,
+               0 AS totalRecharge, 0 AS newRecharge,
+               0 AS totalConsume, 0 AS newConsume
+        FROM `gtc-social-db`.t_user tu WHERE tu.create_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00'
+        GROUP BY days
+
+        UNION ALL
+        SELECT DATE_FORMAT(tu2.create_time, '%Y-%m-%d') days,
+               COUNT(tu2.id) AS newUser, 0 AS newAnchor,
+               0 AS totalRecharge, 0 AS newRecharge,
+               0 AS totalConsume, 0 AS newConsume
+        FROM `gtc-social-db`.t_user tu2 WHERE tu2.create_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00'
+        GROUP BY days
+
+        UNION ALL
+        SELECT DATE_FORMAT(tu3.create_time, '%Y-%m-%d') days,
+               0 AS newUser, COUNT(tu3.id) AS newAnchor,
+               0 AS totalRecharge, 0 AS newRecharge,
+               0 AS totalConsume, 0 AS newConsume
+        FROM `gtc-social-db`.t_user tu3 WHERE tu3.identity = 1 AND tu3.create_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00'
+        GROUP BY days
+
+        UNION ALL
+        SELECT DATE_FORMAT(tr.creat_time, '%Y-%m-%d') days,
+               0 AS newUser, 0 AS newAnchor,
+               COUNT(DISTINCT tr.user_id) AS totalRecharge, 0 AS newRecharge,
+               0 AS totalConsume, 0 AS newConsume
+        FROM `gtc-social-db`.t_recharge tr WHERE tr.status = 20 AND tr.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00'
+        GROUP BY days
+
+        UNION ALL
+        SELECT DATE_FORMAT(tr.creat_time, '%Y-%m-%d') days,
+               0 AS newUser, 0 AS newAnchor,
+               0 AS totalRecharge, COUNT(DISTINCT tr.user_id) AS newRecharge,
+               0 AS totalConsume, 0 AS newConsume
+        FROM `gtc-social-db`.t_recharge tr
+                 LEFT JOIN t_recharge tr2 ON tr2.status = 20 AND tr2.id = tr.id AND tr2.creat_time < '2020-11-01 00:00:00'
+        WHERE tr.status = 20 AND tr.is_first = 1 AND tr.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00' AND tr2.id IS NULL
+        GROUP BY days
+
+        UNION ALL
+        SELECT DATE_FORMAT(bill.creat_time, '%Y-%m-%d') days,
+               0 AS newUser, 0 AS newAnchor,
+               0 AS totalRecharge, 0 AS newRecharge,
+               COUNT(DISTINCT bill.user_id_from) AS totalConsume, 0 AS newConsume
+        FROM (
+                 SELECT tcb.creat_time, tcb.user_id_from FROM t_call_bill tcb
+                 WHERE tcb.valid = 1 AND tcb.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00'
+                 UNION ALL
+                 SELECT tmb.creat_time, tmb.user_id_from FROM t_message_bill tmb
+                 WHERE tmb.valid = 1 AND tmb.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00'
+                 UNION ALL
+                 SELECT tgb.creat_time, tgb.user_id_from FROM t_gift_bill tgb
+                 WHERE tgb.valid = 1 AND tgb.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00'
+             ) bill
+        GROUP BY days
+
+        UNION ALL
+        SELECT DATE_FORMAT(bill2.creat_time, '%Y-%m-%d') days,
+               0 AS newUser, 0 AS newAnchor,
+               0 AS totalRecharge, 0 AS newRecharge,
+               0 AS totalConsume, COUNT(DISTINCT bill2.user_id_from) AS newConsume
+        FROM (
+                 SELECT tcb.creat_time, tcb.user_id_from FROM t_call_bill tcb
+                                                                  LEFT JOIN t_call_bill tcb2 ON tcb2.valid = 1 AND tcb2.id = tcb.id AND tcb2.creat_time < '2020-11-01 00:00:00'
+                 WHERE tcb.valid = 1 AND tcb.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00' AND tcb2.id IS NULL
+                 UNION ALL
+                 SELECT tmb.creat_time, tmb.user_id_from FROM t_message_bill tmb
+                                                                  LEFT JOIN t_message_bill tmb2 ON tmb2.valid = 1 AND tmb2.id = tmb.id AND tmb2.creat_time < '2020-11-01 00:00:00'
+                 WHERE tmb.valid = 1 AND tmb.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00' AND tmb2.id IS NULL
+                 UNION ALL
+                 SELECT tgb.creat_time, tgb.user_id_from FROM t_gift_bill tgb
+                                                                  LEFT JOIN t_gift_bill tgb2 ON tgb2.valid = 1 AND tgb2.id = tgb.id AND tgb2.creat_time < '2020-11-01 00:00:00'
+                 WHERE tgb.valid = 1 AND tgb.creat_time BETWEEN '2020-11-01 00:00:00' AND '2020-12-31 00:00:00' AND tgb2.id IS NULL
+             ) bill2
+        GROUP BY days
+
+    ) t GROUP BY days;
 
 

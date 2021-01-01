@@ -63,6 +63,8 @@ public class DynamicServiceImpl implements DynamicService {
         dynamic.setUserId(user.getId());
         dynamic.setType(type);
         dynamic.setContent(content);
+        // 默认先通过
+        dynamic.setStatus(10);
 
         List<String> photoList = new ArrayList<>();
 

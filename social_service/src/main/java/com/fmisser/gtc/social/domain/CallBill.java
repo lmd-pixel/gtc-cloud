@@ -53,6 +53,7 @@ public class CallBill {
     private int source = 0;
 
     // 创建消费的阶段，从通话开始的每一个分钟内为一个阶段， 第一分钟内为0
+    @Column(nullable = false, columnDefinition = "int default 0")
     private int stage = 0;
 
     // 用户原始消费币

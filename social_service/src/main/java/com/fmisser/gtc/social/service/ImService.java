@@ -22,4 +22,12 @@ public interface ImService {
     // 挂断通话
     Object hangup(User userFrom, User userTo, Long roomId);
 
+    // 生成 user sig
+    String genUserSign(User user);
+
+    // send to user
+    int sendToUser(User fromUser, User toUser, String content);
+
+
+
 }

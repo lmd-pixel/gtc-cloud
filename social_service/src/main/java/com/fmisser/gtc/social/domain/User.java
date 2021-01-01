@@ -192,4 +192,8 @@ public class User {
     // 是否被别人屏蔽聊天
     @Transient
     private int blockChat;
+
+    // 是否被别人关注
+    @Transient
+    private int isFollow;
 }

@@ -1,6 +1,8 @@
 package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.dto.social.*;
+import com.fmisser.gtc.base.dto.social.calc.CalcTotalProfitDto;
+import com.fmisser.gtc.base.dto.social.calc.CalcUserDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.Asset;
 import com.fmisser.gtc.social.domain.IdentityAudit;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -259,5 +262,15 @@ public class UserManagerServiceImpl implements UserManagerService {
         }
 
         return 1;
+    }
+
+    @Override
+    public Pair<List<CalcUserDto>, Map<String, Object>> getCalcUser(Date startTime, Date endTime, int pageIndex, int pageSize) throws ApiException {
+        return null;
+    }
+
+    @Override
+    public Pair<List<CalcTotalProfitDto>, Map<String, Object>> getCalcTotalProfit(Date startTime, Date endTime, int pageIndex, int pageSize) throws ApiException {
+        return null;
     }
 }
