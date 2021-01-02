@@ -68,8 +68,8 @@ public class WithdrawAudit {
     private BigDecimal feeRatio;
 
     // 打款币种 0:人命币 默认
-    @Column
-    private int moneyType;
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private int moneyType = 0;
 
     // 应打款金额
     @Column

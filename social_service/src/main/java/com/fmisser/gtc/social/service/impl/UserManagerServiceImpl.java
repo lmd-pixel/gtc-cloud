@@ -200,7 +200,7 @@ public class UserManagerServiceImpl implements UserManagerService {
             statusList.add(20);
         }
 
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
         return identityAuditRepository.getIdentityAuditList(digitId, nick, gender, statusList, startTime, endTime, pageable)
                 .getContent();
     }

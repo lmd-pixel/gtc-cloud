@@ -49,6 +49,8 @@ public class UserServiceImpl implements UserService {
 
     private final FollowRepository followRepository;
 
+    private final InviteRepository inviteRepository;
+
     public UserServiceImpl(UserRepository userRepository,
                            MinioUtils minioUtils,
                            LabelRepository labelRepository,
@@ -56,7 +58,8 @@ public class UserServiceImpl implements UserService {
                            IdentityAuditService identityAuditService,
                            AssetRepository assetRepository,
                            BlockRepository blockRepository,
-                           FollowRepository followRepository) {
+                           FollowRepository followRepository,
+                           InviteRepository inviteRepository) {
         this.userRepository = userRepository;
         this.minioUtils = minioUtils;
         this.labelRepository = labelRepository;
@@ -65,11 +68,12 @@ public class UserServiceImpl implements UserService {
         this.assetRepository = assetRepository;
         this.blockRepository = blockRepository;
         this.followRepository = followRepository;
+        this.inviteRepository = inviteRepository;
     }
 
     @Transactional
     @Override
-    public User create(String phone, int gender) throws ApiException {
+    public User create(String phone, int gender, String inviteCode) throws ApiException {
         // check exist
         if (userRepository.existsByUsername(phone)) {
             // 已经存在
@@ -101,6 +105,23 @@ public class UserServiceImpl implements UserService {
         Asset asset = new Asset();
         asset.setUserId(user.getId());
         assetRepository.save(asset);
+
+        // 设置邀请信息
+        if (Objects.nonNull(inviteCode)) {
+            // 目前邀请码就是用户的数字id
+            Optional<User> inviteUser = userRepository.findByDigitId(inviteCode);
+            if (!inviteUser.isPresent()) {
+                throw new ApiException(-1, "邀请人信息不正确!");
+            }
+
+            // 保存邀请人信息
+            Invite invite = new Invite();
+            invite.setUserId(inviteUser.get().getId());
+            invite.setInvitedUserId(user.getId());
+            invite.setInviteCode(inviteCode);
+            invite.setType(0);
+            inviteRepository.save(invite);
+        }
 
         return _prepareResponse(user);
     }

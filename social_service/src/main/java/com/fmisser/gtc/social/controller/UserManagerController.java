@@ -180,7 +180,7 @@ public class UserManagerController {
             @ApiImplicitParam(name = "status", value = "审核状态 0: 审核中 1：审核未通过 2：全部(默认)", paramType = "query", dataType = "Integer"),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date"),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date"),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
     @GetMapping(value = "/list-anchor-audit")
@@ -191,7 +191,7 @@ public class UserManagerController {
                                                  @RequestParam(value = "status", required = false, defaultValue = "2") @Range(min = 0, max = 2) Integer status,
                                                  @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
                                                  @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
-                                                 @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+                                                 @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
                                                  @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
         List<IdentityAudit> identityAuditList = userManagerService
                 .getAnchorAuditList(digitId, nick, gender, status, startTime, endTime, pageIndex, pageSize);

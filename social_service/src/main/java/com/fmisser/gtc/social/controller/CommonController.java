@@ -128,4 +128,12 @@ public class CommonController {
         resultMap.put("videoPrice", callPrice);
         return ApiResp.succeed(resultMap);
     }
+
+    @ApiOperation(value = "获取职业选择")
+    @GetMapping(value = "/profession-list")
+    public ApiResp<List<String>> getProfessionList() {
+        List<String> professionList =
+                Arrays.asList("学生", "上班族", "空姐", "模特", "演员", "歌手", "舞者", "健身教练", "教师", "护士", "自由职业");
+        return ApiResp.succeed(professionList);
+    }
 }

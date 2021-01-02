@@ -43,7 +43,8 @@ public class UserController {
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/create")
     ApiResp<User> create(@RequestParam("phone") String phone,
-                         @RequestParam("gender") @Range(min = 0, max = 1) int gender) {
+                         @RequestParam("gender") @Range(min = 0, max = 1) int gender,
+                         @RequestParam(value = "invite", required = false) String invite) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         if (!username.equals(phone)) {
@@ -51,7 +52,7 @@ public class UserController {
             throw new ApiException(-1, "非法操作，认证用户无法创建其他用户资料！");
         }
 
-        return ApiResp.succeed(userService.create(phone, gender));
+        return ApiResp.succeed(userService.create(phone, gender, invite));
     }
 
     @ApiOperation(value = "更新用户信息")

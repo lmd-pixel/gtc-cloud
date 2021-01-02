@@ -51,22 +51,22 @@ public class IdentityAudit {
     private String nick;
 
     @Column
-    private int gender;
+    private Integer gender;
 
     @Column
-    private int age;
+    private Integer age;
 
     /**
      * 审核类型 1： 资料审核  2： 相册审核  3：视频审核
      */
     @Column(nullable = false)
-    private int type;
+    private Integer type;
 
     /**
      * 10： 审核中 20: 审核未通过 30： 审核通过
      */
     @Column(nullable = false)
-    private int status;
+    private Integer status;
 
     @Column
     private String message;
