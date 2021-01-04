@@ -66,14 +66,15 @@ public class UserController {
                                 @RequestParam(value = "intro", required = false) String intro,
                                 @RequestParam(value = "labels", required = false) String labels,
                                 @RequestParam(value = "callPrice", required = false) String callPrice,
-                                @RequestParam(value = "videoPrice", required = false) String videoPrice) {
+                                @RequestParam(value = "videoPrice", required = false) String videoPrice,
+                                @RequestParam(value = "messagePrice", required = false) String messagePrice) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
         //
         // TODO: 2020/11/10 check params
         User user = userService.updateProfile(userDo, nick, birth, city, profession,
-                intro, labels, callPrice, videoPrice, request.getFileMap());
+                intro, labels, callPrice, videoPrice, messagePrice, request.getFileMap());
 
         return ApiResp.succeed(user);
     }

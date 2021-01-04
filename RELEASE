@@ -27,7 +27,9 @@
     </settings>
 
 4. 打包成docker
-    设置docker地址  export DOCKER_HOST=tcp://42.192.212.67:2375
+    设置docker地址
+    测试： export DOCKER_HOST=tcp://42.192.212.67:2375
+    正式： export DOCKER_HOST=tcp://121.4.13.132:2375
     打包  mvn docker:build (如果设置了防火墙，先打开该端口)
 
 5. 统一打包  mvn clean package -Dmaven.test.skip=true

@@ -195,9 +195,11 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
                 !StringUtils.isEmpty(user.getLabels()) &&
                 !StringUtils.isEmpty(user.getProfession()) &&
                 !StringUtils.isEmpty(user.getIntro()) &&
-                !StringUtils.isEmpty(user.getCity()) ;
-//                user.getVideoPrice() != null &&
-//                user.getCallPrice() != null;
+                !StringUtils.isEmpty(user.getCity()) &&
+                user.getVideoPrice() != null &&
+                user.getCallPrice() != null &&
+                user.getMessagePrice() != null;
+
     }
 
     /**

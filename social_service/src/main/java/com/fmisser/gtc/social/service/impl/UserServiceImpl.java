@@ -153,7 +153,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updateProfile(User user,
                               String nick, String birth, String city, String profession,
-                              String intro, String labels, String callPrice, String videoPrice,
+                              String intro, String labels, String callPrice, String videoPrice, String messagePrice,
                               Map<String, MultipartFile> multipartFileMap) throws ApiException {
 
         if (user.getIdentity() == 1) {
@@ -194,6 +194,10 @@ public class UserServiceImpl implements UserService {
         if (videoPrice != null && !videoPrice.isEmpty()) {
             BigDecimal price = BigDecimal.valueOf(Long.parseLong(videoPrice));
             user.setVideoPrice(price);
+        }
+        if (messagePrice != null && !messagePrice.isEmpty()) {
+            BigDecimal price = BigDecimal.valueOf(Long.parseLong(messagePrice));
+            user.setMessagePrice(price);
         }
 
         // 处理表单
@@ -609,6 +613,16 @@ public class UserServiceImpl implements UserService {
                     ossConfProp.getUserProfileBucket(),
                     user.getVideo());
             user.setVideoUrl(videoUrl);
+        }
+
+        if (Objects.nonNull(user.getVideoPrice())) {
+            user.setVideoPrice(user.getVideoPrice().setScale(2, BigDecimal.ROUND_HALF_UP));
+        }
+        if (Objects.nonNull(user.getCallPrice())) {
+            user.setCallPrice(user.getCallPrice().setScale(2, BigDecimal.ROUND_HALF_UP));
+        }
+        if (Objects.nonNull(user.getMessagePrice())) {
+            user.setMessagePrice(user.getMessagePrice().setScale(2, BigDecimal.ROUND_HALF_UP));
         }
 
         return user;

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="format-detection" content="telephone=no">
+		<title>呜呜语聊-主播招募令</title>
+		<style>
+			/*CSS reset*/
+        * {touch-action:pan-y;}
+		body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td,span,a,footer,header {margin:0;padding:0;-webkit-tap-highlight-color:rgba(0,0,0,0)}
+		table,table tr td {border-collapse:collapse;border-spacing:0;}
+		fieldset,img,button {border:0;outline:none}
+		img {vertical-align:middle;}
+		address,caption,cite,code,dfn,em,strong,th,var,i {font-style:normal;font-weight:normal;}
+		form {margin:0px;padding:0px;}
+		ul,li {list-style:none;}
+		caption {text-align:left;}
+		h1,h2,h3,h4,h5,h6 {font-size:100%;font-weight:normal;}
+		q:before,q:after {content:'';}
+		abbr,acronym {border:0;font-variant:normal;}
+		a,img,button,input,textarea {-webkit-tap-highlight-color:rgba(255,255,255,0);}
+		input[type="submit"],input[type="reset"],input[type="button"],input[type="radio"] {-webkit-appearance:none;border:0;}
+		input::placeholder {color:color:rgba(255,255,255,0.7);font-weight:lighter;}
+		input::-webkit-input-placeholder,textarea::-webkit-input-placeholder {color:rgba(255,255,255,0.7);}
+		input:-moz-placeholder,textarea:-moz-placeholder {color:rgba(255,255,255,0.7);}
+		input::-moz-placeholder,textarea::-moz-placeholder {color:rgba(255,255,255,0.7);}
+		input:-ms-input-placeholder,textarea:-ms-input-placeholder {color:rgba(255,255,255,0.7);}
+		input[type='text'],input[type='number'],input[type='tel'] {outline:none;border:0;padding:0 0.2rem;box-sizing:border-box;overflow:hidden;}
+		input:focus {outline:none;}
+		figure,ul,menu,dir {display:block;-webkit-margin-before:0;-webkit-margin-after:0;-webkit-margin-start:0;-webkit-margin-end:0;-webkit-padding-start:0;}
+		/*CSS global*/        html {font-size:calc(100vw / 720 *100);}
+		html,body {width:100%;height:100%;-ms-touch-action:none;background:#fff;color:#982a02;-webkit-tap-highlight-color:transparent;padding:0;border:0;margin:0;-moz-user-select:none;-webkit-user-select:none;-ms-user-select:none;user-select:none;}
+		body {font-size:0.2rem;}
+		.clearfix:after {clear:both;content:"";display:block;font-size:0;height:0;visibility:hidden;}
+        .box{ min-height: 100vh;  background: url(images/bg.jpg) no-repeat 0 0; background-size:100% 100%; overflow:hidden;}
+        #down{ min-height:11.5rem; margin-top:0.2rem;  background: url(images/bgc.png) no-repeat 0 0; width: 100%;  background-size:100% auto;}
+		#down .qrcode{height:2.2rem; width:2.2rem; position: absolute; top:8.5rem; left:12%;  }
+        #down .copyright{ position: fixed; width:100vw; text-align: center; font-size:0.21rem; color:#fff; bottom:0.2rem;}
+        #down .qrcode img{ width: 100%;height:100%;}
+		.u-flex{ box-sizing: border-box; display: -webkit-box;    display: -webkit-flex;    display: flex;    -webkit-box-orient: horizontal;    -webkit-box-direction: normal;    -webkit-flex-direction: row;
+    flex-direction: row;    -webkit-box-align: center;    -webkit-align-items: center;    align-items: center;}
+		#down .btnbox{ position: absolute;top:8.5rem; left:45%; width:45%; }
+        #down .btnbox a{ margin: 0 0 0.2rem 0; display: block; border-radius:0.6rem;  overflow: hidden;}
+        #down .btnbox a:hover,#down .btnbox a:visited,#down .btnbox a:active{ background:rgba(0,0,0,0.5);}
+        #down .btnbox img{ width: 100%;}
+		
+		.head{ width:100%; position: fixed; top:0; left:0; z-index:1;}
+		.head img{ width:100%;}
+		.title{ width:7rem; height:5rem; margin-top:0.4rem; background:url(images/title.png) no-repeat 0 0; background-size:100% 100%;}
+		.li-t{ margin:0rem 0.3rem; color:#fff; font-size:0.3rem; border-left:0.05rem solid rgb(253,3,250); padding: 0 0.05rem; font-weight: bold;}
+		.li-con{ padding: 0.24rem 0.3rem 0; border-radius: 0.1rem; color:#fff; font-size:0.26rem; margin:0.2rem 0.4rem; background-color: rgba(51,32,150,0.6);}
+		.li-con dl{ display: flex; padding:0 0 0.2rem 0;}
+		.li-con dl dt{ color:#06fbfe;  font-size:0.3rem; position: relative;}
+		.li-con dl dt span{ position: relative;z-index: 10;}
+		.li-con dl dt::after{ content: ''; width:90%; height:0.1rem; position: absolute; left:0; top:0.3rem; background:rgba(253,3,250,0.6); z-index:0;}
+		.reg-con{  margin:0.2rem 0.4rem; padding-bottom:0.1rem; }
+		.reg-con li{ position: relative; padding:0.1rem 0.2rem 0.1rem; border-radius: 0.1rem; overflow: hidden; margin-bottom:0.1rem; background-color: rgba(51,32,150,0.6); font-size:0.3rem;}
+		.reg-con li input{ width:100%; border:0; height:0.6rem; line-height: 0.6rem; font-size:0.28rem; background-color: initial; color:#fff;}
+		.reg-con li .getcode{ color:#06fbfe; position: absolute; top:0.25rem; padding:0 0.3rem; right:0; line-height: 0.3rem; border-left:1px solid #7bb9ff; display:block;}
+		.reg-btn{ margin:0.2rem auto 0; width:80%; height:0.8rem; line-height: 0.8rem;}
+		.reg-btn input{ border:1px solid #fff; background:#ec1aff; font-size:0.4rem; height:0.8rem; cursor: pointer; color: #fff; display:block; width:100%; border-radius: 0.8rem;}
+		.tips{ display:none; width:60%; text-align: center; z-index:9999;  position: fixed; top:50%; left:50%;   transition:1s ease;  transform:translate(-50%,-50%); -webkit-transform: translate(-50%,-50%);  -ms-transform: translate(-50%,-50%); background: #261b60; border: 1px solid #5f5593; padding: 0.2rem; color:#fff; border-radius: 0.1rem; font-size: 0.28rem; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+				animation: change 0.5s;
+				-moz-animation: change 0.5s;    
+				-webkit-animation: change 0.5s;    
+				-o-animation: change 0.5s;
+		}
+		 @keyframes change{
+				from {width:30%; }
+				to { width:60%;}
+			}
+		.download{ text-align: center; font-size:0.3rem; color:#fff;}
+	</style>
+		<script type="text/javascript">
+			window.onload = function() {
+				// 阻止双击放大
+				var lastTouchEnd = 0;
+				document.addEventListener('touchstart', function(event) {
+					if (event.touches.length > 1) {
+						event.preventDefault();
+					}
+				});
+				document.addEventListener('touchend', function(event) {
+					var now = (new Date()).getTime();
+					if (now - lastTouchEnd <= 300) {
+						event.preventDefault();
+					}
+					lastTouchEnd = now;
+				}, false);
+				// 阻止双指放大
+				document.addEventListener('gesturestart', function(event) {
+					event.preventDefault();
+				});
+			}
+		</script>
+	</head>
+
+	<body>
+
+		<div class="tips"></div>
+
+		<div class="box">
+			<div class="head"><img src="images/head.png"></div>
+			<div class="title"></div>
+
+			<div class="li-t">招募对象</div>
+
+			<div class="li-con">
+				<dl>
+					<dt><span>颜值达人：</span></dt>
+					<dd>高颜值、良好的亲和力、较强的镜头<br />展现力，敢于表演、展现自己</dd>
+				</dl>
+				<dl>
+					<dt><span>才艺达人：</span></dt>
+					<dd>拥有一项过人才艺，舞蹈、乐器、唱<br />歌等，乐观向上</dd>
+				</dl>
+			</div>
+
+
+
+			<div class="reg-box">
+				<div class="li-t">注册报名</div>
+				<div class="reg-con">
+					<ul>
+						<li><input id="id" type="text" placeholder="邀请人ID" value=""></li>
+						<li><input id="phone" placeholder="请输入手机号" maxlength="11" type="number" value=""></li>
+						<li><input id="code" type="text" placeholder="请输入验证码" value="">
+							<span id="sendcode" class="getcode">发送验证码</span>
+						</li>
+					</ul>
+					<div class="reg-btn">
+						<input id="reg" type="button" value="立即注册" />
+					</div>
+				</div>
+			</div>
+
+
+			<div class="download-box" style="display: none;">
+				<div class="li-t">下载“呜呜语聊”完成女神认证，正式成为主播</div>
+				<div class="reg-con">
+					<div class="download">
+						<img src="images/logo.png" style="width:1.5rem; height:1.5rem;"><br />
+						呜呜语聊
+					</div>
+					<div class="reg-btn">
+						<input id="apkDownload" type="button" value="点我下载" />
+					</div>
+				</div>
+			</div>
+
+
+		</div>
+		<script src="js/jquery.min.js"></script>
+		<script>
+			$(function() {
+				if (getUrlParam('invite') !== null) {
+					$('#id').val(getUrlParam('invite'));
+				}
+
+				$('#apkDownload').on('click', function() {
+					// window.location.href = "/apk/release.apk?v=1";
+				});
+
+
+				$('#sendcode').on('click', function() {
+					if ($('#phone').val().length == 0) {
+						funTips('请输入手机号');
+						return
+					}
+					if ($('#sendcode').text() !== '发送验证码') {
+						return
+					}
+					$.ajax({
+						method: 'post',
+						url: 'http://42.192.212.67:8088/api/auth/user/phone-code',
+						data: {
+							phone: $('#phone').val(),
+							type: '0'
+						},
+						dataType: "json",
+						success: function(data) {
+							if (data.success) {
+								funTips('验证码已发送！');
+								getRandomCode();
+							}else{
+								funTips(data.message);
+							}
+						},
+						error: function(data) {
+							// var data = $.parseJSON(e.responseText);
+							funTips(data.responseJSON.message);
+						}
+					});
+
+
+				});
+
+
+				$('#reg').on('click', function() {
+					if ($('#id').val().length == 0) {
+						funTips('请输入邀请人ID');
+						return
+					}
+					if ($('#phone').val().length == 0) {
+						funTips('请输入手机号');
+						return
+					}
+					if ($('#code').val().length == 0) {
+						funTips('请输入验证码');
+						return
+					}
+
+					$.ajax({
+						method: 'post',
+						url: 'http://42.192.212.67:8088/api/auth/user/sms-login',
+						data: {
+							code: $('#code').val(),
+							phone: $('#phone').val(),
+						},
+						dataType: "json",
+						success: function(data) {
+							console.log('sms-login==》', data);
+							if (data.success) {
+								creatUser(data.data.access_token);
+								funTips('注册成功！');
+							} else {
+								
+								funTips("111"+data.message);
+							}
+						},
+						error: function(data) {
+							// var data = $.parseJSON(e.responseText);
+							funTips(data.responseJSON.message);
+						}
+					});
+				})
+			});
+
+			function creatUser(token) {
+				console.log('token=>',token);
+				$.ajax({
+					method: 'post',
+					url: 'http://42.192.212.67:8088/api/social/user/create',
+					headers: {
+						Authorization: "Bearer" + token
+					},
+					data: {
+						// Authorization: ,
+						gender: 0,
+						phone: $('#phone').val(),
+					},
+					dataType: "json",
+					success: function(data) {
+						console.log('creat=》', data);
+						if (data.success) {
+							funTips('恭喜你，注册成功！');
+							$('.reg-box').hide();
+							$('.download-box').show();
+
+						} else {
+							funTips(data.message);
+						}
+					},
+					error: function(data) {
+						// var data = $.parseJSON(e.responseText);
+						funTips(data.responseJSON.message);
+					}
+				});
+
+			}
+
+
+			function funTips(msg) {
+				$('.tips').html(msg);
+				$('.tips').show();
+				setTimeout(function() {
+					$('.tips').hide()
+				}, 2000);
+
+			}
+
+
+			var time = 60;
+			//倒计时
+			function getRandomCode() {
+				if (time === 0) {
+					time = 60;
+					return;
+				} else {
+					time--;
+					$('#sendcode').text(time + 's后重发');
+					if (time == 0) {
+						$('#sendcode').text('发送验证码');
+					}
+				}
+				setTimeout(function() {
+					getRandomCode();
+				}, 1000);
+			}
+
+			//获取url中的参数
+			function getUrlParam(name) {
+				var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+				var r = window.location.search.substr(1).match(reg); //匹配目标参数
+				if (r != null) return unescape(r[2]);
+				return null; //返回参数值
+			}
+		</script>
+	</body>
+
+</html>

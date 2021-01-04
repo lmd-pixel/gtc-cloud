@@ -1,10 +1,7 @@
 package com.fmisser.gtc.social.controller;
 
 import com.fmisser.gtc.base.response.ApiResp;
-import com.fmisser.gtc.social.domain.District;
-import com.fmisser.gtc.social.domain.Label;
-import com.fmisser.gtc.social.domain.Product;
-import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.service.DistrictService;
 import com.fmisser.gtc.social.service.LabelService;
 import com.fmisser.gtc.social.service.ProductService;
@@ -135,5 +132,11 @@ public class CommonController {
         List<String> professionList =
                 Arrays.asList("学生", "上班族", "空姐", "模特", "演员", "歌手", "舞者", "健身教练", "教师", "护士", "自由职业");
         return ApiResp.succeed(professionList);
+    }
+
+    @ApiOperation(value = "获取礼物列表")
+    @GetMapping(value = "/gift-list")
+    public ApiResp<List<Gift>> getGiftList() {
+        return null;
     }
 }

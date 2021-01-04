@@ -11,6 +11,7 @@ import com.fmisser.gtc.auth.service.ThirdPartyLoginService;
 import com.fmisser.gtc.auth.service.UserService;
 import com.fmisser.gtc.base.dto.auth.TokenDto;
 import com.fmisser.gtc.base.exception.ApiException;
+import com.fmisser.gtc.base.prop.OauthConfProp;
 import com.fmisser.gtc.base.utils.AuthUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
@@ -43,13 +44,16 @@ public class UserDetailServiceImpl implements UserService {
 
     private final ThirdPartyLoginService thirdPartyLoginService;
 
+    private final OauthConfProp oauthConfProp;
+
     public UserDetailServiceImpl(UserRepository userRepository,
                                  RoleRepository roleRepository,
                                  PasswordEncoder passwordEncoder,
                                  SmsService smsService,
                                  AutoLoginService autoLoginService,
                                  OAuthFeign oAuthFeign,
-                                 ThirdPartyLoginService thirdPartyLoginService) {
+                                 ThirdPartyLoginService thirdPartyLoginService,
+                                 OauthConfProp oauthConfProp) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -57,6 +61,7 @@ public class UserDetailServiceImpl implements UserService {
         this.autoLoginService = autoLoginService;
         this.oAuthFeign = oAuthFeign;
         this.thirdPartyLoginService = thirdPartyLoginService;
+        this.oauthConfProp = oauthConfProp;
     }
 
     @Override
@@ -164,29 +169,29 @@ public class UserDetailServiceImpl implements UserService {
     @Override
     public TokenDto autoLogin(String phone, String token) throws ApiException {
         // TODO: 2020/12/8 client client secret scope 使用配置
-        String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
-        return oAuthFeign.autoLogin(basicAuth, phone, token, "test", "auto_login");
+        String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
+        return oAuthFeign.autoLogin(basicAuth, phone, token, oauthConfProp.getOauth2Scope(), "auto_login");
     }
 
     @Override
     public TokenDto smsLogin(String phone, String code) throws ApiException {
         // TODO: 2020/12/8 client client secret scope 使用配置
-        String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
-        return oAuthFeign.smsLogin(basicAuth, phone, code, "test", "sms_login");
+        String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
+        return oAuthFeign.smsLogin(basicAuth, phone, code, oauthConfProp.getOauth2Scope(), "sms_login");
     }
 
     @Override
     public TokenDto login(String username, String password) throws ApiException {
         // TODO: 2020/12/8 client client secret scope 使用配置
-        String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
-        return oAuthFeign.login(basicAuth, username, password, "test", "password");
+        String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
+        return oAuthFeign.login(basicAuth, username, password, oauthConfProp.getOauth2Scope(), "password");
     }
 
     @Override
     public TokenDto appleLogin(String subject, String token) throws ApiException {
         // TODO: 2020/12/8 client client secret scope 使用配置
-        String basicAuth = AuthUtils.genBasicAuthString("test-client", "test-client-secret");
-        return oAuthFeign.appleLogin(basicAuth, subject, token, "test", "apple_login");
+        String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
+        return oAuthFeign.appleLogin(basicAuth, subject, token, oauthConfProp.getOauth2Scope(), "apple_login");
     }
 
     /**

@@ -1,0 +1,13 @@
+INSERT INTO `gtc-social-db`.t_label (id, disabled, name, type) VALUES (1, 0, '可爱', 0);
+INSERT INTO `gtc-social-db`.t_label (id, disabled, name, type) VALUES (2, 0, '性感', 0);
+INSERT INTO `gtc-social-db`.t_label (id, disabled, name, type) VALUES (3, 0, '妩媚', 0);
+INSERT INTO `gtc-social-db`.t_label (id, disabled, name, type) VALUES (4, 0, '萝莉', 0);
+INSERT INTO `gtc-social-db`.t_label (id, disabled, name, type) VALUES (5, 0, '御姐', 0);
+INSERT INTO `gtc-social-db`.t_label (id, disabled, name, type) VALUES (6, 0, '开朗', 0);
+INSERT INTO `gtc-social-db`.t_label (id, disabled, name, type) VALUES (7, 0, '活波', 0);
+INSERT INTO `gtc-social-db`.t_label (id, disabled, name, type) VALUES (8, 0, '热情', 0);
+INSERT INTO `gtc-social-db`.t_label (id, disabled, name, type) VALUES (9, 0, '高冷', 0);
+INSERT INTO `gtc-social-db`.t_label (id, disabled, name, type) VALUES (10, 0, '帅气', 0);
+INSERT INTO `gtc-social-db`.t_label (id, disabled, name, type) VALUES (11, 0, '英俊', 0);
+INSERT INTO `gtc-social-db`.t_label (id, disabled, name, type) VALUES (12, 0, '霸道', 0);
+INSERT INTO `gtc-social-db`.t_label (id, disabled, name, type) VALUES (13, 0, '忧郁', 0);
