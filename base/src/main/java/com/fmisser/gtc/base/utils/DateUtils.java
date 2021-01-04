@@ -14,7 +14,7 @@ public class DateUtils {
     public static int getAgeFromBirth(Date birth) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime birthDay = birth.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-        return now.getYear() - birthDay.getYear();
+        return now.getYear() - birthDay.getYear() - 1;
     }
 
     // 根据日期计算星座

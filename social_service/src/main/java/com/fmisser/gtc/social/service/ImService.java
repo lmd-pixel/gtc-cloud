@@ -1,5 +1,7 @@
 package com.fmisser.gtc.social.service;
 
+import com.fmisser.gtc.base.exception.ApiException;
+import com.fmisser.gtc.social.domain.Gift;
 import com.fmisser.gtc.social.domain.User;
 
 /**
@@ -28,6 +30,5 @@ public interface ImService {
     // send to user
     int sendToUser(User fromUser, User toUser, String content);
 
-
-
+    int sendGiftMsg(User userFrom, User userTo, Gift gift, int count) throws ApiException;
 }

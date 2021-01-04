@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.dto.social.*;
+import com.fmisser.gtc.base.dto.social.calc.CalcConsumeDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcTotalProfitDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcUserDto;
 import com.fmisser.gtc.base.exception.ApiException;
@@ -12,6 +13,7 @@ import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.UserManagerService;
 import com.fmisser.gtc.social.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -43,7 +45,7 @@ public class UserManagerServiceImpl implements UserManagerService {
     }
 
     @Override
-    public List<AnchorDto> getAnchorList(String digitId, String nick, String phone, Integer gender,
+    public Pair<List<AnchorDto>,Map<String, Object>> getAnchorList(String digitId, String nick, String phone, Integer gender,
                                          Date startTime, Date endTime,
                                          int pageIndex, int pageSize,
                                          int sortColumn, int sortDirection) throws ApiException {
@@ -88,14 +90,21 @@ public class UserManagerServiceImpl implements UserManagerService {
                 break;
         }
 
-        Pageable pageable = PageRequest.of(pageIndex, pageSize, direction, sortProp);
-        return userRepository
-                .anchorStatistics(digitId, nick, phone, gender, startTime, endTime, pageable)
-                .getContent();
+        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize, direction, sortProp);
+        Page<AnchorDto> anchorDtoPage = userRepository
+                .anchorStatistics(digitId, nick, phone, gender, startTime, endTime, pageable);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", anchorDtoPage.getTotalPages());
+        extra.put("totalEle", anchorDtoPage.getTotalElements());
+        extra.put("currPage", pageIndex);
+        extra.put("totalUser", anchorDtoPage.getTotalElements());
+
+        return Pair.of(anchorDtoPage.getContent(), extra);
     }
 
     @Override
-    public List<ConsumerDto> getConsumerList(String digitId, String nick, String phone,
+    public Pair<List<ConsumerDto>,Map<String, Object>> getConsumerList(String digitId, String nick, String phone,
                                              Date startTime, Date endTime,
                                              int pageIndex, int pageSize,
                                              int sortColumn, int sortDirection) throws ApiException {
@@ -137,10 +146,20 @@ public class UserManagerServiceImpl implements UserManagerService {
                 break;
         }
 
-        Pageable pageable = PageRequest.of(pageIndex, pageSize, direction, sortProp);
-        return userRepository
-                .consumerStatistics(digitId, nick, phone, startTime, endTime, pageable)
-                .getContent();
+        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize, direction, sortProp);
+        Page<ConsumerDto> consumerDtoPage = userRepository
+                .consumerStatistics(digitId, nick, phone, startTime, endTime, pageable);
+
+        CalcConsumeDto calcConsumeDto = userRepository.calcConsume(digitId, nick, phone, startTime, endTime);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", consumerDtoPage.getTotalPages());
+        extra.put("totalEle", consumerDtoPage.getTotalElements());
+        extra.put("currPage", pageIndex);
+        extra.put("totalUser", calcConsumeDto.getCount());
+        extra.put("totalRecharge", calcConsumeDto.getRecharge());
+
+        return Pair.of(consumerDtoPage.getContent(), extra);
     }
 
     @Override
@@ -153,10 +172,18 @@ public class UserManagerServiceImpl implements UserManagerService {
     }
 
     @Override
-    public List<RecommendDto> getRecommendList(String digitId, String nick, Integer type,
+    public Pair<List<RecommendDto>, Map<String, Object>> getRecommendList(String digitId, String nick, Integer type,
                                                int pageIndex, int pageSize) throws ApiException {
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        return recommendRepository.getRecommendList(digitId, nick, type, pageable).getContent();
+        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
+        Page<RecommendDto> recommendDtoPage =
+                recommendRepository.getRecommendList(digitId, nick, type, pageable);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", recommendDtoPage.getTotalPages());
+        extra.put("totalEle", recommendDtoPage.getTotalElements());
+        extra.put("currPage", pageIndex);
+
+        return Pair.of(recommendDtoPage.getContent(), extra);
     }
 
     @Override
@@ -185,7 +212,7 @@ public class UserManagerServiceImpl implements UserManagerService {
     }
 
     @Override
-    public List<IdentityAudit> getAnchorAuditList(String digitId, String nick, Integer gender, Integer status,
+    public Pair<List<IdentityAudit>, Map<String, Object>> getAnchorAuditList(String digitId, String nick, Integer gender, Integer status,
                                                   Date startTime, Date endTime,
                                                   int pageIndex, int pageSize) throws ApiException {
 
@@ -201,8 +228,15 @@ public class UserManagerServiceImpl implements UserManagerService {
         }
 
         Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
-        return identityAuditRepository.getIdentityAuditList(digitId, nick, gender, statusList, startTime, endTime, pageable)
-                .getContent();
+        Page<IdentityAudit> identityAuditPage = identityAuditRepository
+                .getIdentityAuditList(digitId, nick, gender, statusList, startTime, endTime, pageable);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", identityAuditPage.getTotalPages());
+        extra.put("totalEle", identityAuditPage.getTotalElements());
+        extra.put("currPage", pageIndex);
+
+        return Pair.of(identityAuditPage.getContent(), extra);
     }
 
     @Transactional

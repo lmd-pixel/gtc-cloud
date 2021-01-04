@@ -19,13 +19,13 @@ import java.util.Map;
 public interface UserManagerService {
 
     // 获取主播列表
-    List<AnchorDto> getAnchorList(String digitId, String nick, String phone, Integer gender,
+    Pair<List<AnchorDto>,Map<String, Object>> getAnchorList(String digitId, String nick, String phone, Integer gender,
                                   Date startTime, Date endTime,
                                   int pageIndex, int pageSize,
                                   int sortColumn, int sortDirection) throws ApiException;
 
     // 获取普通用户列表
-    List<ConsumerDto> getConsumerList(String digitId, String nick, String phone,
+    Pair<List<ConsumerDto>,Map<String, Object>> getConsumerList(String digitId, String nick, String phone,
                                       Date startTime, Date endTime,
                                       int pageIndex, int pageSize,
                                       int sortColumn, int sortDirection) throws ApiException;
@@ -34,16 +34,17 @@ public interface UserManagerService {
     User getUserProfile(String digitId) throws ApiException;
 
     // 获取推荐主播列表
-    List<RecommendDto> getRecommendList(String digitId, String nick, Integer type,
+    Pair<List<RecommendDto>, Map<String, Object>> getRecommendList(String digitId, String nick, Integer type,
                                         int pageIndex, int pageSize) throws ApiException;
 
     // 设置主播推荐
     int configRecommend(String digitId, int type, int recommend, Long level) throws ApiException;
 
     // 获取主播审核列表
-    List<IdentityAudit> getAnchorAuditList(String digitId, String nick, Integer gender, Integer status,
-                                           Date startTime, Date endTime,
-                                           int pageIndex, int pageSize) throws ApiException;
+    Pair<List<IdentityAudit>, Map<String, Object>> getAnchorAuditList(String digitId, String nick,
+                                                                      Integer gender, Integer status,
+                                                                      Date startTime, Date endTime,
+                                                                      int pageIndex, int pageSize) throws ApiException;
 
     // 审核主播资料/相册/视频
     int anchorAudit(String serialNumber, int operate, String message) throws ApiException;

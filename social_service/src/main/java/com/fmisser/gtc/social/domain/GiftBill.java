@@ -41,6 +41,8 @@ public class GiftBill {
     private Long userIdTo;
 
     // 唯一消息标识 通过自定义消息来实现
+    // 目前实现不走消息
+    @Deprecated
     @Column(nullable = false, unique = true)
     private String msgKey;
 

@@ -18,7 +18,14 @@ public interface RecommendRepository extends JpaRepository<Recommend, Long> {
             "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
             "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) " +
             "WHERE tr.recommend = 1 AND tr.type = ?3 " +
-            "ORDER BY tr.level ", nativeQuery = true)
+            "ORDER BY tr.level ",
+            countQuery = "SELECT COUNT(tr.id) " +
+                    "FROM t_recommend tr " +
+                    "INNER JOIN t_user tu ON tu.id = tr.user_id AND " +
+                    "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+                    "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) " +
+                    "WHERE tr.recommend = 1 AND tr.type = ?3 ",
+            nativeQuery = true)
     Page<RecommendDto> getRecommendList(String digitId, String nick, Integer type, Pageable pageable);
 
     Optional<Recommend> findByUserIdAndType(Long userId, int type);

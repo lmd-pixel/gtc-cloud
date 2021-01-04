@@ -2,6 +2,7 @@ package com.fmisser.gtc.social.repository;
 
 import com.fmisser.gtc.base.dto.social.AnchorDto;
 import com.fmisser.gtc.base.dto.social.ConsumerDto;
+import com.fmisser.gtc.base.dto.social.calc.CalcConsumeDto;
 import com.fmisser.gtc.social.domain.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -135,8 +136,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "(tu.gender LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) AND " +
             "(tu.create_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL) " +
             "GROUP BY tu.digit_id ORDER BY tu.digit_id DESC",
+            countQuery = "SELECT COUNT(tu.id) " +
+                    "FROM t_user tu " +
+                    "WHERE tu.identity = 1 AND " +
+                    "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+                    "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+                    "(tu.phone LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
+                    "(tu.gender LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) AND " +
+                    "(tu.create_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL) ",
             nativeQuery = true)
-    Page<AnchorDto> anchorStatistics(String digitId, String nick, String phone, Integer gender, Date startTime, Date endTime, Pageable pageable);
+    Page<AnchorDto> anchorStatistics(String digitId, String nick, String phone, Integer gender,
+                                     Date startTime, Date endTime, Pageable pageable);
 
     // 用户数据模糊查询
     @Query(value = "SELECT tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, " +
@@ -161,8 +171,42 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
             "(tu.phone LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
             "(tu.create_time BETWEEN ?4 AND ?5 OR ?4 IS NULL OR ?5 IS NULL) " +
-            "GROUP BY tu.digit_id ORDER BY tu.digit_id DESC",
+            "GROUP BY tu.digit_id ORDER BY tu.digit_id DESC ",
+            countQuery = "SELECT COUNT(tu.digit_id) " +
+                    "FROM t_user tu " +
+                    "WHERE tu.identity = 0 AND " +
+                    "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+                    "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+                    "(tu.phone LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
+                    "(tu.create_time BETWEEN ?4 AND ?5 OR ?4 IS NULL OR ?5 IS NULL) ",
             nativeQuery = true)
     Page<ConsumerDto> consumerStatistics(String digitId, String nick, String phone, Date startTime, Date endTime, Pageable pageable);
+    // 目前不知道如何使用参数化order by desc/asc的办法，笨方法可以写两条sql
+//    List<ConsumerDto> consumerStatistics(String digitId, String nick, String phone,
+//                                         Date startTime, Date endTime,
+//                                         String sort, int direction,
+//                                         int limit, int offset);
+
+    // 用户消费充值统计
+    @Query(value = "SELECT COUNT(DISTINCT tu.id) AS count," +
+            "SUM(tr.coin) AS recharge " +
+//            "SUM(tcb.origin_coin) AS voiceConsume, " +
+//            "SUM(tcb2.origin_coin) AS videoConsume, " +
+//            "SUM(tmb.origin_coin) AS msgConsume, " +
+//            "SUM(tgb.origin_coin) AS giftConsume " +
+            "FROM t_user tu " +
+            "LEFT JOIN t_recharge tr ON tr.user_id = tu.id AND tr.status >= 20 " +
+//            "LEFT JOIN t_call_bill tcb ON tcb.user_id_from = tu.id AND tcb.type = 0 " +
+//            "LEFT JOIN t_call_bill tcb2 ON tcb2.user_id_from = tu.id AND tcb.type = 1 " +
+//            "LEFT JOIN t_message_bill tmb ON tmb.user_id_from = tu.id " +
+//            "LEFT JOIN t_gift_bill tgb ON tgb.user_id_from = tu.id " +
+            "WHERE tu.identity = 0 AND " +
+            "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+            "(tu.phone LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
+            "(tu.create_time BETWEEN ?4 AND ?5 OR ?4 IS NULL OR ?5 IS NULL) ",
+            nativeQuery = true)
+    CalcConsumeDto calcConsume(String digitId, String nick, String phone, Date startTime, Date endTime);
+
 
 }

@@ -2,6 +2,7 @@ package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.aop.ReTry;
 import com.fmisser.gtc.base.exception.ApiException;
+import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.IdentityAudit;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.repository.IdentityAuditRepository;
@@ -68,12 +69,8 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
                 optionalIdentityAudit.get().getStatus() == 10) {
             throw new ApiException(-1, "用户资料仍在审核中，无法再次提交");
         } else {
-            IdentityAudit audit = new IdentityAudit();
-            audit.setSerialNumber(createAuditSerialNumber(user.getId(), 1));
-            audit.setUserId(user.getId());
-            audit.setType(1);
-            audit.setStatus(10);
-            identityAuditRepository.save(audit);
+            IdentityAudit identityAudit = _createIdentityAudit(user, 1);
+            identityAuditRepository.save(identityAudit);
         }
 
         // 照片审核
@@ -82,12 +79,8 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
                 optionalIdentityAudit.get().getStatus() == 10) {
             throw new ApiException(-1, "用户照片仍在审核中，无法再次提交");
         } else {
-            IdentityAudit audit = new IdentityAudit();
-            audit.setSerialNumber(createAuditSerialNumber(user.getId(), 2));
-            audit.setUserId(user.getId());
-            audit.setType(2);
-            audit.setStatus(10);
-            identityAuditRepository.save(audit);
+            IdentityAudit identityAudit = _createIdentityAudit(user, 2);
+            identityAuditRepository.save(identityAudit);
         }
 
         // 视频审核
@@ -96,12 +89,8 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
                 optionalIdentityAudit.get().getStatus() == 10) {
             throw new ApiException(-1, "用户视频仍在审核中，无法再次提交");
         } else {
-            IdentityAudit audit = new IdentityAudit();
-            audit.setSerialNumber(createAuditSerialNumber(user.getId(), 3));
-            audit.setUserId(user.getId());
-            audit.setType(3);
-            audit.setStatus(10);
-            identityAuditRepository.save(audit);
+            IdentityAudit identityAudit = _createIdentityAudit(user, 3);
+            identityAuditRepository.save(identityAudit);
         }
 
         return 1;
@@ -220,5 +209,18 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
                 new Date().getTime(),
                 userId,
                 type);
+    }
+
+    private IdentityAudit _createIdentityAudit(User user, int type) {
+        IdentityAudit audit = new IdentityAudit();
+        audit.setSerialNumber(createAuditSerialNumber(user.getId(), 1));
+        audit.setUserId(user.getId());
+        audit.setDigitId(user.getDigitId());
+        audit.setNick(user.getNick());
+        audit.setPhone(user.getPhone());
+        audit.setAge(DateUtils.getAgeFromBirth(user.getBirth()));
+        audit.setType(type);
+        audit.setStatus(10);
+        return audit;
     }
 }

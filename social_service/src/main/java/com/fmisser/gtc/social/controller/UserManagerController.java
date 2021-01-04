@@ -42,7 +42,7 @@ public class UserManagerController {
             @ApiImplicitParam(name = "gender", value = "用户性别", paramType = "query", dataType = "Integer, required = false"),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer"),
             @ApiImplicitParam(name = "sortColumn",
                     value = "排序列 0：注册时间， 1：最近登录时间, 2: 账户余额， 3：礼物收益， 4：私信收益， 5：语音收益 6：语音时长  7：视频收益 8：视频时长 ",
@@ -58,18 +58,14 @@ public class UserManagerController {
                                                       @RequestParam(value = "gender", required = false) Integer gender,
                                                       @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
                                                       @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
-                                                      @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+                                                      @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
                                                       @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize,
                                                       @RequestParam(value = "sortColumn", required = false, defaultValue = "0") int sortColumn,
                                                       @RequestParam(value = "sortDirection", required = false, defaultValue = "0") int sortDirection) {
-        List<AnchorDto> anchorDtoList = userManagerService
+        Pair<List<AnchorDto>, Map<String, Object>> anchorDtoList = userManagerService
                 .getAnchorList(digitId, nick, phone, gender, startTime, endTime, pageIndex, pageSize, sortColumn, sortDirection);
 
-        // 统计数据
-        Map<String, Object> countMap = new HashMap<>();
-        countMap.put("userCount", anchorDtoList.size());
-
-        return ApiResp.succeed(anchorDtoList, countMap);
+        return ApiResp.succeed(anchorDtoList.getFirst(), anchorDtoList.getSecond());
     }
 
     @ApiOperation(value = "获取普通用户列表")
@@ -80,7 +76,7 @@ public class UserManagerController {
             @ApiImplicitParam(name = "phone", value = "用户手机号", paramType = "query", required = false),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer"),
             @ApiImplicitParam(name = "sortColumn",
                     value = "排序列 0：注册时间， 1：最近登录时间, 2: 礼物消费， 3：私信消费， 4：语音消费， 5：视频消费， 6：充值总额， 7：账户余额 ",
@@ -95,25 +91,25 @@ public class UserManagerController {
                                              @RequestParam(value = "phone", required = false) String phone,
                                              @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
                                              @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
-                                             @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+                                             @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
                                              @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize,
                                              @RequestParam(value = "sortColumn", required = false, defaultValue = "0") int sortColumn,
                                              @RequestParam(value = "sortDirection", required = false, defaultValue = "0") int sortDirection) {
-        List<ConsumerDto> consumerDtoList = userManagerService
+        Pair<List<ConsumerDto>, Map<String, Object>> consumerDtoList = userManagerService
                 .getConsumerList(digitId, nick, phone, startTime, endTime, pageIndex, pageSize, sortColumn, sortDirection);
 
         // 统计数据
-        Map<String, Object> countMap = new HashMap<>();
-        BigDecimal countRecharge = consumerDtoList
-                .stream()
-                .map(ConsumerDto::getRechargeCoin)
-                .filter(Objects::nonNull)
-                .reduce( BigDecimal.ZERO, BigDecimal::add );
+//        Map<String, Object> countMap = new HashMap<>();
+//        BigDecimal countRecharge = consumerDtoList
+//                .stream()
+//                .map(ConsumerDto::getRechargeCoin)
+//                .filter(Objects::nonNull)
+//                .reduce( BigDecimal.ZERO, BigDecimal::add );
 
-        countMap.put("userCount", consumerDtoList.size());
-        countMap.put("userRecharge", countRecharge);
+//        countMap.put("userCount", consumerDtoList.size());
+//        countMap.put("userRecharge", countRecharge);
 
-        return ApiResp.succeed(consumerDtoList, countMap);
+        return ApiResp.succeed(consumerDtoList.getFirst(), consumerDtoList.getSecond());
     }
 
     @ApiOperation(value = "获取用户信息(包含照片信息)")
@@ -134,7 +130,7 @@ public class UserManagerController {
             @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query"),
             @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query"),
             @ApiImplicitParam(name = "type", value = "推荐模块 0: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人", required = true, paramType = "query"),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
     @GetMapping(value = "/list-recommend")
@@ -142,10 +138,11 @@ public class UserManagerController {
     ApiResp<List<RecommendDto>> getRecommendList(@RequestParam(value = "digitId", required = false) String digitId,
                                                  @RequestParam(value = "nick", required = false) String nick,
                                                  @RequestParam(value = "type") @Range(min = 0, max = 2, message = "type参数范围不合法") Integer type,
-                                                 @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+                                                 @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
                                                  @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
-        List<RecommendDto> recommendDtoList = userManagerService.getRecommendList(digitId, nick, type, pageIndex, pageSize);
-        return ApiResp.succeed(recommendDtoList);
+        Pair<List<RecommendDto>, Map<String, Object>> recommendDtoList =
+                userManagerService.getRecommendList(digitId, nick, type, pageIndex, pageSize);
+        return ApiResp.succeed(recommendDtoList.getFirst(), recommendDtoList.getSecond());
     }
 
     @ApiOperation(value = "设置主播推荐")
@@ -193,9 +190,9 @@ public class UserManagerController {
                                                  @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
                                                  @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
                                                  @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
-        List<IdentityAudit> identityAuditList = userManagerService
+        Pair<List<IdentityAudit>, Map<String, Object>> identityAuditList = userManagerService
                 .getAnchorAuditList(digitId, nick, gender, status, startTime, endTime, pageIndex, pageSize);
-        return ApiResp.succeed(identityAuditList);
+        return ApiResp.succeed(identityAuditList.getFirst(), identityAuditList.getSecond());
     }
 
     @ApiOperation(value = "主播认证审核")
@@ -218,7 +215,7 @@ public class UserManagerController {
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date"),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date"),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
     @GetMapping(value = "/calc-user-list")
@@ -226,7 +223,7 @@ public class UserManagerController {
     ApiResp<List<CalcUserDto>> getCalcUser(
             @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
-            @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+            @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
         Pair<List<CalcUserDto>, Map<String, Object>> calcUserDtoPair = userManagerService
                 .getCalcUser(startTime, endTime, pageIndex, pageSize);

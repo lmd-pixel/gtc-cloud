@@ -32,7 +32,7 @@ public class ImMsgFactory {
         return imSendMsgDto;
     }
 
-    static public ImSendMsgDto buildGiftMsg(String fromAccount, String toAccount, String content, boolean syncMsg) {
+    static public ImSendMsgDto buildGiftMsg(String fromAccount, String toAccount, String content, Long giftId, boolean syncMsg) {
         ImSendMsgDto imSendMsgDto = new ImSendMsgDto();
         imSendMsgDto.setSyncOtherMachine(syncMsg ? 1 : 2);
         imSendMsgDto.setTo_Account(toAccount);
@@ -55,7 +55,7 @@ public class ImMsgFactory {
         ImMsgBody customMsgBody = new ImMsgBody();
         customMsgBody.setMsgType("TIMCustomElem");
         ImMsgBody.ImMsgContent customMsgContent = new ImMsgBody.ImMsgContent();
-        customMsgContent.setData("火箭");
+        customMsgContent.setData(giftId.toString());
         customMsgContent.setDesc("这是一个礼物");
         customMsgBody.setMsgContent(customMsgContent);
 

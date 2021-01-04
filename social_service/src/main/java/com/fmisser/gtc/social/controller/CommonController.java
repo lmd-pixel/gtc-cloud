@@ -2,10 +2,7 @@ package com.fmisser.gtc.social.controller;
 
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.*;
-import com.fmisser.gtc.social.service.DistrictService;
-import com.fmisser.gtc.social.service.LabelService;
-import com.fmisser.gtc.social.service.ProductService;
-import com.fmisser.gtc.social.service.UserService;
+import com.fmisser.gtc.social.service.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -26,15 +23,18 @@ public class CommonController {
     private final ProductService productService;
     private final DistrictService districtService;
     private final LabelService labelService;
+    private final GiftService giftService;
 
     public CommonController(UserService userService,
                             ProductService productService,
                             DistrictService districtService,
-                            LabelService labelService) {
+                            LabelService labelService,
+                            GiftService giftService) {
         this.userService = userService;
         this.productService = productService;
         this.districtService = districtService;
         this.labelService = labelService;
+        this.giftService = giftService;
     }
 
     @ApiOperation(value = "获取主播列表")
@@ -137,6 +137,7 @@ public class CommonController {
     @ApiOperation(value = "获取礼物列表")
     @GetMapping(value = "/gift-list")
     public ApiResp<List<Gift>> getGiftList() {
-        return null;
+        List<Gift> giftList = giftService.getGiftList();
+        return ApiResp.succeed(giftList);
     }
 }

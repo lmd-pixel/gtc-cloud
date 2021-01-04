@@ -47,6 +47,8 @@ jpa 防sql注入
 
 微服务统一配置
 
+minio 迁移配置： https://www.cnblogs.com/lkj371/p/12691063.html
+
 mysql 优化：https://zhuanlan.zhihu.com/p/106061137
 
 ################## 业务逻辑相关 ##################

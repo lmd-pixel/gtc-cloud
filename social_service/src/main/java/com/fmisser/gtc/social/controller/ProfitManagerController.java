@@ -24,7 +24,7 @@ import java.util.Map;
 
 @Api(description = "收益管理")
 @RestController
-@RequestMapping("/withdraw-manager")
+@RequestMapping("/profit-manager")
 @Validated
 public class ProfitManagerController {
     @Autowired
@@ -144,7 +144,7 @@ public class ProfitManagerController {
             @ApiImplicitParam(name = "anchorNick", value = "主播昵称", paramType = "query", required = false),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
     @PreAuthorize("hasAnyRole('MANAGER')")
@@ -156,7 +156,7 @@ public class ProfitManagerController {
             @RequestParam(value = "anchorNick", required = false) String anchorNick,
             @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
-            @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+            @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
         Pair<List<ConsumerMessageBillDto>, Map<String,Object>> consumerMessageBillDtoList = profitManagerService
                 .getConsumerMsgBillList(consumerDigitId, consumerNick,
@@ -175,7 +175,7 @@ public class ProfitManagerController {
             @ApiImplicitParam(name = "anchorNick", value = "主播昵称", paramType = "query", required = false),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
     @PreAuthorize("hasAnyRole('MANAGER')")
@@ -187,7 +187,7 @@ public class ProfitManagerController {
             @RequestParam(value = "anchorNick", required = false) String anchorNick,
             @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
-            @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+            @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
         Pair<List<ConsumerGiftBillDto>, Map<String,Object>> consumerGiftBillDtoList = profitManagerService
                 .getConsumerGiftBillList(consumerDigitId, consumerNick,

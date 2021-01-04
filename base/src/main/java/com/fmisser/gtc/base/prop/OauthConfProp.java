@@ -18,6 +18,6 @@ public class OauthConfProp {
     @Value("${oauth2.scope}")
     private String oauth2Scope;
 
-    @Value("${oauth2.jwt.sign_key}")
-    private String oauth2JwtKey;
+//    @Value("${oauth2.jwt.sign_key}")
+//    private String oauth2JwtKey;
 }

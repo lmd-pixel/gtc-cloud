@@ -698,6 +698,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public static boolean isAudioSupported(String stuff) {
-        return stuff.toLowerCase().equals(".mp3");
+//        return stuff.toLowerCase().equals(".mp3");
+        return true;
     }
 }

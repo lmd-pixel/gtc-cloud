@@ -1,10 +1,12 @@
 package com.fmisser.gtc.social.service.impl;
 
+import com.fmisser.gtc.base.dto.im.ImMsgBody;
 import com.fmisser.gtc.base.dto.im.ImMsgFactory;
 import com.fmisser.gtc.base.dto.im.ImSendMsgCbResp;
 import com.fmisser.gtc.base.dto.im.ImSendMsgDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.ImConfProp;
+import com.fmisser.gtc.social.domain.Gift;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.feign.ImFeign;
 import com.fmisser.gtc.social.service.ImService;
@@ -78,7 +80,7 @@ public class TencentImService implements ImService {
             throw new ApiException(-1, "目标用户不存在!");
         }
         String fromAccount = Objects.isNull(fromUser) ? null : fromUser.getDigitId();
-        ImSendMsgDto imSendMsgDto = ImMsgFactory.buildGiftMsg(fromAccount, toUser.getDigitId(), content, true);
+        ImSendMsgDto imSendMsgDto = ImMsgFactory.buildTextMsg(fromAccount, toUser.getDigitId(), content, true);
 
         // 获取管理员的 usersig
         String admin = imConfProp.getAdmin();
@@ -94,6 +96,39 @@ public class TencentImService implements ImService {
         // TODO: 2020/12/29 记录消息
 
         return 1;
+    }
+
+    @Override
+    public int sendGiftMsg(User userFrom, User userTo, Gift gift, int count) throws ApiException {
+        ImSendMsgDto msg2From = ImMsgFactory
+                .buildGiftMsg(userFrom.getDigitId(), userTo.getDigitId(), "我给你送了新礼物!", gift.getId(), true);
+        ImSendMsgDto msg2To = ImMsgFactory
+                .buildGiftMsg(userTo.getDigitId(), userFrom.getDigitId(), "我已收到你的新礼物!", gift.getId(), true);
+
+        // 获取管理员的 usersig
+        String admin = imConfProp.getAdmin();
+        String adminSig = genAdminSig(admin);
+
+        // 发送给发送方
+        ImSendMsgCbResp imSendMsgCbResp = imFeign
+                .sendMsg(imConfProp.getSdkAppId(), admin, adminSig, new Random().nextInt(), "json", msg2From);
+
+        if (!imSendMsgCbResp.getActionStatus().equals("OK")) {
+            throw new ApiException(-1, imSendMsgCbResp.getErrorInfo());
+        }
+
+        // 发送给接收方
+        imSendMsgCbResp = imFeign
+                .sendMsg(imConfProp.getSdkAppId(), admin, adminSig, new Random().nextInt(), "json", msg2To);
+
+        if (!imSendMsgCbResp.getActionStatus().equals("OK")) {
+            throw new ApiException(-1, imSendMsgCbResp.getErrorInfo());
+        }
+
+        // TODO: 2020/12/29 记录消息
+
+        return 1;
+
     }
 
     /**
