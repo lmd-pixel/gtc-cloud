@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.dto.social.RechargeDto;
+import com.fmisser.gtc.base.dto.social.calc.CalcRechargeDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.repository.RechargeRepository;
 import com.fmisser.gtc.social.service.RechargeManagerService;
@@ -8,11 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class RechargeManagerServiceImpl implements RechargeManagerService {
@@ -24,10 +24,10 @@ public class RechargeManagerServiceImpl implements RechargeManagerService {
     }
 
     @Override
-    public List<RechargeDto> getRechargeList(String digitId, String nick, Integer status,
-                                             Date startTime, Date endTime,
-                                             Integer pageIndex, Integer pageSize) throws ApiException {
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+    public Pair<List<RechargeDto>, Map<String, Object>> getRechargeList(String digitId, String nick, Integer status,
+                                                       Date startTime, Date endTime,
+                                                       Integer pageIndex, Integer pageSize) throws ApiException {
+//        Pageable pageable = PageRequest.of(pageIndex, pageSize);
 
         // status: 0: 未完成 1:已完成 2: 全部
         List<Integer> statusList = new ArrayList<>();
@@ -48,11 +48,21 @@ public class RechargeManagerServiceImpl implements RechargeManagerService {
             statusList.add(31);
         }
 
-        Page<RechargeDto> rechargeDtoPage = rechargeRepository
-                .getRechargeList(digitId, nick, startTime, endTime, statusList, pageable);
+//        Page<RechargeDto> rechargeDtoPage = rechargeRepository
+//                .getRechargeList(digitId, nick, startTime, endTime, statusList, pageable);
 
-        // TODO: 2020/12/2 统计总充值人数和充值金额
+        List<RechargeDto> rechargeDtoList = rechargeRepository
+                .getRechargeList(digitId, nick, startTime, endTime, statusList, pageSize, pageSize * (pageIndex - 1));
 
-        return  rechargeDtoPage.getContent();
+        CalcRechargeDto calcRechargeDto = rechargeRepository.calcRecharge(digitId, nick, startTime, endTime, statusList);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", (calcRechargeDto.getCount() / pageSize) + 1 );
+        extra.put("totalEle", calcRechargeDto.getCount());
+        extra.put("currPage", pageIndex);
+        extra.put("totalCount", calcRechargeDto.getCount());
+        extra.put("totolRecharge", calcRechargeDto.getRecharge());
+
+        return Pair.of(rechargeDtoList, extra);
     }
 }

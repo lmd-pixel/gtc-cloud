@@ -168,6 +168,12 @@ public class UserManagerServiceImpl implements UserManagerService {
         // 附带用户金币数据
         Asset asset = assetRepository.findByUserId(user.getId());
         user.setCoin(asset.getCoin());
+        // 附带收益比例
+        user.setVideoProfitRatio(asset.getVideoProfitRatio());
+        user.setVoiceProfitRatio(asset.getVoiceProfitRatio());
+        user.setMsgProfitRatio(asset.getMsgProfitRatio());
+        user.setGiftProfitRatio(asset.getGiftProfitRatio());
+
         return userService.profile(user);
     }
 
@@ -237,6 +243,12 @@ public class UserManagerServiceImpl implements UserManagerService {
         extra.put("currPage", pageIndex);
 
         return Pair.of(identityAuditPage.getContent(), extra);
+    }
+
+    @Override
+    public List<IdentityAudit> getAnchorAudit(String digitId) throws ApiException {
+        User user = userService.getUserByDigitId(digitId);
+        return identityAuditRepository.getLatestWithAllType(user.getId());
     }
 
     @Transactional

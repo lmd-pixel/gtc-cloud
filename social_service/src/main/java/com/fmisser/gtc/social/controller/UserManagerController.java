@@ -153,7 +153,7 @@ public class UserManagerController {
             @ApiImplicitParam(name = "recommend", value = "是否推荐 0：取消推荐 1：设置成推荐", paramType = "query", defaultValue = "0", dataType = "Integer"),
             @ApiImplicitParam(name = "level", value = "推荐排序数值 如果取消推荐，这个字段可以不填", paramType = "query", dataType = "Integer")
     })
-    @PutMapping(value = "/config-recommend")
+    @PostMapping(value = "/config-recommend")
     ApiResp<Integer> configRecommend(@RequestParam(value = "digitId") String digitId,
                                      @RequestParam(value = "type") @Range(min = 0, max = 2, message = "type参数范围不合法") int type,
                                      @RequestParam(value = "recommend") @Range(min = 0, max = 1, message = "recommend参数范围不合法") int recommend,
@@ -195,6 +195,18 @@ public class UserManagerController {
         return ApiResp.succeed(identityAuditList.getFirst(), identityAuditList.getSecond());
     }
 
+    @ApiOperation(value = "获取主播最新的所有类型审核")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
+            @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query")
+    })
+    @GetMapping(value = "/get-anchor-audit")
+    @PreAuthorize("hasAnyRole('MANAGER')")
+    ApiResp<List<IdentityAudit>> getAnchorAudit(@RequestParam(value = "digitId") String digitId ) {
+        List<IdentityAudit> identityAuditList = userManagerService.getAnchorAudit(digitId);
+        return ApiResp.succeed(identityAuditList);
+    }
+
     @ApiOperation(value = "主播认证审核")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
@@ -202,7 +214,7 @@ public class UserManagerController {
             @ApiImplicitParam(name = "operate", value = "审核操作： 0: 审核不通过 1：审核通过", paramType = "query", defaultValue = "0", dataType = "Integer"),
             @ApiImplicitParam(name = "message", value = "审核备注信息", paramType = "query")
     })
-    @PutMapping(value = "/anchor-audit")
+    @PostMapping(value = "/anchor-audit")
     ApiResp<Integer> anchorAudit(@RequestParam(value = "serialNumber") String serialNumber,
                                  @RequestParam(value = "operate") @Range(min = 0, max = 1) int operate,
                                  @RequestParam(value = "message", required = false) String message) {

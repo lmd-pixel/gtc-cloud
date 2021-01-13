@@ -51,5 +51,7 @@
    2375端口只有自己使用的时候再去打开，不用的时候关闭
 
    firewall-cmd --zone=public --add-port=2375/tcp --permanent
+   firewall-cmd --reload
+
    firewall-cmd --zone=public --remove-port=2375/tcp --permanent
    firewall-cmd --reload

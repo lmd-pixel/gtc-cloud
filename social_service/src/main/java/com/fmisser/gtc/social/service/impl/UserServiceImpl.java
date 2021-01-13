@@ -85,11 +85,18 @@ public class UserServiceImpl implements UserService {
         user.setUsername(phone);
         user.setPhone(phone);
 
-        LocalDateTime dateTime = LocalDateTime.now();
-        Date startHour = Date.from(DateUtils.getHourStart(dateTime).atZone(ZoneId.systemDefault()).toInstant());
-        Date endHour = Date.from(DateUtils.getHourEnd(dateTime).atZone(ZoneId.systemDefault()).toInstant());
+//        LocalDateTime dateTime = LocalDateTime.now(ZoneId.systemDefault());
+//        Date startHour = Date.from(DateUtils.getHourStart(dateTime).atZone(ZoneId.systemDefault()).toInstant());
+//        Date endHour = Date.from(DateUtils.getHourEnd(dateTime).atZone(ZoneId.systemDefault()).toInstant());
+        Date date = new Date();
+        Date startHour = DateUtils.getHourStart(date);
+        Date endHour = DateUtils.getHourEnd(date);
         long count = userRepository.countByCreateTimeBetween(startHour, endHour);
-        String digitId = calcDigitId(dateTime, count + 1);
+        String digitId = calcDigitId(date, count + 1);
+//        Date startDay = DateUtils.getDayStart(date);
+//        Date endDay = DateUtils.getDayEnd(date);
+//        Long count = userRepository.countByCreateTimeBetween(startDay, endDay);
+//        String digitId = calcDigitIdV2(date, count + 1);
         user.setDigitId(digitId);
         user.setNick(String.format("会员%s", digitId));
 
@@ -565,11 +572,11 @@ public class UserServiceImpl implements UserService {
             List<String> photosNameList = changePhotosToList(user.getPhotos());
             List<String> photosUrlList = photosNameList.stream()
                     .map( name -> String.format("%s/%s/%s",
-                            ossConfProp.getMinioUrl(), ossConfProp.getUserProfileBucket(), name))
+                            ossConfProp.getMinioVisitUrl(), ossConfProp.getUserProfileBucket(), name))
                     .collect(Collectors.toList());
             List<String> photosThumbnailUrlList = photosNameList.stream()
                     .map( name -> String.format("%s/%s/thumbnail_%s",
-                            ossConfProp.getMinioUrl(), ossConfProp.getUserProfileBucket(), name))
+                            ossConfProp.getMinioVisitUrl(), ossConfProp.getUserProfileBucket(), name))
                     .collect(Collectors.toList());
             user.setPhotoUrlList(photosUrlList);
             user.setPhotoThumbnailUrlList(photosThumbnailUrlList);
@@ -578,11 +585,11 @@ public class UserServiceImpl implements UserService {
         // 返回完整的头像的链接和缩略图的链接
         if (user.getHead() != null && !user.getHead().isEmpty()) {
             String headUrl = String.format("%s/%s/%s",
-                    ossConfProp.getMinioUrl(),
+                    ossConfProp.getMinioVisitUrl(),
                     ossConfProp.getUserProfileBucket(),
                     user.getHead());
             String headThumbnailUrl = String.format("%s/%s/thumbnail_%s",
-                    ossConfProp.getMinioUrl(),
+                    ossConfProp.getMinioVisitUrl(),
                     ossConfProp.getUserProfileBucket(),
                     user.getHead());
             user.setHeadUrl(headUrl);
@@ -592,7 +599,7 @@ public class UserServiceImpl implements UserService {
         // 返回完整的语音介绍的链接
         if (user.getVoice() != null && !user.getVoice().isEmpty()) {
             String voiceUrl = String.format("%s/%s/%s",
-                    ossConfProp.getMinioUrl(),
+                    ossConfProp.getMinioVisitUrl(),
                     ossConfProp.getUserProfileBucket(),
                     user.getVoice());
             user.setVoiceUrl(voiceUrl);
@@ -609,7 +616,7 @@ public class UserServiceImpl implements UserService {
         // 返回完整的视频链接
         if (user.getVideo() != null && !user.getVideo().isEmpty()) {
             String videoUrl = String.format("%s/%s/%s",
-                    ossConfProp.getMinioUrl(),
+                    ossConfProp.getMinioVisitUrl(),
                     ossConfProp.getUserProfileBucket(),
                     user.getVideo());
             user.setVideoUrl(videoUrl);
@@ -681,6 +688,80 @@ public class UserServiceImpl implements UserService {
             return String.format("%01d%04d%04d", yearIndex, hourOfYear, index);
         } else {
             return String.format("%01d%04d%03d", yearIndex, hourOfYear, index);
+        }
+    }
+
+    protected static String calcDigitId(Date date, long index) {
+
+        GregorianCalendar gregorianCalendar = new GregorianCalendar();
+        gregorianCalendar.setTime(date);
+
+        // 从2020年开始计算
+        final int startYear = 2020;
+        final int maxIndex = 999;
+
+        int year = gregorianCalendar.get(Calendar.YEAR);
+        int yearIndex = year - startYear + 1;
+
+        int dayOfYear = gregorianCalendar.get(Calendar.DAY_OF_YEAR);
+        int hour = gregorianCalendar.get(Calendar.HOUR_OF_DAY) + 1;
+//        int am_pm = gregorianCalendar.get(Calendar.AM_PM);
+//        if (am_pm == 1) {
+//            hour += 12;
+//        }
+        int hourOfYear = dayOfYear * hour;
+
+        // TODO: 2020/11/9 记录一些异常情况
+        if (yearIndex <= 0) {
+            //
+        }
+
+        if (index > maxIndex) {
+
+        }
+
+
+        if (index > maxIndex) {
+            // 如果每小时注册超过999，则生成总共9位的数字id，每小时注册上限变成9999
+            return String.format("%01d%04d%04d", yearIndex, hourOfYear, index);
+        } else {
+            return String.format("%01d%04d%03d", yearIndex, hourOfYear, index);
+        }
+    }
+
+    // 以天为单位
+    protected static String calcDigitIdV2(Date date, long index) {
+
+        GregorianCalendar gregorianCalendar = new GregorianCalendar();
+        gregorianCalendar.setTime(date);
+
+        // 从2020年开始计算
+        final int startYear = 2020;
+        final int maxIndex = 9999;
+
+        int year = gregorianCalendar.get(Calendar.YEAR);
+        int yearIndex = year - startYear + 1;
+
+        int dayOfYear = gregorianCalendar.get(Calendar.DAY_OF_YEAR);
+
+        // 考虑跟以前的不冲突,这里从大到小
+        dayOfYear = 999 - dayOfYear;
+
+        // TODO: 2020/11/9 记录一些异常情况
+        if (yearIndex <= 0) {
+            //
+        }
+
+        if (index > maxIndex) {
+
+        }
+
+
+        if (index > maxIndex) {
+            // 如果每小时注册超过9999，则生成总共9位的数字id，每小时注册上限变成99999
+            return String.format("%01d%03d%05d", yearIndex, dayOfYear, index);
+        } else {
+            return String.format("%01d%03d%04d", yearIndex, dayOfYear, index);
         }
     }
 

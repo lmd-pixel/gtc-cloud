@@ -213,10 +213,11 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
 
     private IdentityAudit _createIdentityAudit(User user, int type) {
         IdentityAudit audit = new IdentityAudit();
-        audit.setSerialNumber(createAuditSerialNumber(user.getId(), 1));
+        audit.setSerialNumber(createAuditSerialNumber(user.getId(), type));
         audit.setUserId(user.getId());
         audit.setDigitId(user.getDigitId());
         audit.setNick(user.getNick());
+        audit.setGender(user.getGender());
         audit.setPhone(user.getPhone());
         audit.setAge(DateUtils.getAgeFromBirth(user.getBirth()));
         audit.setType(type);

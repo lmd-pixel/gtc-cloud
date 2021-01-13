@@ -185,6 +185,18 @@ public class User {
     @Transient
     private BigDecimal coin;
 
+    @Transient
+    private BigDecimal voiceProfitRatio;
+
+    @Transient
+    private BigDecimal videoProfitRatio;
+
+    @Transient
+    private BigDecimal msgProfitRatio;
+
+    @Transient
+    private BigDecimal giftProfitRatio;
+
     // 是否被别人屏蔽动态
     @Transient
     private int blockDynamic;

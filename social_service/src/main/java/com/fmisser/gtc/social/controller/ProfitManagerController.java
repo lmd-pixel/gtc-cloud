@@ -111,7 +111,7 @@ public class ProfitManagerController {
             @ApiImplicitParam(name = "consumerNick", value = "用户昵称", paramType = "query", required = false),
             @ApiImplicitParam(name = "anchorDigitId", value = "主播ID", paramType = "query", required = false),
             @ApiImplicitParam(name = "anchorNick", value = "主播昵称", paramType = "query", required = false),
-            @ApiImplicitParam(name = "type", value = "通话类型： 0: 语音通话， 1：视频通话",  required = true, paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "type", value = "通话类型： 0: 语音通话， 1：视频通话", paramType = "query", defaultValue = "0", dataType = "Integer"),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),

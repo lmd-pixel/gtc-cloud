@@ -12,6 +12,8 @@ import com.fmisser.gtc.base.utils.JPushUtils;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 /**
  * 极光一键认证登录
  */
@@ -34,7 +36,7 @@ public class AutoLoginServiceImpl implements AutoLoginService {
 
     @Override
     @SneakyThrows
-    public boolean checkPhoneToken(String phone, String token) throws ApiException {
+    public String checkPhoneToken(String phone, String token) throws ApiException {
         String basicAuthString = JPushUtils
                 .genAuthString(jPushConfProp.getAppKey(), jPushConfProp.getMasterSecret());
 
@@ -43,7 +45,7 @@ public class AutoLoginServiceImpl implements AutoLoginService {
 
         // 先保存请求信息
         PhoneTokenRequest phoneTokenRequest = new PhoneTokenRequest();
-        phoneTokenRequest.setPhone(phone);
+//        phoneTokenRequest.setPhone(phone);
         phoneTokenRequest.setToken(token);
         phoneTokenRequest = phoneTokenRequestRepository.save(phoneTokenRequest);
 
@@ -59,20 +61,27 @@ public class AutoLoginServiceImpl implements AutoLoginService {
         phoneTokenRequest.setExId(loginTokenVerifyDto.getExID());
         phoneTokenRequest.setCode(loginTokenVerifyDto.getCode());
         phoneTokenRequest.setContent(loginTokenVerifyDto.getContent());
-        phoneTokenRequest.setEncodePhone(loginTokenVerifyDto.getPhone());
+        String encodePhone = loginTokenVerifyDto.getPhone();
+        if (Objects.nonNull(encodePhone)) {
+            phoneTokenRequest.setEncodePhone(encodePhone);
+            String decodePhone = JPushUtils.rsaDecrypt(encodePhone, jPushConfProp.getRsaPri());
+            // 前端不会传phone过来，只传token
+            phoneTokenRequest.setPhone(decodePhone);
+        }
         phoneTokenRequestRepository.save(phoneTokenRequest);
 
         if (loginTokenVerifyDto.getCode() == 8000) {
 
+            // FIXME: 2021/1/8 前端不会传phone，不需要验证
             // 认证 phone 是否相同
-            String encodePhone = loginTokenVerifyDto.getPhone();
-            String decodePhone = JPushUtils.rsaDecrypt(encodePhone, jPushConfProp.getRsaPri());
-            if (!decodePhone.equals(loginTokenVerifyDto.getExID())) {
-                // error
-                throw new ApiException(-1, "手机号验证失败!");
-            }
+//            String encodePhone = loginTokenVerifyDto.getPhone();
+//            String decodePhone = JPushUtils.rsaDecrypt(encodePhone, jPushConfProp.getRsaPri());
+//            if (!decodePhone.equals(loginTokenVerifyDto.getExID())) {
+//                // error
+//                throw new ApiException(-1, "手机号验证失败!");
+//            }
 
-            return true;
+            return phoneTokenRequest.getPhone();
         } else {
             throw new ApiException(-1, "认证失败!");
         }

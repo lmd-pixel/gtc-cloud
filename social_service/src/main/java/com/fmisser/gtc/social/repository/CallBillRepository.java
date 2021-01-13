@@ -12,11 +12,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
 @Repository
 public interface CallBillRepository extends JpaRepository<CallBill, Long> {
+
+    List<CallBill> findByCallId(Long callId);
+
     // 查询音视频通话的统计数据, 平台收入，主播收益，用户消耗，用户人数
     // row1是语音 row2是视频
     @Query(value = "SELECT " +

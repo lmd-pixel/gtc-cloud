@@ -20,6 +20,8 @@ minio 配合ngxin 只允许访问某些类型的文件（.jpg .png .mp4等），
 所有容器以分布式、集群方式部署
 k8s redis: https://www.imooc.com/article/275617
 
+redis 分布式锁 ： https://zhuanlan.zhihu.com/p/342529829
+
 图片压缩，提供缩略图方式加快进度，图片渐进式加载 Thumbnails
 
 日志 https://www.jianshu.com/p/49960b914676
@@ -55,6 +57,7 @@ mysql 优化：https://zhuanlan.zhihu.com/p/106061137
 
 1. 增加认证相关的记录到db
 
+2. 数据备份
 
 
 ################## 项目结构相关 ##################

@@ -14,6 +14,9 @@ public class OssConfProp {
     @Value("${oss.minio.url}")
     private String minioUrl;
 
+    @Value("${oss.minio.visit.url}")
+    private String minioVisitUrl;
+
     @Value("${oss.minio.access_key}")
     private String minioAccessKey;
 

@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -19,7 +20,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "t_call",
-        indexes = {@Index(columnList = "createdTime")})
+        indexes = {@Index(columnList = "userIdFrom, createdTime")})
 @Data
 @EntityListeners(AuditingEntityListener.class)
 @DynamicInsert
@@ -78,5 +79,9 @@ public class Call {
     private int duration = 0;
 
     @Column(nullable = false, columnDefinition = "int default 0")
-    private int isFinished;
+    private int isFinished = 0;
+
+    @JsonIgnore
+    @Version
+    private Long version;
 }

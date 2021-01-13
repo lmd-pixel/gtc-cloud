@@ -216,20 +216,22 @@ public class UserDetailServiceImpl implements UserService {
     /**
      * 自定义手机号一键登录模式
      * 注册，登录一体
+     * @param phone 这个参数无用，前端不传
      */
     public UserDetails loadUserByPhoneAuto(String phone, String token) {
         // verify phone token
-        if (!autoLoginService.checkPhoneToken(phone, token)) {
+        String phoneDecode = autoLoginService.checkPhoneToken(phone, token);
+        if (phoneDecode.isEmpty()) {
             return null;
         }
 
-        User user = userRepository.findByUsername(phone);
+        User user = userRepository.findByUsername(phoneDecode);
         if (user != null) {
             return user;
         }
 
         // 认证过后，如果数据库没有这条数据，则创建一条
-        return _innerCreateByUsername(phone, 2);
+        return _innerCreateByUsername(phoneDecode, 2);
     }
 
     /**

@@ -42,7 +42,7 @@ public class CallBill {
 
     //
     @Column(nullable = false)
-    private String callId;
+    private Long callId;
 
     // 类型 0： 语音， 1： 视频
     @Column(nullable = false)

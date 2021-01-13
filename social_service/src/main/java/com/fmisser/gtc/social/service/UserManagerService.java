@@ -46,6 +46,8 @@ public interface UserManagerService {
                                                                       Date startTime, Date endTime,
                                                                       int pageIndex, int pageSize) throws ApiException;
 
+    List<IdentityAudit> getAnchorAudit(String digitId) throws ApiException;
+
     // 审核主播资料/相册/视频
     int anchorAudit(String serialNumber, int operate, String message) throws ApiException;
 

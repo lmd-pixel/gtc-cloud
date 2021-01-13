@@ -2,6 +2,7 @@ package com.fmisser.gtc.social.repository;
 
 import com.fmisser.gtc.base.dto.social.RechargeDto;
 import com.fmisser.gtc.base.dto.social.StatisticRechargeDto;
+import com.fmisser.gtc.base.dto.social.calc.CalcRechargeDto;
 import com.fmisser.gtc.social.domain.Recharge;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,8 +37,27 @@ public interface RechargeRepository extends JpaRepository<Recharge, Long> {
             "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) " +
             "WHERE tr.status IN (?5) AND " +
             "(tr.creat_time BETWEEN ?3 AND ?4 OR ?3 IS NULL OR ?4 IS NULL) " +
-            "ORDER BY tr.creat_time DESC ", nativeQuery = true)
-    Page<RechargeDto> getRechargeList(String digitId, String nick,
+            "ORDER BY tr.creat_time DESC " +
+            "LIMIT ?6 OFFSET ?7",
+            nativeQuery = true)
+//    Page<RechargeDto> getRechargeList(String digitId, String nick,
+//                                      Date startTime, Date endTime,
+//                                      List<Integer> status, Pageable pageable);
+    List<RechargeDto> getRechargeList(String digitId, String nick,
                                       Date startTime, Date endTime,
-                                      List<Integer> status, Pageable pageable);
+                                      List<Integer> status, int limit, int offset);
+
+    // 统计总充值
+    @Query(value = "SELECT COUNT(tr.id) AS count, SUM(tr.price) AS recharge " +
+            "FROM t_recharge tr " +
+            "INNER JOIN t_user tu ON tu.id = tr.user_id AND " +
+            "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) " +
+            "WHERE tr.status IN (?5) AND " +
+            "(tr.creat_time BETWEEN ?3 AND ?4 OR ?3 IS NULL OR ?4 IS NULL) ",
+            nativeQuery = true)
+    CalcRechargeDto calcRecharge(String digitId, String nick,
+                                 Date startTime, Date endTime,
+                                 List<Integer> status);
+
 }

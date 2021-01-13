@@ -41,7 +41,7 @@ public class UserController {
     }
 
     @PostMapping("/auto-login")
-    public ApiResp<TokenDto> autoLogin(@RequestParam("phone") @Size(min = 11, max = 11, message = "请输入有效的手机号") String phone,
+    public ApiResp<TokenDto> autoLogin(@RequestParam(value = "phone", required = false) @Size(min = 11, max = 11, message = "请输入有效的手机号") String phone,
                                        @RequestParam("token") String token) throws ApiException {
         return ApiResp.succeed(userService.autoLogin(phone, token));
     }

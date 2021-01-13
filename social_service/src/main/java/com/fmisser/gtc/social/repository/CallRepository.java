@@ -13,6 +13,9 @@ import java.util.List;
 
 @Repository
 public interface CallRepository extends JpaRepository<Call, Long> {
+
+    Call findByRoomId(Long roomId);
+
     // 查询语音或者视频会话数
     @Query(value = "SELECT COUNT(id) FROM t_call " +
             "WHERE type = ?1 AND " +

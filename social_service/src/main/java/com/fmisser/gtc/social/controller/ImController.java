@@ -9,7 +9,10 @@ import io.swagger.annotations.ApiImplicitParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @Api(description = "聊天API")
 @RestController
@@ -21,6 +24,86 @@ public class ImController {
 
     @Autowired
     private UserService userService;
+
+    @PostMapping("/login")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    public ApiResp<String> login() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        String userSig = imService.login(userDo);
+        return ApiResp.succeed(userSig);
+    }
+
+    @PostMapping("/logout")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    public ApiResp<String> logout() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        String userSig = imService.login(userDo);
+        return ApiResp.succeed(userSig);
+    }
+
+    @PostMapping("/update-call")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    public ApiResp<Map<String, Object>> updateCall(@RequestParam("roomId") Long roomId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        Map<String, Object> results = imService.updateCall(userDo, roomId);
+        return ApiResp.succeed(results);
+    }
+
+    @PostMapping("/call")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    public ApiResp<Long> call(@RequestParam("toUserDigitId") String toUserDigitId,
+                              @RequestParam("type") int type) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        User userTo = userService.getUserByDigitId(toUserDigitId);
+
+        Long roomId = imService.call(userDo, userTo, type);
+        return ApiResp.succeed(roomId);
+    }
+
+    @PostMapping("/accept-call")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    public ApiResp<Integer> acceptCall(@RequestParam("toUserDigitId") String toUserDigitId,
+                                    @RequestParam("roomId") Long roomId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        User userTo = null;
+        if (!StringUtils.isEmpty(toUserDigitId)) {
+            userTo = userService.getUserByDigitId(toUserDigitId);
+        }
+
+        int ret = imService.accept(userDo, userTo, roomId);
+        return ApiResp.succeed(ret);
+    }
+
+    @PostMapping("/hangup-call")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    public ApiResp<Map<String, Object>> hangupCall(@RequestParam("roomId") Long roomId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+//        User userTo = null;
+//        if (!StringUtils.isEmpty(toUserDigitId)) {
+//            userTo = userService.getUserByDigitId(toUserDigitId);
+//        }
+
+        Map<String, Object> ret = imService.hangup(userDo, roomId);
+        return ApiResp.succeed(ret);
+    }
 
     @GetMapping("/user-sig")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")

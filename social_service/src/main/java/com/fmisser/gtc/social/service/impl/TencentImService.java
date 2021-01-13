@@ -6,26 +6,34 @@ import com.fmisser.gtc.base.dto.im.ImSendMsgCbResp;
 import com.fmisser.gtc.base.dto.im.ImSendMsgDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.ImConfProp;
-import com.fmisser.gtc.social.domain.Gift;
-import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.base.utils.DateUtils;
+import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.feign.ImFeign;
+import com.fmisser.gtc.social.repository.AssetRepository;
+import com.fmisser.gtc.social.repository.CallBillRepository;
+import com.fmisser.gtc.social.repository.CallRepository;
+import com.fmisser.gtc.social.repository.UserRepository;
 import com.fmisser.gtc.social.service.ImService;
+import com.fmisser.gtc.social.service.UserService;
+import lombok.Data;
 import lombok.SneakyThrows;
 import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Base64Utils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Objects;
-import java.util.Random;
+import java.sql.Time;
+import java.util.*;
 import java.util.zip.Deflater;
+
+import static com.fmisser.gtc.social.service.impl.TencentImCallbackService.createBillSerialNumber;
 
 
 /**
@@ -41,29 +49,220 @@ public class TencentImService implements ImService {
     @Autowired
     private ImFeign imFeign;
 
+    @Autowired
+    private CallRepository callRepository;
+
+    @Autowired
+    private CallBillRepository callBillRepository;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private AssetRepository assetRepository;
+
     @Override
-    public Object login(User user) {
-        return null;
+    public String login(User user) throws ApiException {
+        // TODO: 2021/1/7 记录用户登录
+
+        // 返回 用户 user sign
+        return genUserSign(user);
     }
 
     @Override
-    public Object logout(User user) {
-        return null;
+    public int logout(User user) throws ApiException {
+        // TODO: 2021/1/7 记录用户登出
+
+        return 0;
     }
 
     @Override
-    public Object call(User userFrom, User userTo) {
-        return null;
+    public Long call(User userFrom, User userTo, int type) throws ApiException {
+        // 创建通话房间
+        Call call = new Call();
+        call.setType(type);
+        call.setUserIdFrom(userFrom.getId());
+        call.setUserIdTo(userTo.getId());
+        call.setRoomId(Long.valueOf(genRoomId()));
+        call.setCommId(UUID.randomUUID().toString());
+
+        call = callRepository.save(call);
+        return call.getRoomId();
     }
 
     @Override
-    public Object accept(User userFrom, User userTo, Long roomId) {
-        return null;
+    public int accept(User userFrom, User userTo, Long roomId) throws ApiException {
+        // TODO: 2021/1/8 校验是否匹配
+        return 1;
     }
 
     @Override
-    public Object hangup(User userFrom, User userTo, Long roomId) {
-        return null;
+    public Map<String, Object> hangup(User user, Long roomId) throws ApiException {
+        // 结束不进行任何结算
+
+        Map<String, Object> resultMap = new HashMap<>();
+
+        // 根据用户不同返回不同类型数据
+        Call call = callRepository.findByRoomId(roomId);
+        if (call.getIsFinished() == 0) {
+            // 生成结束信息
+            Date now = new Date();
+            call.setFinishTime(now);
+            call.setIsFinished(1);
+
+            Date startTime = call.getStartTime();
+            if (Objects.isNull(startTime)) {
+                // 还没开始
+                call.setFinishTime(now);
+            } else {
+                // 如果已经开始了 则计算总通话时长
+                int deltaTime = (int) ((now.getTime() - startTime.getTime()) / 1000);
+                call.setDuration(deltaTime);
+            }
+
+            callRepository.save(call);
+        }
+
+        // 返回前端数据
+        resultMap.put("duration", call.getDuration());
+        resultMap.put("coin", 0);
+        resultMap.put("card", 0);
+
+        List<CallBill> callBillList = callBillRepository.findByCallId(call.getId());
+        if (user.getId().equals(call.getUserIdFrom())) {
+            // 计算消费
+            Optional<BigDecimal> totalConsume =
+                 callBillList.stream()
+                         .map(CallBill::getOriginCoin).reduce(BigDecimal::add);
+            totalConsume.ifPresent(bigDecimal -> resultMap.put("coin", bigDecimal));
+
+        } else if (user.getId().equals(call.getUserIdTo())) {
+            // 计算收益
+            Optional<BigDecimal> totalProfit =
+                    callBillList.stream()
+                            .map(CallBill::getProfitCoin).reduce(BigDecimal::add);
+            totalProfit.ifPresent(bigDecimal -> resultMap.put("coin", bigDecimal));
+
+        }
+
+        return resultMap;
+    }
+
+    @Transactional
+    @Override
+    public Map<String, Object> updateCall(User userFrom, Long roomId) throws ApiException {
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("need_close", 0);
+        resultMap.put("need_recharge", 0);
+
+        Call call = callRepository.findByRoomId(roomId);
+        if (call.getIsFinished() == 1) {
+            throw new ApiException(-1, "通话已结束");
+        }
+
+        Optional<User> optionalUserTo = userRepository.findById(call.getUserIdTo());
+        if (!optionalUserTo.isPresent()) {
+            throw new ApiException(-1, "目标用户不存在");
+        }
+        User userTo = optionalUserTo.get();
+
+        // step1: 更新通话信息
+        Date now = new Date();
+        if (Objects.isNull(call.getStartTime())) {
+            // 设置开始通话时间
+            call.setStartTime(now);
+        } else {
+            // 更新通话时长
+            Date startTime = call.getStartTime();
+            int deltaTime = (int) ((now.getTime() - startTime.getTime()) / 1000);
+            call.setDuration(deltaTime);
+        }
+        callRepository.save(call);
+
+        // 获取通话费用
+        BigDecimal callPrice = call.getType() == 0 ? userTo.getCallPrice() : userTo.getVideoPrice();
+
+        if (Objects.isNull(callPrice) || callPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            // 价格为0 或者 null 不计算收入
+            return resultMap;
+        }
+
+        // step2： 计算收益
+        Asset assetFrom = assetRepository.findByUserId(call.getUserIdFrom());
+        Asset assetTo = assetRepository.findByUserId(call.getUserIdTo());
+
+        // 当前通话总时长
+        int duration = call.getDuration();
+        // 当前的时长应该包含几个阶段的付费
+        int stage = (int) ((duration / 60 )) + 1;
+
+        List<CallBill> callBillList = callBillRepository.findByCallId(call.getId());
+        int existStage = callBillList.size();
+
+        List<CallBill> newCallBillList = new ArrayList<>();
+        for (int i = existStage; i < stage; i++) {
+
+            // 生成流水
+            CallBill callBill = new CallBill();
+            callBill.setCallId(call.getId());
+            callBill.setUserIdFrom(call.getUserIdFrom());
+            callBill.setUserIdTo(call.getUserIdTo());
+            callBill.setSerialNumber(createBillSerialNumber());
+            callBill.setType(call.getType());
+            callBill.setStage(i);
+
+            // 因为这里可能有多条数据，如果直接抛出异常，会导致可以结算的部分没结算,
+            // 所以金币不足，也正常记录，但收益都是0
+            if (assetFrom.getCoin().compareTo(callPrice) < 0) {
+                callBill.setOriginCoin(BigDecimal.ZERO);
+                callBill.setCommissionCoin(BigDecimal.ZERO);
+                callBill.setCommissionRatio(BigDecimal.ZERO);
+                callBill.setProfitCoin(BigDecimal.ZERO);
+                callBill.setRemark("用户金币不足");
+
+                // 提示前端结束通话
+                resultMap.put("need_close", 1);
+            } else {
+
+                // 扣款
+                assetRepository.subCoin(call.getUserIdFrom(), callPrice);
+
+                // 计算收益抽成
+                BigDecimal profitRatio = assetTo.getGiftProfitRatio();
+                BigDecimal commissionRatio = BigDecimal.ONE.subtract(profitRatio);
+                BigDecimal commissionCoin = commissionRatio.multiply(callPrice);
+                // 直接加金币 去掉抽成价格
+                BigDecimal coinProfit = callPrice.subtract(commissionCoin);
+                assetRepository.addCoin(assetTo.getUserId(), coinProfit);
+
+                callBill.setOriginCoin(callPrice);
+                callBill.setCommissionCoin(commissionCoin);
+                callBill.setCommissionRatio(commissionRatio);
+                callBill.setProfitCoin(coinProfit);
+            }
+
+            newCallBillList.add(callBill);
+        }
+
+        callBillRepository.saveAll(newCallBillList);
+
+        // 返回相关数据给前端
+        resultMap.put("duration", duration);
+
+        // 只有发起通话的人才会收到具体信息
+        if (userFrom.getId().equals(call.getUserIdFrom())) {
+            // 获取最新的余额是否足够三分钟通话，不足提醒需要充值
+            Asset assetFromLatest = assetRepository.findByUserId(userFrom.getId());
+            BigDecimal totalPrice = BigDecimal.valueOf(3).multiply(callPrice);
+            if (assetFromLatest.getCoin().compareTo(totalPrice) < 0) {
+                resultMap.put("need_recharge", 1);
+            }
+        }
+
+        return resultMap;
     }
 
     /**
@@ -75,7 +274,7 @@ public class TencentImService implements ImService {
     }
 
     @Override
-    public int sendToUser(User fromUser, User toUser, String content) {
+    public int sendToUser(User fromUser, User toUser, String content) throws ApiException {
         if (Objects.isNull(toUser)) {
             throw new ApiException(-1, "目标用户不存在!");
         }
@@ -345,5 +544,12 @@ public class TencentImService implements ImService {
             }
         }
         return userbuf;
+    }
+
+    // 生成唯一房间id
+    private Integer genRoomId() {
+        // TODO: 2021/1/7 换更可靠的方式生成
+        Random random = new Random();
+        return Math.abs(random.nextInt());
     }
 }
