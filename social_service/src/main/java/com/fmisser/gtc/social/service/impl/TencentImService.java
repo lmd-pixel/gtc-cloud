@@ -130,6 +130,7 @@ public class TencentImService implements ImService {
         resultMap.put("duration", call.getDuration());
         resultMap.put("coin", 0);
         resultMap.put("card", 0);
+        resultMap.put("userIdTo", "");  // 对方的数字id
 
         List<CallBill> callBillList = callBillRepository.findByCallId(call.getId());
         if (user.getId().equals(call.getUserIdFrom())) {
@@ -137,7 +138,10 @@ public class TencentImService implements ImService {
             Optional<BigDecimal> totalConsume =
                  callBillList.stream()
                          .map(CallBill::getOriginCoin).reduce(BigDecimal::add);
-            totalConsume.ifPresent(bigDecimal -> resultMap.put("coin", bigDecimal));
+            totalConsume.ifPresent(bigDecimal -> resultMap.put("coin", BigDecimal.ZERO.subtract(bigDecimal)));
+
+            Optional<User> userTo = userRepository.findById(call.getUserIdTo());
+            resultMap.put("userIdTo", userTo.get().getDigitId());
 
         } else if (user.getId().equals(call.getUserIdTo())) {
             // 计算收益
@@ -146,6 +150,8 @@ public class TencentImService implements ImService {
                             .map(CallBill::getProfitCoin).reduce(BigDecimal::add);
             totalProfit.ifPresent(bigDecimal -> resultMap.put("coin", bigDecimal));
 
+            Optional<User> userTo = userRepository.findById(call.getUserIdFrom());
+            resultMap.put("userIdTo", userTo.get().getDigitId());
         }
 
         return resultMap;
@@ -191,7 +197,6 @@ public class TencentImService implements ImService {
         }
 
         // step2： 计算收益
-        Asset assetFrom = assetRepository.findByUserId(call.getUserIdFrom());
         Asset assetTo = assetRepository.findByUserId(call.getUserIdTo());
 
         // 当前通话总时长
@@ -216,6 +221,7 @@ public class TencentImService implements ImService {
 
             // 因为这里可能有多条数据，如果直接抛出异常，会导致可以结算的部分没结算,
             // 所以金币不足，也正常记录，但收益都是0
+            Asset assetFrom = assetRepository.findByUserId(call.getUserIdFrom());
             if (assetFrom.getCoin().compareTo(callPrice) < 0) {
                 callBill.setOriginCoin(BigDecimal.ZERO);
                 callBill.setCommissionCoin(BigDecimal.ZERO);
@@ -231,7 +237,7 @@ public class TencentImService implements ImService {
                 assetRepository.subCoin(call.getUserIdFrom(), callPrice);
 
                 // 计算收益抽成
-                BigDecimal profitRatio = assetTo.getGiftProfitRatio();
+                BigDecimal profitRatio = call.getType() == 0 ? assetTo.getVoiceProfitRatio() : assetTo.getVideoProfitRatio();
                 BigDecimal commissionRatio = BigDecimal.ONE.subtract(profitRatio);
                 BigDecimal commissionCoin = commissionRatio.multiply(callPrice);
                 // 直接加金币 去掉抽成价格
@@ -247,16 +253,18 @@ public class TencentImService implements ImService {
             newCallBillList.add(callBill);
         }
 
-        callBillRepository.saveAll(newCallBillList);
+        if (newCallBillList.size() > 0) {
+            callBillRepository.saveAll(newCallBillList);
+        }
 
         // 返回相关数据给前端
         resultMap.put("duration", duration);
 
         // 只有发起通话的人才会收到具体信息
         if (userFrom.getId().equals(call.getUserIdFrom())) {
-            // 获取最新的余额是否足够三分钟通话，不足提醒需要充值
+            // 获取最新的余额是否足够一分钟通话，不足提醒需要充值
             Asset assetFromLatest = assetRepository.findByUserId(userFrom.getId());
-            BigDecimal totalPrice = BigDecimal.valueOf(3).multiply(callPrice);
+            BigDecimal totalPrice = BigDecimal.valueOf(2).multiply(callPrice);
             if (assetFromLatest.getCoin().compareTo(totalPrice) < 0) {
                 resultMap.put("need_recharge", 1);
             }
@@ -300,13 +308,24 @@ public class TencentImService implements ImService {
     @Override
     public int sendGiftMsg(User userFrom, User userTo, Gift gift, int count) throws ApiException {
         ImSendMsgDto msg2From = ImMsgFactory
-                .buildGiftMsg(userFrom.getDigitId(), userTo.getDigitId(), "我给你送了新礼物!", gift.getId(), true);
+                .buildGiftMsg(null, userTo.getDigitId(), "你收到了新的礼物!", 202, gift.getId(), count, true);
         ImSendMsgDto msg2To = ImMsgFactory
-                .buildGiftMsg(userTo.getDigitId(), userFrom.getDigitId(), "我已收到你的新礼物!", gift.getId(), true);
+                .buildGiftMsg(null, userFrom.getDigitId(), "赠送礼物成功!", 201, gift.getId(), count, true);
+
+//        ImSendMsgDto msgCustom = ImMsgFactory.buildGiftMsg(userFrom.getDigitId(), userTo.getDigitId(),
+//                "", 203, gift.getId(), count, true);
 
         // 获取管理员的 usersig
         String admin = imConfProp.getAdmin();
         String adminSig = genAdminSig(admin);
+
+        // 发送给发送方,接收方也能监听到消息
+//        ImSendMsgCbResp imSendMsgCbResp = imFeign
+//                .sendMsg(imConfProp.getSdkAppId(), admin, adminSig, new Random().nextInt(), "json", msgCustom);
+//
+//        if (!imSendMsgCbResp.getActionStatus().equals("OK")) {
+//            throw new ApiException(-1, imSendMsgCbResp.getErrorInfo());
+//        }
 
         // 发送给发送方
         ImSendMsgCbResp imSendMsgCbResp = imFeign

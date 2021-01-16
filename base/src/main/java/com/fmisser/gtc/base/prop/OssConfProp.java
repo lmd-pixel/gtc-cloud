@@ -52,4 +52,10 @@ public class OssConfProp {
 
     @Value("${user_dynamic.image.prefix}")
     private String userDynamicPicturePrefix;
+
+    @Value("${oss.minio.bucket.system_config}")
+    private String giftBucket;
+
+    @Value("${gift.prefix}")
+    private String giftPrefix;
 }

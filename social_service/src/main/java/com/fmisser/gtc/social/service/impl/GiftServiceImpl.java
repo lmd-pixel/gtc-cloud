@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.exception.ApiException;
+import com.fmisser.gtc.base.prop.OssConfProp;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.repository.AssetRepository;
 import com.fmisser.gtc.social.repository.GiftBillRepository;
@@ -10,6 +11,7 @@ import com.fmisser.gtc.social.service.ImService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,19 +32,23 @@ public class GiftServiceImpl implements GiftService {
 
     private final ImService imService;
 
+    private final OssConfProp ossConfProp;
+
     public GiftServiceImpl(GiftRepository giftRepository,
                            GiftBillRepository giftBillRepository,
                            AssetRepository assetRepository,
-                           ImService imService) {
+                           ImService imService,
+                           OssConfProp ossConfProp) {
         this.giftRepository = giftRepository;
         this.giftBillRepository = giftBillRepository;
         this.assetRepository = assetRepository;
         this.imService = imService;
+        this.ossConfProp = ossConfProp;
     }
 
     @Override
     public List<Gift> getGiftList() throws ApiException {
-        return giftRepository.findAll();
+        return _prepareGiftResponse(giftRepository.findAll());
     }
 
     @Transactional
@@ -103,5 +109,18 @@ public class GiftServiceImpl implements GiftService {
         imService.sendGiftMsg(fromUser, toUser, gift, count);
 
         return 1;
+    }
+
+    private List<Gift> _prepareGiftResponse(List<Gift> giftList) {
+        for (Gift gift: giftList) {
+            if (!StringUtils.isEmpty(gift.getImage())) {
+                String imageUrl = String.format("%s/%s/%s",
+                        ossConfProp.getMinioVisitUrl(),
+                        ossConfProp.getGiftBucket(),
+                        gift.getImage());
+                gift.setImageUrl(imageUrl);
+            }
+        }
+        return giftList;
     }
 }

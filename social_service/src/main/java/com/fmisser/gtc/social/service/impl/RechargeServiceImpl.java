@@ -97,16 +97,31 @@ public class RechargeServiceImpl implements RechargeService {
         // 处理用户充值逻辑
         if (iapReceiptDto.getStatus() == 0) {
             // TODO: 2020/12/16 校验前端提供的支付信息和苹果后端解析的票据
-            if (iapReceiptDto.getReceipt().getIn_app().size() != 1) {
-                // 多条数据认为是异常
-                throw new ApiException(-1, "充值数据异常");
+//            if (iapReceiptDto.getReceipt().getIn_app().size() != 1) {
+//                // 多条数据认为是异常
+//                throw new ApiException(-1, "充值数据异常");
+//            }
+
+//            IapReceiptDto.InApp inApp = iapReceiptDto.getReceipt().getIn_app().get(0);
+//            // 购买的数量不止一个,交易号和商品不匹配都认为是异常
+//            if (inApp.getQuantity() != 1 ||
+//                    !inApp.getProduct_id().equals(iapReceipt.getProductId()) ||
+//                    !inApp.getTransaction_id().equals(iapReceipt.getTransactionId())) {
+//                throw new ApiException(-1, "充值数据异常");
+//            }
+
+            // 查找是否有一个匹配的充值选项
+            boolean valid = false;
+            for (IapReceiptDto.InApp inApp : iapReceiptDto.getReceipt().getIn_app()) {
+                if (inApp.getQuantity() == 1 &&
+                        inApp.getProduct_id().equals(iapReceipt.getProductId()) &&
+                        inApp.getTransaction_id().equals(iapReceipt.getTransactionId())) {
+                    valid = true;
+                    break;
+                }
             }
 
-            IapReceiptDto.InApp inApp = iapReceiptDto.getReceipt().getIn_app().get(0);
-            // 购买的数量不止一个,交易号和商品不匹配都认为是异常
-            if (inApp.getQuantity() != 1 ||
-                    !inApp.getProduct_id().equals(iapReceipt.getProductId()) ||
-                    !inApp.getTransaction_id().equals(iapReceipt.getTransactionId())) {
+            if (!valid) {
                 throw new ApiException(-1, "充值数据异常");
             }
 

@@ -32,7 +32,7 @@ public class ImMsgFactory {
         return imSendMsgDto;
     }
 
-    static public ImSendMsgDto buildGiftMsg(String fromAccount, String toAccount, String content, Long giftId, boolean syncMsg) {
+    static public ImSendMsgDto buildGiftMsg(String fromAccount, String toAccount, String content, int tag, Long giftId, int giftCount, boolean syncMsg) {
         ImSendMsgDto imSendMsgDto = new ImSendMsgDto();
         imSendMsgDto.setSyncOtherMachine(syncMsg ? 1 : 2);
         imSendMsgDto.setTo_Account(toAccount);
@@ -45,22 +45,26 @@ public class ImMsgFactory {
         imSendMsgDto.setMsgRandom(Math.abs(new Random().nextInt()));
 
         // 文本消息
-        ImMsgBody imMsgBody = new ImMsgBody();
-        imMsgBody.setMsgType("TIMTextElem");
-        ImMsgBody.ImMsgContent imMsgContent = new ImMsgBody.ImMsgContent();
-        imMsgContent.setText(content);
-        imMsgBody.setMsgContent(imMsgContent);
+//        ImMsgBody imMsgBody = new ImMsgBody();
+//        imMsgBody.setMsgType("TIMTextElem");
+//        ImMsgBody.ImMsgContent imMsgContent = new ImMsgBody.ImMsgContent();
+//        imMsgContent.setText(content);
+//        imMsgBody.setMsgContent(imMsgContent);
 
         // 自定义消息
         ImMsgBody customMsgBody = new ImMsgBody();
         customMsgBody.setMsgType("TIMCustomElem");
         ImMsgBody.ImMsgContent customMsgContent = new ImMsgBody.ImMsgContent();
-        customMsgContent.setData(giftId.toString());
+
+        String msgData = String.format("{\"tag\":%d,\"giftId\":%d,\"giftCount\":%d}", tag, giftId, giftCount);
+        customMsgContent.setData(msgData);
+
         customMsgContent.setDesc("这是一个礼物");
         customMsgBody.setMsgContent(customMsgContent);
 
 
-        imSendMsgDto.setMsgBody(Arrays.asList(imMsgBody, customMsgBody));
+//        imSendMsgDto.setMsgBody(Arrays.asList(imMsgBody, customMsgBody));
+        imSendMsgDto.setMsgBody(Collections.singletonList(customMsgBody));
 
         return imSendMsgDto;
     }

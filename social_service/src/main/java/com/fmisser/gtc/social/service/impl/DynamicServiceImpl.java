@@ -299,11 +299,11 @@ public class DynamicServiceImpl implements DynamicService {
 
             if (!StringUtils.isEmpty(commentDto.getHead())) {
                 String headUrl = String.format("%s/%s/%s",
-                        ossConfProp.getMinioUrl(),
+                        ossConfProp.getMinioVisitUrl(),
                         ossConfProp.getUserProfileBucket(),
                         commentDto.getHead());
                 String headThumbnailUrl = String.format("%s/%s/thumbnail_%s",
-                        ossConfProp.getMinioUrl(),
+                        ossConfProp.getMinioVisitUrl(),
                         ossConfProp.getUserProfileBucket(),
                         commentDto.getHead());
                 commentDto.setHeadUrl(headUrl);
@@ -323,11 +323,11 @@ public class DynamicServiceImpl implements DynamicService {
                 List<String> pictureNameList = changePhotosToList(dynamicDto.getPictures());
                 List<String> pictureUrlList = pictureNameList.stream()
                         .map( name -> String.format("%s/%s/%s",
-                                ossConfProp.getMinioUrl(), ossConfProp.getUserDynamicBucket(), name))
+                                ossConfProp.getMinioVisitUrl(), ossConfProp.getUserDynamicBucket(), name))
                         .collect(Collectors.toList());
                 List<String> pictureThumbnailUrlList = pictureNameList.stream()
                         .map( name -> String.format("%s/%s/thumbnail_%s",
-                                ossConfProp.getMinioUrl(), ossConfProp.getUserDynamicBucket(), name))
+                                ossConfProp.getMinioVisitUrl(), ossConfProp.getUserDynamicBucket(), name))
                         .collect(Collectors.toList());
                 dynamicDto.setPictureUrlList(pictureUrlList);
                 dynamicDto.setPictureThumbnailUrlList(pictureThumbnailUrlList);
@@ -336,7 +336,7 @@ public class DynamicServiceImpl implements DynamicService {
             // 提供完整的视频链接
             if (!StringUtils.isEmpty(dynamicDto.getVideo())) {
                 String videoUrl = String.format("%s/%s/%s",
-                        ossConfProp.getMinioUrl(),
+                        ossConfProp.getMinioVisitUrl(),
                         ossConfProp.getUserDynamicBucket(),
                         dynamicDto.getVideo());
                 dynamicDto.setVideoUrl(videoUrl);
@@ -352,11 +352,11 @@ public class DynamicServiceImpl implements DynamicService {
 
             if (!StringUtils.isEmpty(dynamicDto.getHead())) {
                 String headUrl = String.format("%s/%s/%s",
-                        ossConfProp.getMinioUrl(),
+                        ossConfProp.getMinioVisitUrl(),
                         ossConfProp.getUserProfileBucket(),
                         dynamicDto.getHead());
                 String headThumbnailUrl = String.format("%s/%s/thumbnail_%s",
-                        ossConfProp.getMinioUrl(),
+                        ossConfProp.getMinioVisitUrl(),
                         ossConfProp.getUserProfileBucket(),
                         dynamicDto.getHead());
                 dynamicDto.setHeadUrl(headUrl);

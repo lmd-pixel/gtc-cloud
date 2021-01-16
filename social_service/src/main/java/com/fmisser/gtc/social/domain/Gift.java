@@ -29,6 +29,9 @@ public class Gift {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(nullable = false)
+    private String image;
+
     @Column
     private String message;
 
@@ -74,4 +77,7 @@ public class Gift {
     @LastModifiedBy
     @Column
     private String modifyBy;
+
+    @Transient
+    private String imageUrl;
 }

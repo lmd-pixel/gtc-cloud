@@ -529,20 +529,20 @@ public class UserServiceImpl implements UserService {
         // 压缩图片
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         if (size > 1024 * 1024 * 2) {
-            // 2m 以上
-            Thumbnails.of(bufferedInputStream).scale(0.5).outputQuality(0.2).toOutputStream(outputStream);
+            // 2m 以上 大小缩小一半，质量为原始质量的0.2
+            Thumbnails.of(bufferedInputStream).scale(0.5).outputQuality(0.4).toOutputStream(outputStream);
         } else if (size > 1024 * 1024) {
-            // 1m ～ 2m
-            Thumbnails.of(bufferedInputStream).scale(0.75).outputQuality(0.2).toOutputStream(outputStream);
+            // 1m ～ 2m, 大小缩小到原来的0.75，质量为原始质量的0.2
+            Thumbnails.of(bufferedInputStream).scale(0.75).outputQuality(0.4).toOutputStream(outputStream);
         } else if (size > 1024 * 1024 * 0.5) {
             // 500k ~1m
-            Thumbnails.of(bufferedInputStream).scale(0.75f).outputQuality(0.3).toOutputStream(outputStream);
+            Thumbnails.of(bufferedInputStream).scale(0.75f).outputQuality(0.6).toOutputStream(outputStream);
         } else if (size > 1024 * 1024 * 0.1) {
             // 100k ~ 500k
-            Thumbnails.of(bufferedInputStream).scale(1.0f).outputQuality(0.3).toOutputStream(outputStream);
+            Thumbnails.of(bufferedInputStream).scale(1.0f).outputQuality(0.6).toOutputStream(outputStream);
         } else {
             // 100k ~ 500k
-            Thumbnails.of(bufferedInputStream).scale(1.0f).outputQuality(0.5).toOutputStream(outputStream);
+            Thumbnails.of(bufferedInputStream).scale(1.0f).outputQuality(1.0).toOutputStream(outputStream);
         }
 
         // 存储压缩图片
