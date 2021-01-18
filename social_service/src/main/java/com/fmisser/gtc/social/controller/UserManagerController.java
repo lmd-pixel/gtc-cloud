@@ -8,6 +8,7 @@ import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.IdentityAudit;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.service.UserManagerService;
+import com.fmisser.gtc.social.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -16,8 +17,11 @@ import org.hibernate.validator.constraints.Range;
 import org.springframework.data.util.Pair;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -28,9 +32,12 @@ import java.util.*;
 @Validated
 public class UserManagerController {
     private final UserManagerService userManagerService;
+    private final UserService userService;
 
-    public UserManagerController(UserManagerService userManagerService) {
+    public UserManagerController(UserManagerService userManagerService,
+                                 UserService userService) {
         this.userManagerService = userManagerService;
+        this.userService = userService;
     }
 
     @ApiOperation(value = "获取主播用户列表")
@@ -241,6 +248,36 @@ public class UserManagerController {
                 .getCalcUser(startTime, endTime, pageIndex, pageSize);
 
         return ApiResp.succeed(calcUserDtoPair.getFirst(), calcUserDtoPair.getSecond());
+    }
+
+    @ApiOperation(value = "更新用户信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
+            @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date"),
+            @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date"),
+            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
+            @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
+    })
+    @PostMapping(value = "/update-user-profile")
+    @PreAuthorize("hasAnyRole('MANAGER')")
+    ApiResp<User> uploadProfile(MultipartHttpServletRequest request,
+                                @RequestParam(value = "digitId") String digitId,
+                                @RequestParam(value = "nick", required = false) String nick,
+                                @RequestParam(value = "birth", required = false) String birth,
+                                @RequestParam(value = "city", required = false) String city,
+                                @RequestParam(value = "profession", required = false) String profession,
+                                @RequestParam(value = "intro", required = false) String intro,
+                                @RequestParam(value = "labels", required = false) String labels,
+                                @RequestParam(value = "callPrice", required = false) String callPrice,
+                                @RequestParam(value = "videoPrice", required = false) String videoPrice,
+                                @RequestParam(value = "messagePrice", required = false) String messagePrice) {
+
+        User userDo = userService.getUserByDigitId(digitId);
+
+        User user = userService.updateProfile(userDo, nick, birth, city, profession,
+                intro, labels, callPrice, videoPrice, messagePrice, request.getFileMap());
+
+        return ApiResp.succeed(user);
     }
 
 }

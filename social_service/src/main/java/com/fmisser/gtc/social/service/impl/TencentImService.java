@@ -307,41 +307,41 @@ public class TencentImService implements ImService {
 
     @Override
     public int sendGiftMsg(User userFrom, User userTo, Gift gift, int count) throws ApiException {
-        ImSendMsgDto msg2From = ImMsgFactory
-                .buildGiftMsg(null, userTo.getDigitId(), "你收到了新的礼物!", 202, gift.getId(), count, true);
-        ImSendMsgDto msg2To = ImMsgFactory
-                .buildGiftMsg(null, userFrom.getDigitId(), "赠送礼物成功!", 201, gift.getId(), count, true);
+//        ImSendMsgDto msg2From = ImMsgFactory
+//                .buildGiftMsg(null, userTo.getDigitId(), "你收到了新的礼物!", 202, gift.getId(), count, true);
+//        ImSendMsgDto msg2To = ImMsgFactory
+//                .buildGiftMsg(null, userFrom.getDigitId(), "赠送礼物成功!", 201, gift.getId(), count, true);
 
-//        ImSendMsgDto msgCustom = ImMsgFactory.buildGiftMsg(userFrom.getDigitId(), userTo.getDigitId(),
-//                "", 203, gift.getId(), count, true);
+        ImSendMsgDto msgCustom = ImMsgFactory.buildGiftMsg(userFrom.getDigitId(), userTo.getDigitId(),
+                "", 203, gift.getId(), count, true);
 
         // 获取管理员的 usersig
         String admin = imConfProp.getAdmin();
         String adminSig = genAdminSig(admin);
 
         // 发送给发送方,接收方也能监听到消息
+        ImSendMsgCbResp imSendMsgCbResp = imFeign
+                .sendMsg(imConfProp.getSdkAppId(), admin, adminSig, new Random().nextInt(), "json", msgCustom);
+
+        if (!imSendMsgCbResp.getActionStatus().equals("OK")) {
+            throw new ApiException(-1, imSendMsgCbResp.getErrorInfo());
+        }
+
+//        // 发送给发送方
 //        ImSendMsgCbResp imSendMsgCbResp = imFeign
-//                .sendMsg(imConfProp.getSdkAppId(), admin, adminSig, new Random().nextInt(), "json", msgCustom);
+//                .sendMsg(imConfProp.getSdkAppId(), admin, adminSig, new Random().nextInt(), "json", msg2From);
 //
 //        if (!imSendMsgCbResp.getActionStatus().equals("OK")) {
 //            throw new ApiException(-1, imSendMsgCbResp.getErrorInfo());
 //        }
-
-        // 发送给发送方
-        ImSendMsgCbResp imSendMsgCbResp = imFeign
-                .sendMsg(imConfProp.getSdkAppId(), admin, adminSig, new Random().nextInt(), "json", msg2From);
-
-        if (!imSendMsgCbResp.getActionStatus().equals("OK")) {
-            throw new ApiException(-1, imSendMsgCbResp.getErrorInfo());
-        }
-
-        // 发送给接收方
-        imSendMsgCbResp = imFeign
-                .sendMsg(imConfProp.getSdkAppId(), admin, adminSig, new Random().nextInt(), "json", msg2To);
-
-        if (!imSendMsgCbResp.getActionStatus().equals("OK")) {
-            throw new ApiException(-1, imSendMsgCbResp.getErrorInfo());
-        }
+//
+//        // 发送给接收方
+//        imSendMsgCbResp = imFeign
+//                .sendMsg(imConfProp.getSdkAppId(), admin, adminSig, new Random().nextInt(), "json", msg2To);
+//
+//        if (!imSendMsgCbResp.getActionStatus().equals("OK")) {
+//            throw new ApiException(-1, imSendMsgCbResp.getErrorInfo());
+//        }
 
         // TODO: 2020/12/29 记录消息
 

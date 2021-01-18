@@ -14,7 +14,7 @@ sudo docker run -p 9000:9000 -e MINIO_ACCESS_KEY=root -e MINIO_SECRET_KEY=gtc_cl
 sudo docker run -p 8001:8001 --name gtc_registry -d registry
 sudo docker run -p 8002:8002 --name gtc_auth -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -d auth
 sudo docker run -p 8003:8003 --name gtc_social -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -d social
-sudo docker run -p 8088:8088 --name gtc_gateway -d gateway
+sudo docker run -p 8088:8088 --name gtc_gateway -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -d gateway
 sudo docker run -p 8089:8089 --name gtc_monitor -d monitor
 
 ## docker compose

@@ -52,7 +52,7 @@ spring:
         enabled: true
   profiles:
     # 使用测试配置
-    active: local
+    active: prod
 
 # hystrix 超时设置
 hystrix:
@@ -64,7 +64,7 @@ hystrix:
         isolation:
           strategy: SEMAPHORE
           thread:
-            timeoutInMilliseconds: 15000
+            timeoutInMilliseconds: 30000
 
 # actuator 暴露 hystrix
 management:

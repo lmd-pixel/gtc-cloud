@@ -34,9 +34,9 @@
     </dependencyManagement>
 
     <modules>
-<!--        <module>registry</module>-->
+        <module>registry</module>
 <!--        <module>auth_service</module>-->
-        <module>social_service</module>
+<!--        <module>social_service</module>-->
 <!--        <module>gateway</module>-->
 <!--        <module>monitor</module>-->
 

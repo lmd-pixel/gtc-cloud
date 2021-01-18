@@ -137,7 +137,7 @@ public class UserServiceImpl implements UserService {
     public User getUserByUsername(String username) throws ApiException {
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (!userOptional.isPresent()) {
-            throw new ApiException(-1, "用户数据不存在");
+            throw new ApiException(1005, "用户数据不存在");
         }
         return userOptional.get();
     }
@@ -146,7 +146,7 @@ public class UserServiceImpl implements UserService {
     public User getUserByDigitId(String digitId) throws ApiException {
         Optional<User> userOptional = userRepository.findByDigitId(digitId);
         if (!userOptional.isPresent()) {
-            throw new ApiException(-1, "用户数据不存在");
+            throw new ApiException(1005, "用户数据不存在");
         }
         return userOptional.get();
     }
