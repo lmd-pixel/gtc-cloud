@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface RecommendRepository extends JpaRepository<Recommend, Long> {
@@ -29,4 +30,6 @@ public interface RecommendRepository extends JpaRepository<Recommend, Long> {
     Page<RecommendDto> getRecommendList(String digitId, String nick, Integer type, Pageable pageable);
 
     Optional<Recommend> findByUserIdAndType(Long userId, int type);
+
+    List<Recommend> findByType(int type);
 }

@@ -48,7 +48,7 @@ public class CallBill {
     @Column(nullable = false)
     private int type;
 
-    // 消费来源, 0: 金币消费
+    // 消费来源, 0: 金币消费 其他值来自coupon的type值
     @Column(nullable = false, columnDefinition = "int default 0")
     private int source = 0;
 

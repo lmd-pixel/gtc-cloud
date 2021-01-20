@@ -31,7 +31,9 @@ public class Coupon {
 
     /**
      * 券类型
-     *
+     * 10： 免费聊天券
+     * 20： 语音聊天券
+     * 30： 视频聊天券
      */
     @Column
     private Integer type;
@@ -40,7 +42,7 @@ public class Coupon {
     @Column
     private Integer count;
 
-    @Column
+    @Column(nullable = false, unique = true)
     private String name;
 
     @Column
@@ -80,4 +82,8 @@ public class Coupon {
     @LastModifiedBy
     @Column
     private String modifyBy;
+
+    @JsonIgnore
+    @Version
+    private Long version;
 }

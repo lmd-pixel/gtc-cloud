@@ -9,10 +9,8 @@ import com.fmisser.gtc.base.prop.ImConfProp;
 import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.feign.ImFeign;
-import com.fmisser.gtc.social.repository.AssetRepository;
-import com.fmisser.gtc.social.repository.CallBillRepository;
-import com.fmisser.gtc.social.repository.CallRepository;
-import com.fmisser.gtc.social.repository.UserRepository;
+import com.fmisser.gtc.social.repository.*;
+import com.fmisser.gtc.social.service.CouponService;
 import com.fmisser.gtc.social.service.ImService;
 import com.fmisser.gtc.social.service.UserService;
 import lombok.Data;
@@ -63,6 +61,12 @@ public class TencentImService implements ImService {
 
     @Autowired
     private AssetRepository assetRepository;
+
+    @Autowired
+    private CouponService couponService;
+
+    @Autowired
+    private CouponRepository couponRepository;
 
     @Override
     public String login(User user) throws ApiException {
@@ -209,6 +213,9 @@ public class TencentImService implements ImService {
 
         List<CallBill> newCallBillList = new ArrayList<>();
         for (int i = existStage; i < stage; i++) {
+
+            // 优惠券判断
+
 
             // 生成流水
             CallBill callBill = new CallBill();

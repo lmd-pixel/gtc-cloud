@@ -3,6 +3,10 @@ spring:
     name: gateway
   cloud:
     gateway:
+#      httpclient:
+#        pool:
+#          max-idle-time:
+#          max-connections:
       discovery:
         locator:
           # 开启后默认通过服务名称可以路由到服务内部，但是通过此方法路由过去触发hystrix有问题，超时设置无效，建议关闭
@@ -52,7 +56,7 @@ spring:
         enabled: true
   profiles:
     # 使用测试配置
-    active: prod
+    active: local
 
 # hystrix 超时设置
 hystrix:

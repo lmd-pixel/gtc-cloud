@@ -46,7 +46,7 @@ public class MessageBill {
     @Column(nullable = false, unique = true)
     private String msgKey;
 
-    // 消费来源, 0: 金币消费 1: 消息免费券
+    // 消费来源, 0: 金币消费 其他值来自 coupon type值
     @Column(nullable = false, columnDefinition = "int default 0")
     private int source = 0;
 

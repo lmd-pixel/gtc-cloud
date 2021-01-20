@@ -39,18 +39,33 @@ public class CommonController {
 
     @ApiOperation(value = "获取主播列表")
     @GetMapping(value = "/list-anchor")
-    ApiResp<List<User>> getAnchorList(@RequestParam(value = "type") Integer type,
-                                      @RequestParam(value = "gender", required = false) Integer gender,
-                                      @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
-                                      @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
+    ApiResp<List<User>> getAnchorList(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam(value = "type") Integer type,
+            @RequestParam(value = "gender", required = false) Integer gender,
+            @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
         List<User> userList = userService.getAnchorList(type, gender, pageIndex, pageSize);
+
+        // 针对版本审核
+        if (version.equals("v16")) {
+            for (User user:
+                 userList) {
+                user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+                user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+                user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            }
+        }
+
         return ApiResp.succeed(userList);
     }
 
     @ApiOperation(value = "获取主播详情")
     @ApiImplicitParam(name = "Authorization", required = false, dataType = "String", paramType = "header")
     @GetMapping(value = "/anchor-profile")
-    ApiResp<User> getAnchorInfo(@RequestParam("digitId") String digitId) {
+    ApiResp<User> getAnchorInfo(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam("digitId") String digitId) {
         User user = userService.getUserByDigitId(digitId);
         User selfUser = null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -62,7 +77,16 @@ public class CommonController {
             }
         }
 
-        return ApiResp.succeed(userService.getAnchorProfile(user, selfUser));
+        User userDto = userService.getAnchorProfile(user, selfUser);
+
+        // 针对版本审核
+        if (version.equals("v16")) {
+            userDto.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            userDto.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            userDto.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+        }
+
+        return ApiResp.succeed(userDto);
     }
 
     @ApiOperation(value = "获取苹果支付商品列表")

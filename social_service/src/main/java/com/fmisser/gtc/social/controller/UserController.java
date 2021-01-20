@@ -17,9 +17,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.ws.rs.DELETE;
+import java.math.BigDecimal;
 import java.util.*;
 
 @Api(description = "用户API")
@@ -43,7 +45,8 @@ public class UserController {
     @ApiOperation(value = "创建用户")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/create")
-    ApiResp<User> create(@RequestParam(value = "phone", required = false, defaultValue = "") String phone,
+    ApiResp<User> create(@RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+                         @RequestParam(value = "phone", required = false, defaultValue = "") String phone,
                          @RequestParam("gender") @Range(min = 0, max = 1) int gender,
                          @RequestParam(value = "invite", required = false) String invite) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -53,14 +56,23 @@ public class UserController {
             // return error
             throw new ApiException(-1, "非法操作，认证用户无法创建其他用户资料！");
         }
+        User user = userService.create(username, gender, invite);
 
-        return ApiResp.succeed(userService.create(username, gender, invite));
+        // 针对版本审核
+        if (version.equals("v16")) {
+            user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+        }
+
+        return ApiResp.succeed(user);
     }
 
     @ApiOperation(value = "更新用户信息")
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/update-profile")
     ApiResp<User> uploadProfile(MultipartHttpServletRequest request,
+                                @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
                                 @RequestParam(value = "nick", required = false) String nick,
                                 @RequestParam(value = "birth", required = false) String birth,
                                 @RequestParam(value = "city", required = false) String city,
@@ -78,13 +90,21 @@ public class UserController {
         User user = userService.updateProfile(userDo, nick, birth, city, profession,
                 intro, labels, callPrice, videoPrice, messagePrice, request.getFileMap());
 
+        // 针对版本审核
+        if (version.equals("v16")) {
+            user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+        }
+
         return ApiResp.succeed(user);
     }
 
     @ApiOperation(value = "更新用户照片")
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/update-photos")
-    ApiResp<User> uploadPhotos(MultipartHttpServletRequest request) {
+    ApiResp<User> uploadPhotos(MultipartHttpServletRequest request,
+                               @RequestHeader(value = "version", required = false, defaultValue = "v1") String version) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
@@ -92,13 +112,21 @@ public class UserController {
         // TODO: 2020/11/10 check params
         User user = userService.updatePhotos(userDo, request.getFileMap());
 
+        // 针对版本审核
+        if (version.equals("v16")) {
+            user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+        }
+
         return ApiResp.succeed(user);
     }
 
     @ApiOperation(value = "更新用户视频")
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/update-video")
-    ApiResp<User> uploadVideo(MultipartHttpServletRequest request) {
+    ApiResp<User> uploadVideo(MultipartHttpServletRequest request,
+                              @RequestHeader(value = "version", required = false, defaultValue = "v1") String version) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
@@ -106,17 +134,33 @@ public class UserController {
         // TODO: 2020/11/10 check params
         User user = userService.updateVideo(userDo, request.getFileMap());
 
+        // 针对版本审核
+        if (version.equals("v16")) {
+            user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+        }
+
         return ApiResp.succeed(user);
     }
 
     @ApiOperation(value = "获取用户信息")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @GetMapping(value = "/profile")
-    ApiResp<User> getProfile() {
+    ApiResp<User> getProfile(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
         User user = userService.profile(userDo);
+
+        // 针对版本审核
+        if (version.equals("v16")) {
+            user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+        }
+
         return ApiResp.succeed(user);
     }
 
@@ -159,11 +203,25 @@ public class UserController {
     @ApiOperation(value = "请求身份审核")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/request-identity")
-    ApiResp<Integer> requestIdentity() {
+    ApiResp<Integer> requestIdentity(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
 
+        // 针对版本审核
+        if (version.equals("v16")) {
+            // 这里只是审核判断，实际值并没有写入用户信息
+            if (Objects.isNull(userDo.getMessagePrice())) {
+                userDo.setMessagePrice(BigDecimal.valueOf(1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            }
+            if (Objects.isNull(userDo.getCallPrice())) {
+                userDo.setCallPrice(BigDecimal.valueOf(450).setScale(2, BigDecimal.ROUND_HALF_UP));
+            }
+            if (Objects.isNull(userDo.getVideoPrice())) {
+                userDo.setVideoPrice(BigDecimal.valueOf(450).setScale(2, BigDecimal.ROUND_HALF_UP));
+            }
+        }
         int ret = identityAuditService.requestIdentityAudit(userDo);
         return ApiResp.succeed(ret);
     }

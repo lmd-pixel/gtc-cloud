@@ -5,11 +5,14 @@ import com.fmisser.gtc.base.dto.im.ImBeforeSendMsgDto;
 import com.fmisser.gtc.base.dto.im.ImCbResp;
 import com.fmisser.gtc.base.dto.im.ImStateChangeDto;
 import com.fmisser.gtc.social.domain.Asset;
+import com.fmisser.gtc.social.domain.Coupon;
 import com.fmisser.gtc.social.domain.MessageBill;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.repository.AssetRepository;
+import com.fmisser.gtc.social.repository.CouponRepository;
 import com.fmisser.gtc.social.repository.MessageBillRepository;
 import com.fmisser.gtc.social.repository.UserRepository;
+import com.fmisser.gtc.social.service.CouponService;
 import com.fmisser.gtc.social.service.ImCallbackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.annotation.Retryable;
@@ -17,10 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @Service
 public class TencentImCallbackService implements ImCallbackService {
@@ -31,12 +31,20 @@ public class TencentImCallbackService implements ImCallbackService {
 
     private final MessageBillRepository messageBillRepository;
 
+    private final CouponService couponService;
+
+    private final CouponRepository couponRepository;
+
     public TencentImCallbackService(AssetRepository assetRepository,
                                     UserRepository userRepository,
-                                    MessageBillRepository messageBillRepository) {
+                                    MessageBillRepository messageBillRepository,
+                                    CouponService couponService,
+                                    CouponRepository couponRepository) {
         this.assetRepository = assetRepository;
         this.userRepository = userRepository;
         this.messageBillRepository = messageBillRepository;
+        this.couponService = couponService;
+        this.couponRepository = couponRepository;
     }
 
     @Override
@@ -81,7 +89,15 @@ public class TencentImCallbackService implements ImCallbackService {
 
         Asset assetFrom = assetRepository.findByUserId(userFrom.getId());
         BigDecimal coinFrom = assetFrom.getCoin();
-        int msgFreeCoupon = assetFrom.getMsgFreeCoupon();
+        // 优惠券信息转移到 Coupon
+//        int msgFreeCoupon = assetFrom.getMsgFreeCoupon();
+
+        int msgFreeCoupon;
+        List<Coupon> couponList = couponService.getMsgFreeCoupon(userFrom);
+        msgFreeCoupon = couponList.stream()
+                .filter(couponService::isCouponValid)
+                .map(Coupon::getCount)
+                .reduce(0, Integer::sum);
 
         if (msgFreeCoupon <= 0 && coinFrom.compareTo(messagePrice) < 0) {
             // 没有免费券 同时 聊币不够
@@ -139,7 +155,14 @@ public class TencentImCallbackService implements ImCallbackService {
         Asset assetTo = assetRepository.findByUserId(userTo.getId());
 
         // 免费聊天券信息
-        int msgFreeCoupon = assetFrom.getMsgFreeCoupon();
+//        int msgFreeCoupon = assetFrom.getMsgFreeCoupon();
+
+        int msgFreeCoupon;
+        List<Coupon> couponList = couponService.getMsgFreeCoupon(userFrom);
+        msgFreeCoupon = couponList.stream()
+                .filter(couponService::isCouponValid)
+                .map(Coupon::getCount)
+                .reduce(0, Integer::sum);
 
         // 再次判断金币是否足够，消息发送之前和发送之后可能金币发生了改动
         if (msgFreeCoupon <= 0 && assetFrom.getCoin().compareTo(messagePrice) < 0) {
@@ -159,11 +182,20 @@ public class TencentImCallbackService implements ImCallbackService {
         // 有券就直接扣券，使用券的话，主播没有收益
         if (msgFreeCoupon > 0) {
             // 扣券
-            assetRepository.subMsgFreeCoupon(assetFrom.getUserId(), 1);
+//            assetRepository.subMsgFreeCoupon(assetFrom.getUserId(), 1);
+
+            // 找到第一个可以扣免费券的
+            Coupon availableCoupon = couponList.stream()
+                    .filter(couponService::isCouponValid)
+                    .findFirst()
+                    .get();
+            availableCoupon.setCount(availableCoupon.getCount() - 1);
+            couponRepository.save(availableCoupon);
+
             // 扣券 主播没有收益
 
             // 流水数据
-            messageBill.setSource(1);   // 免费券类型
+            messageBill.setSource(availableCoupon.getType());   // 免费券类型
             messageBill.setOriginCoin(BigDecimal.ZERO);
             messageBill.setCommissionRatio(BigDecimal.ZERO);
             messageBill.setCommissionCoin(BigDecimal.ZERO);
