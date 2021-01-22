@@ -55,7 +55,7 @@ public class CryptoUtils {
     }
 
     public static byte[] base64DecodeOriginToByteArray(String content) {
-        return Base64Utils.decodeFromString(content);
+        return Base64Utils.decodeFromUrlSafeString(content);
     }
 
     // aes 加密 再 base64 encode

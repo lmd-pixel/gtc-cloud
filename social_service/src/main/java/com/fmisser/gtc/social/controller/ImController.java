@@ -7,6 +7,7 @@ import com.fmisser.gtc.social.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
@@ -128,5 +129,22 @@ public class ImController {
         User toUser = userService.getUserByDigitId(digitId);
 
         return ApiResp.succeed(imService.sendToUser(userDo, toUser, content));
+    }
+
+    @PostMapping("/system-send-msg")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @PreAuthorize("hasAnyRole('MANAGER')")
+    public ApiResp<Integer> systemSendMsg(@RequestParam(value = "digitIdFrom", required = false) String digitIdFrom,
+                                          @RequestParam("digitIdTo") String digitIdTo,
+                                          @RequestParam("content") String content) {
+
+        User userFrom = null;
+        if (!StringUtils.isEmpty(digitIdFrom)) {
+            userFrom = userService.getUserByDigitId(digitIdFrom);
+        }
+
+        User toUser = userService.getUserByDigitId(digitIdTo);
+
+        return ApiResp.succeed(imService.sendToUser(userFrom, toUser, content));
     }
 }

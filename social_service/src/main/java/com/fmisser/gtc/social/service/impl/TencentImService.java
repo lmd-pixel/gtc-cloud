@@ -214,9 +214,6 @@ public class TencentImService implements ImService {
         List<CallBill> newCallBillList = new ArrayList<>();
         for (int i = existStage; i < stage; i++) {
 
-            // 优惠券判断
-
-
             // 生成流水
             CallBill callBill = new CallBill();
             callBill.setCallId(call.getId());
@@ -226,35 +223,67 @@ public class TencentImService implements ImService {
             callBill.setType(call.getType());
             callBill.setStage(i);
 
-            // 因为这里可能有多条数据，如果直接抛出异常，会导致可以结算的部分没结算,
-            // 所以金币不足，也正常记录，但收益都是0
-            Asset assetFrom = assetRepository.findByUserId(call.getUserIdFrom());
-            if (assetFrom.getCoin().compareTo(callPrice) < 0) {
-                callBill.setOriginCoin(BigDecimal.ZERO);
-                callBill.setCommissionCoin(BigDecimal.ZERO);
-                callBill.setCommissionRatio(BigDecimal.ZERO);
-                callBill.setProfitCoin(BigDecimal.ZERO);
-                callBill.setRemark("用户金币不足");
+            // 判断本次通话是否已经使用过优惠券等
+            boolean usedCoupon = false;
+            List<CallBill> callBillWithTypeList = callBillRepository.findByCallIdAndSourceNot(call.getId(), 0);
+            if (callBillWithTypeList.size() <= 0) {
 
-                // 提示前端结束通话
-                resultMap.put("need_close", 1);
-            } else {
+                // 判断是否有优惠券
+                List<Coupon> couponList = couponService.getCallFreeCoupon(userFrom, call.getType());
+                Optional<Coupon> optionalCoupon = couponList.stream()
+                        .filter(couponService::isCouponValid)
+                        .findFirst();
 
-                // 扣款
-                assetRepository.subCoin(call.getUserIdFrom(), callPrice);
+                if (optionalCoupon.isPresent()) {
+                    Coupon availableCoupon = optionalCoupon.get();
+                    // 使用优惠券
+                    availableCoupon.setCount(availableCoupon.getCount() - 1);
+                    couponRepository.save(availableCoupon);
 
-                // 计算收益抽成
-                BigDecimal profitRatio = call.getType() == 0 ? assetTo.getVoiceProfitRatio() : assetTo.getVideoProfitRatio();
-                BigDecimal commissionRatio = BigDecimal.ONE.subtract(profitRatio);
-                BigDecimal commissionCoin = commissionRatio.multiply(callPrice);
-                // 直接加金币 去掉抽成价格
-                BigDecimal coinProfit = callPrice.subtract(commissionCoin);
-                assetRepository.addCoin(assetTo.getUserId(), coinProfit);
+                    // 设置流水，使用优惠券不计算收益
+                    callBill.setSource(availableCoupon.getType());
+                    callBill.setOriginCoin(BigDecimal.ZERO);
+                    callBill.setCommissionCoin(BigDecimal.ZERO);
+                    callBill.setCommissionRatio(BigDecimal.ZERO);
+                    callBill.setProfitCoin(BigDecimal.ZERO);
+                    callBill.setRemark("使用了优惠券");
 
-                callBill.setOriginCoin(callPrice);
-                callBill.setCommissionCoin(commissionCoin);
-                callBill.setCommissionRatio(commissionRatio);
-                callBill.setProfitCoin(coinProfit);
+                    usedCoupon = true;
+                }
+            }
+
+            // 如果没有使用优惠券
+            if (!usedCoupon) {
+                // 因为这里可能有多条数据，如果直接抛出异常，会导致可以结算的部分没结算,
+                // 所以金币不足，也正常记录，但收益都是0
+                Asset assetFrom = assetRepository.findByUserId(call.getUserIdFrom());
+                if (assetFrom.getCoin().compareTo(callPrice) < 0) {
+                    callBill.setOriginCoin(BigDecimal.ZERO);
+                    callBill.setCommissionCoin(BigDecimal.ZERO);
+                    callBill.setCommissionRatio(BigDecimal.ZERO);
+                    callBill.setProfitCoin(BigDecimal.ZERO);
+                    callBill.setRemark("用户金币不足");
+
+                    // 提示前端结束通话
+                    resultMap.put("need_close", 1);
+                } else {
+
+                    // 扣款
+                    assetRepository.subCoin(call.getUserIdFrom(), callPrice);
+
+                    // 计算收益抽成
+                    BigDecimal profitRatio = call.getType() == 0 ? assetTo.getVoiceProfitRatio() : assetTo.getVideoProfitRatio();
+                    BigDecimal commissionRatio = BigDecimal.ONE.subtract(profitRatio);
+                    BigDecimal commissionCoin = commissionRatio.multiply(callPrice);
+                    // 直接加金币 去掉抽成价格
+                    BigDecimal coinProfit = callPrice.subtract(commissionCoin);
+                    assetRepository.addCoin(assetTo.getUserId(), coinProfit);
+
+                    callBill.setOriginCoin(callPrice);
+                    callBill.setCommissionCoin(commissionCoin);
+                    callBill.setCommissionRatio(commissionRatio);
+                    callBill.setProfitCoin(coinProfit);
+                }
             }
 
             newCallBillList.add(callBill);

@@ -26,7 +26,7 @@ public class Coupon {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private Long userId;
 
     /**
@@ -42,7 +42,8 @@ public class Coupon {
     @Column
     private Integer count;
 
-    @Column(nullable = false, unique = true)
+    // 券的名称，每个用户的name唯一
+    @Column(nullable = false)
     private String name;
 
     @Column

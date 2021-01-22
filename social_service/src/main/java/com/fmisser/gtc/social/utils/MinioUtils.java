@@ -14,6 +14,9 @@ import java.util.List;
 /**
  * Minio 简单封装
  */
+
+// TODO: 2021/1/21 改成service
+
 @Component
 public class MinioUtils {
 

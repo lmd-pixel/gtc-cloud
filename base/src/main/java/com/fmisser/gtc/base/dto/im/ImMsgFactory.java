@@ -29,6 +29,27 @@ public class ImMsgFactory {
 
         imSendMsgDto.setMsgBody(Collections.singletonList(imMsgBody));
 
+        // apns
+        ImOfflinePushInfo imOfflinePushInfo = new ImOfflinePushInfo();
+        imOfflinePushInfo.setPushFlag(0);
+        imOfflinePushInfo.setTitle("");
+        imOfflinePushInfo.setDesc(content);
+        imOfflinePushInfo.setExt("");
+
+        ImOfflinePushInfo.ImApnsInfo imApnsInfo = new ImOfflinePushInfo.ImApnsInfo();
+        imApnsInfo.setSound("");
+        imApnsInfo.setImage("");
+        imApnsInfo.setBadgeMode(1);
+        imApnsInfo.setTitle("");
+        imApnsInfo.setSubTitle("");
+        imOfflinePushInfo.setApnsInfo(imApnsInfo);
+
+        ImOfflinePushInfo.ImAndroidInfo imAndroidInfo = new ImOfflinePushInfo.ImAndroidInfo();
+        imAndroidInfo.setSound("");
+        imOfflinePushInfo.setAndroidInfo(imAndroidInfo);
+
+        imSendMsgDto.setOfflinePushInfo(imOfflinePushInfo);
+
         return imSendMsgDto;
     }
 

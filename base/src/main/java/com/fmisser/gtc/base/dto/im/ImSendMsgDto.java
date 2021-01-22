@@ -36,4 +36,7 @@ public class ImSendMsgDto {
 
     @JsonProperty("MsgBody")
     private List<ImMsgBody> MsgBody;
+
+    @JsonProperty("OfflinePushInfo")
+    private ImOfflinePushInfo OfflinePushInfo;
 }

@@ -57,8 +57,8 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
         appleAuthToken.setIdentityToken(identityToken);
         appleAuthToken = appleAuthTokenRepository.save(appleAuthToken);
 
-        String[] jwtContentList = identityToken.split(".");
-        if (jwtContentList.length != 2) {
+        String[] jwtContentList = identityToken.split("\\.");
+        if (jwtContentList.length != 3) {
             throw new ApiException(-1, "非法数据，无法验证!");
         }
 

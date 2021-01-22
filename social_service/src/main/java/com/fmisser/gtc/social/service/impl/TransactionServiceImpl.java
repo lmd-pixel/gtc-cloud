@@ -4,10 +4,8 @@ import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.AppleConfProp;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.feign.IapVerifyFeign;
-import com.fmisser.gtc.social.repository.AssetRepository;
-import com.fmisser.gtc.social.repository.IapReceiptRepository;
-import com.fmisser.gtc.social.repository.ProductRepository;
-import com.fmisser.gtc.social.repository.RechargeRepository;
+import com.fmisser.gtc.social.repository.*;
+import com.fmisser.gtc.social.service.CouponService;
 import com.fmisser.gtc.social.service.TransactionService;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -30,14 +28,18 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final IapReceiptRepository iapReceiptRepository;
 
+    private final CouponService couponService;
+
     public TransactionServiceImpl(AssetRepository assetRepository,
                                   ProductRepository productRepository,
                                   RechargeRepository rechargeRepository,
-                                  IapReceiptRepository iapReceiptRepository) {
+                                  IapReceiptRepository iapReceiptRepository,
+                                  CouponService couponService) {
         this.assetRepository = assetRepository;
         this.productRepository = productRepository;
         this.rechargeRepository = rechargeRepository;
         this.iapReceiptRepository = iapReceiptRepository;
+        this.couponService = couponService;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -113,6 +115,15 @@ public class TransactionServiceImpl implements TransactionService {
         recharge.setRemark("iap recharge");
         recharge.setFinishTime(new Date());
         recharge = rechargeRepository.save(recharge);
+
+        // 判断是否是首次充值，首次充值送聊天券和视频卡
+        // 考虑以后退款等操作，都认为是已完成过充值，不再赠送
+        Long count = rechargeRepository.countByUserIdAndStatusGreaterThanEqual(iapReceipt.getUserId(), 20);
+        if (count == 1) {
+            // 首充
+            couponService.addCommVideoCoupon(iapReceipt.getUserId(), 1);
+            couponService.addCommMsgFreeCoupon(iapReceipt.getUserId(), 100);
+        }
 
         // step3  处理成功，iap receipt 关联 recharge id，设置完成交易
         iapReceipt.setRechargeId(recharge.getId());

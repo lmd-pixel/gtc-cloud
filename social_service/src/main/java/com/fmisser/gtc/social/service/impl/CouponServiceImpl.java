@@ -15,6 +15,11 @@ import java.util.Objects;
 @Service
 public class CouponServiceImpl implements CouponService {
 
+    // TODO: 2021/1/20 改成配置
+    private final String CommonFreeMsgCoupon = "comm_msg_free_coupon";
+    private final String CommonFreeVoiceCoupon = "comm_voice_free_coupon";
+    private final String CommonFreeVideoCoupon = "comm_video_free_coupon";
+
     @Autowired
     private CouponRepository couponRepository;
 
@@ -69,5 +74,59 @@ public class CouponServiceImpl implements CouponService {
         }
 
         return valid;
+    }
+
+    @Override
+    public int addCommMsgFreeCoupon(Long userId, int count) throws ApiException {
+        Coupon coupon = couponRepository.findByUserIdAndName(userId, CommonFreeMsgCoupon);
+        if (Objects.isNull(coupon)) {
+            coupon = new Coupon();
+            coupon.setUserId(userId);
+            coupon.setType(10);
+            coupon.setName(CommonFreeMsgCoupon);
+            coupon.setCount(count);
+        } else {
+            coupon.setCount(count + coupon.getCount());
+        }
+
+        couponRepository.save(coupon);
+
+        return 1;
+    }
+
+    @Override
+    public int addCommVoiceCoupon(Long userId, int count) throws ApiException {
+        Coupon coupon = couponRepository.findByUserIdAndName(userId, CommonFreeVoiceCoupon);
+        if (Objects.isNull(coupon)) {
+            coupon = new Coupon();
+            coupon.setUserId(userId);
+            coupon.setType(20);
+            coupon.setName(CommonFreeVoiceCoupon);
+            coupon.setCount(count);
+        } else {
+            coupon.setCount(count + coupon.getCount());
+        }
+
+        couponRepository.save(coupon);
+
+        return 1;
+    }
+
+    @Override
+    public int addCommVideoCoupon(Long userId, int count) throws ApiException {
+        Coupon coupon = couponRepository.findByUserIdAndName(userId, CommonFreeVideoCoupon);
+        if (Objects.isNull(coupon)) {
+            coupon = new Coupon();
+            coupon.setUserId(userId);
+            coupon.setType(30);
+            coupon.setName(CommonFreeVideoCoupon);
+            coupon.setCount(count);
+        } else {
+            coupon.setCount(count + coupon.getCount());
+        }
+
+        couponRepository.save(coupon);
+
+        return 1;
     }
 }

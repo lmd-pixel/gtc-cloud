@@ -9,6 +9,7 @@ import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.controller.BlockController;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.repository.*;
+import com.fmisser.gtc.social.service.CouponService;
 import com.fmisser.gtc.social.service.IdentityAuditService;
 import com.fmisser.gtc.social.service.UserService;
 import com.fmisser.gtc.social.utils.MinioUtils;
@@ -51,6 +52,8 @@ public class UserServiceImpl implements UserService {
 
     private final InviteRepository inviteRepository;
 
+    private final CouponService couponService;
+
     public UserServiceImpl(UserRepository userRepository,
                            MinioUtils minioUtils,
                            LabelRepository labelRepository,
@@ -59,7 +62,8 @@ public class UserServiceImpl implements UserService {
                            AssetRepository assetRepository,
                            BlockRepository blockRepository,
                            FollowRepository followRepository,
-                           InviteRepository inviteRepository) {
+                           InviteRepository inviteRepository,
+                           CouponService couponService) {
         this.userRepository = userRepository;
         this.minioUtils = minioUtils;
         this.labelRepository = labelRepository;
@@ -69,6 +73,7 @@ public class UserServiceImpl implements UserService {
         this.blockRepository = blockRepository;
         this.followRepository = followRepository;
         this.inviteRepository = inviteRepository;
+        this.couponService = couponService;
     }
 
     @Transactional
@@ -129,6 +134,10 @@ public class UserServiceImpl implements UserService {
             invite.setType(0);
             inviteRepository.save(invite);
         }
+
+        // 注册送 视频卡 和 聊天券
+        couponService.addCommMsgFreeCoupon(user.getId(), 20);
+        couponService.addCommVideoCoupon(user.getId(), 1);
 
         return _prepareResponse(user);
     }
@@ -709,7 +718,7 @@ public class UserServiceImpl implements UserService {
 //        if (am_pm == 1) {
 //            hour += 12;
 //        }
-        int hourOfYear = dayOfYear * hour;
+        int hourOfYear = dayOfYear * 24 + hour;
 
         // TODO: 2020/11/9 记录一些异常情况
         if (yearIndex <= 0) {

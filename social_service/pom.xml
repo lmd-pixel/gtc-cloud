@@ -89,6 +89,13 @@
             <version>0.4.13</version>
         </dependency>
 
+        <!-- 腾讯推送 -->
+        <dependency>
+            <groupId>com.github.xingePush</groupId>
+            <artifactId>xinge</artifactId>
+            <version>1.2.4</version>
+        </dependency>
+
         <dependency>
             <groupId>com.fmisser.gtc</groupId>
             <artifactId>base</artifactId>
