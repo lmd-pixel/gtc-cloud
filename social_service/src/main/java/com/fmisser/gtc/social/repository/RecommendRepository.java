@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.repository;
 
+import com.fmisser.gtc.base.dto.social.RecommendAnchorDto;
 import com.fmisser.gtc.base.dto.social.RecommendDto;
 import com.fmisser.gtc.social.domain.Recommend;
 import org.springframework.data.domain.Page;
@@ -32,4 +33,15 @@ public interface RecommendRepository extends JpaRepository<Recommend, Long> {
     Optional<Recommend> findByUserIdAndType(Long userId, int type);
 
     List<Recommend> findByType(int type);
+
+    // 获取随机推荐主播
+    // jpa sql 无法使用 rand 函数，这里取出所有数据再筛选
+    @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.RecommendAnchorDto(" +
+            "tu.id, tu.digitId, tu.nick, tu.gender, tu.head) " +
+            "FROM Recommend tr " +
+            "INNER JOIN User tu ON tu.id = tr.userId " +
+            "WHERE tr.recommend = 1 AND tr.type = 3 " +
+//            "ORDER BY RAND() LIMIT ?1 ")
+            " ORDER BY tr.id")
+    List<RecommendAnchorDto> getRandRecommendAnchor();
 }

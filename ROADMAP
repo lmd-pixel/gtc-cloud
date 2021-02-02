@@ -53,6 +53,8 @@ minio 迁移配置： https://www.cnblogs.com/lkj371/p/12691063.html
 
 mysql 优化：https://zhuanlan.zhihu.com/p/106061137
 
+nginx 降低https延迟 https://zhuanlan.zhihu.com/p/346618690
+
 ################## 业务逻辑相关 ##################
 
 1. 增加认证相关的记录到db

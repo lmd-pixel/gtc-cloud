@@ -12,7 +12,7 @@ import java.io.IOException;
 public class FollowNoticeSubscribe {
 
     @StreamListener(target = "follow-notice-channel")
-    public void processMessage(Message message) throws IOException {
+    public void processMessage(Message<Long> message) throws IOException {
         // TODO: 2020/10/28 在服务重启的时候 已经处理过的消息可能会再次接收，根据业务需要处理幂等性
         Channel channel = (Channel) message.getHeaders().get(AmqpHeaders.CHANNEL);
         Long deliveryTag = (Long) message.getHeaders().get(AmqpHeaders.DELIVERY_TAG);

@@ -12,6 +12,7 @@ import com.fmisser.gtc.social.feign.ImFeign;
 import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.CouponService;
 import com.fmisser.gtc.social.service.ImService;
+import com.fmisser.gtc.social.service.SysConfigService;
 import com.fmisser.gtc.social.service.UserService;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -54,9 +55,6 @@ public class TencentImService implements ImService {
     private CallBillRepository callBillRepository;
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -67,6 +65,9 @@ public class TencentImService implements ImService {
 
     @Autowired
     private CouponRepository couponRepository;
+
+    @Autowired
+    private SysConfigService sysConfigService;
 
     @Override
     public String login(User user) throws ApiException {
@@ -130,8 +131,14 @@ public class TencentImService implements ImService {
             callRepository.save(call);
         }
 
-        // 返回前端数据
-        resultMap.put("duration", call.getDuration());
+        // 判断是否在审核
+        if (sysConfigService.isAppAudit()) {
+            // 过审 不显示时间
+            resultMap.put("duration", 0);
+        } else {
+            resultMap.put("duration", call.getDuration());
+        }
+
         resultMap.put("coin", 0);
         resultMap.put("card", 0);
         resultMap.put("userIdTo", "");  // 对方的数字id
@@ -144,6 +151,11 @@ public class TencentImService implements ImService {
                          .map(CallBill::getOriginCoin).reduce(BigDecimal::add);
             totalConsume.ifPresent(bigDecimal -> resultMap.put("coin", BigDecimal.ZERO.subtract(bigDecimal)));
 
+            Optional<Integer> cardType = callBillList.stream().map(CallBill::getSource)
+                    .filter(s -> s > 0)
+                    .findFirst();
+            cardType.ifPresent( c -> resultMap.put("card", -1));
+
             Optional<User> userTo = userRepository.findById(call.getUserIdTo());
             resultMap.put("userIdTo", userTo.get().getDigitId());
 
@@ -154,6 +166,11 @@ public class TencentImService implements ImService {
                             .map(CallBill::getProfitCoin).reduce(BigDecimal::add);
             totalProfit.ifPresent(bigDecimal -> resultMap.put("coin", bigDecimal));
 
+            Optional<Integer> cardType = callBillList.stream().map(CallBill::getSource)
+                    .filter(s -> s > 0)
+                    .findFirst();
+            cardType.ifPresent( c -> resultMap.put("card", 1));
+
             Optional<User> userTo = userRepository.findById(call.getUserIdFrom());
             resultMap.put("userIdTo", userTo.get().getDigitId());
         }
@@ -163,10 +180,11 @@ public class TencentImService implements ImService {
 
     @Transactional
     @Override
-    public Map<String, Object> updateCall(User userFrom, Long roomId) throws ApiException {
+    public Map<String, Object> updateCall(User user, Long roomId) throws ApiException {
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("need_close", 0);
         resultMap.put("need_recharge", 0);
+        resultMap.put("used_card", 0);
 
         Call call = callRepository.findByRoomId(roomId);
         if (call.getIsFinished() == 1) {
@@ -175,9 +193,15 @@ public class TencentImService implements ImService {
 
         Optional<User> optionalUserTo = userRepository.findById(call.getUserIdTo());
         if (!optionalUserTo.isPresent()) {
-            throw new ApiException(-1, "目标用户不存在");
+            throw new ApiException(-1, "用户不存在");
         }
         User userTo = optionalUserTo.get();
+
+        Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
+        if (!optionalUserFrom.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userFrom = optionalUserFrom.get();
 
         // step1: 更新通话信息
         Date now = new Date();
@@ -192,8 +216,15 @@ public class TencentImService implements ImService {
         }
         callRepository.save(call);
 
-        // 获取通话费用
-        BigDecimal callPrice = call.getType() == 0 ? userTo.getCallPrice() : userTo.getVideoPrice();
+        BigDecimal callPrice;
+        // 判断是否在审核
+        if (sysConfigService.isAppAudit()) {
+            // 过审 不计费
+            callPrice = BigDecimal.ZERO;
+        } else {
+            // 获取通话费用
+            callPrice = call.getType() == 0 ? userTo.getCallPrice() : userTo.getVideoPrice();
+        }
 
         if (Objects.isNull(callPrice) || callPrice.compareTo(BigDecimal.ZERO) <= 0) {
             // 价格为0 或者 null 不计算收入
@@ -249,6 +280,7 @@ public class TencentImService implements ImService {
                     callBill.setRemark("使用了优惠券");
 
                     usedCoupon = true;
+                    resultMap.put("used_card", 1);
                 }
             }
 
@@ -297,7 +329,7 @@ public class TencentImService implements ImService {
         resultMap.put("duration", duration);
 
         // 只有发起通话的人才会收到具体信息
-        if (userFrom.getId().equals(call.getUserIdFrom())) {
+        if (user.getId().equals(call.getUserIdFrom())) {
             // 获取最新的余额是否足够一分钟通话，不足提醒需要充值
             Asset assetFromLatest = assetRepository.findByUserId(userFrom.getId());
             BigDecimal totalPrice = BigDecimal.valueOf(2).multiply(callPrice);
@@ -349,7 +381,7 @@ public class TencentImService implements ImService {
 //                .buildGiftMsg(null, userFrom.getDigitId(), "赠送礼物成功!", 201, gift.getId(), count, true);
 
         ImSendMsgDto msgCustom = ImMsgFactory.buildGiftMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                "", 203, gift.getId(), count, true);
+                "您收到一个礼物，快去看看吧", 203, gift.getId(), count, true);
 
         // 获取管理员的 usersig
         String admin = imConfProp.getAdmin();

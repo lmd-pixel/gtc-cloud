@@ -86,14 +86,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> getAnchorListByFollow(Integer gender, Pageable pageable);
 
     // 根据推荐+关注排序
-    @Query(value = "(SELECT tu.*, 1 AS sort1, tu.follows AS sort2 FROM t_user tu " +
+    @Query(value = "(SELECT tu.*, tr.level AS sort1, tu.follows AS sort2 FROM t_user tu " +
             "INNER JOIN t_recommend tr ON tr.type = 0 AND tr.recommend = 1 AND tr.user_id = tu.id " +
             "WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
             "ORDER BY tr.level) UNION ALL " +
-            "(SELECT tu2.*, 0 AS sort1, tu2.follows AS sort2 FROM t_user tu2 " +
+            "(SELECT tu2.*, 10000000 AS sort1, tu2.follows AS sort2 FROM t_user tu2 " +
             "LEFT JOIN t_recommend tr2 ON tr2.type = 0 AND tr2.recommend = 1 AND tr2.user_id = tu2.id " +
             "WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND tr2.id IS NULL) " +
-            "ORDER BY sort1 DESC , sort2 DESC",
+            "ORDER BY sort1 , sort2 DESC",
             countQuery = "SELECT COUNT(*) FROM t_user " +
                     "WHERE identity = 1 " +
                     "AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL)",
@@ -123,8 +123,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "FROM t_user tu " +
             "LEFT JOIN t_call tc ON tc.user_id_to = tu.id AND tc.type = 0 " +
             "LEFT JOIN t_call tc2 ON tc2.user_id_to = tu.id AND tc2.type = 1 " +
-            "LEFT JOIN t_call_bill tcb ON tcb.user_id_to = tu.id AND tcb.type = 0 " +
-            "LEFT JOIN t_call_bill tcb2 ON tcb2.user_id_to = tu.id AND tcb2.type = 1 " +
+            "LEFT JOIN t_call_bill tcb ON tcb.type = 0 AND tcb.user_id_to = tu.id " +
+            "LEFT JOIN t_call_bill tcb2 ON tcb2.type = 1 AND tcb2.user_id_to = tu.id " +
             "LEFT JOIN t_message_bill tmb ON tmb.user_id_to = tu.id " +
             "LEFT JOIN t_gift_bill tgb ON tgb.user_id_to = tu.id " +
             "LEFT JOIN t_asset tas ON tas.user_id = tu.id " +
@@ -208,5 +208,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             nativeQuery = true)
     CalcConsumeDto calcConsume(String digitId, String nick, String phone, Date startTime, Date endTime);
 
-
+    // 获取随机主播
+    @Query(value = "SELECT * FROM t_user WHERE identity = 1 ORDER BY RAND() LIMIT ?1", nativeQuery = true)
+    List<User> findRandAnchorList(int limit);
 }

@@ -20,6 +20,10 @@ set global long_query_time=2;
 
 show variables like '%slow_query_log_file%';
 
+-- utf8 to utf8mb4
+ALTER TABLE `gtc-social-db`.t_dynamic CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+ALTER TABLE `gtc-social-db`.t_dynamic_comment CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
 
 -- procedure
 delimiter $$

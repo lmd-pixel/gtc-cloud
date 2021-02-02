@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.service;
 
+import com.fmisser.gtc.base.dto.social.RecvGiftDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.Gift;
 import com.fmisser.gtc.social.domain.User;
@@ -12,4 +13,7 @@ public interface GiftService {
 
     // 送礼物
     int postGift(User fromUser, User toUser, Long giftId, Integer count) throws ApiException;
+
+    // 获取接收礼物列表
+    List<RecvGiftDto> getRecvGiftList(User user, int pageIndex, int pageSize) throws ApiException;
 }

@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.exception.ApiException;
+import com.fmisser.gtc.base.i18n.SystemTips;
 import com.fmisser.gtc.base.prop.OssConfProp;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.base.response.ApiRespHelper;
@@ -8,9 +9,11 @@ import com.fmisser.gtc.base.utils.CryptoUtils;
 import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.controller.BlockController;
 import com.fmisser.gtc.social.domain.*;
+import com.fmisser.gtc.social.mq.GreetDelayedBinding;
 import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.CouponService;
 import com.fmisser.gtc.social.service.IdentityAuditService;
+import com.fmisser.gtc.social.service.ImService;
 import com.fmisser.gtc.social.service.UserService;
 import com.fmisser.gtc.social.utils.MinioUtils;
 import io.minio.ObjectWriteResponse;
@@ -19,6 +22,8 @@ import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -54,6 +59,10 @@ public class UserServiceImpl implements UserService {
 
     private final CouponService couponService;
 
+    private final SystemTips systemTips;
+
+    private final GreetDelayedBinding greetDelayedBinding;
+
     public UserServiceImpl(UserRepository userRepository,
                            MinioUtils minioUtils,
                            LabelRepository labelRepository,
@@ -63,7 +72,10 @@ public class UserServiceImpl implements UserService {
                            BlockRepository blockRepository,
                            FollowRepository followRepository,
                            InviteRepository inviteRepository,
-                           CouponService couponService) {
+                           CouponService couponService,
+                           ImService imService,
+                           SystemTips systemTips,
+                           GreetDelayedBinding greetDelayedBinding) {
         this.userRepository = userRepository;
         this.minioUtils = minioUtils;
         this.labelRepository = labelRepository;
@@ -74,6 +86,8 @@ public class UserServiceImpl implements UserService {
         this.followRepository = followRepository;
         this.inviteRepository = inviteRepository;
         this.couponService = couponService;
+        this.systemTips = systemTips;
+        this.greetDelayedBinding = greetDelayedBinding;
     }
 
     @Transactional
@@ -136,8 +150,21 @@ public class UserServiceImpl implements UserService {
         }
 
         // 注册送 视频卡 和 聊天券
-        couponService.addCommMsgFreeCoupon(user.getId(), 20);
-        couponService.addCommVideoCoupon(user.getId(), 1);
+        couponService.addCommMsgFreeCoupon(user.getId(), 20, 10);
+        couponService.addCommVideoCoupon(user.getId(), 1, 10);
+
+        // 新用户注册欢迎消息
+//        imService.sendToUser(null, user, systemTips.assistNewUserMsg(user.getNick()));
+        // 放到消息队列去调用，这时候可能用户还没登录到腾讯im，直接发消息会报错，也可以在后台直接注册到腾讯im再调用
+        // 发送消息加入队列, 5秒后发送
+        String sendMsgPayload = String
+                .format("3,%s,%s,%s", "", user.getId(), systemTips.assistNewUserMsg(user.getNick()));
+        Message<String> welcomeDelayedMessage = MessageBuilder
+                .withPayload(sendMsgPayload).setHeader("x-delay", 5 * 1000).build();
+        boolean ret = greetDelayedBinding.greetDelayedOutputChannel().send(welcomeDelayedMessage);
+        if (!ret) {
+            // TODO: 2021/1/25 处理发送失败
+        }
 
         return _prepareResponse(user);
     }
@@ -154,6 +181,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getUserByDigitId(String digitId) throws ApiException {
         Optional<User> userOptional = userRepository.findByDigitId(digitId);
+        if (!userOptional.isPresent()) {
+            throw new ApiException(1005, "用户数据不存在");
+        }
+        return userOptional.get();
+    }
+
+    @Override
+    public User getUserById(Long id) throws ApiException {
+        Optional<User> userOptional = userRepository.findById(id);
         if (!userOptional.isPresent()) {
             throw new ApiException(1005, "用户数据不存在");
         }
@@ -279,7 +315,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @SneakyThrows
-    public User updatePhotos(User user,
+    public User updatePhotos(User user, String existsPhotos,
                              Map<String, MultipartFile> multipartFileMap) throws ApiException {
         if (user.getIdentity() == 1) {
             // TODO: 2020/11/30 如果是主播身份，不能随意更改资料，需要审核
@@ -329,11 +365,31 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        if (photoList.size() == 0 ) {
-            throw new ApiException(-1, "上传信息出错,请稍后重试");
+//        if (photoList.size() == 0 ) {
+//            throw new ApiException(-1, "上传信息出错,请稍后重试");
+//        }
+
+        String originPhotosString = user.getPhotos();
+        if (Objects.nonNull(originPhotosString) && !StringUtils.isEmpty(existsPhotos)) {
+            // 过滤掉已经不需要的
+            List<String> originPhotos = changePhotosToList(originPhotosString);
+            List<String> existPhotos = changePhotosToList(existsPhotos);
+
+            List<String> filterPhotos = originPhotos.stream()
+                    .filter(existPhotos::contains)
+                    .collect(Collectors.toList());
+
+            if (photoList.size() > 0) {
+                filterPhotos.addAll(photoList);
+            }
+
+            user.setPhotos(filterPhotos.toString());
+        } else {
+            if (photoList.size() > 0) {
+                user.setPhotos(photoList.toString());
+            }
         }
 
-        user.setPhotos(photoList.toString());
         user = userRepository.save(user);
 
         return _prepareResponse(user);
@@ -512,6 +568,11 @@ public class UserServiceImpl implements UserService {
         return finalUser;
     }
 
+    @Override
+    public List<User> getRandAnchorList(int count) throws ApiException {
+        return userRepository.findRandAnchorList(count);
+    }
+
     // TODO: 2020/12/30 整理到其他地方
     // minio 存储原始图片和缩略图
     @SneakyThrows
@@ -633,12 +694,20 @@ public class UserServiceImpl implements UserService {
 
         if (Objects.nonNull(user.getVideoPrice())) {
             user.setVideoPrice(user.getVideoPrice().setScale(2, BigDecimal.ROUND_HALF_UP));
+        } else {
+            user.setVideoPrice(BigDecimal.ZERO.setScale(2, BigDecimal.ROUND_HALF_UP));
         }
+
         if (Objects.nonNull(user.getCallPrice())) {
             user.setCallPrice(user.getCallPrice().setScale(2, BigDecimal.ROUND_HALF_UP));
+        } else {
+            user.setCallPrice(BigDecimal.ZERO.setScale(2, BigDecimal.ROUND_HALF_UP));
         }
+
         if (Objects.nonNull(user.getMessagePrice())) {
             user.setMessagePrice(user.getMessagePrice().setScale(2, BigDecimal.ROUND_HALF_UP));
+        } else {
+            user.setMessagePrice(BigDecimal.ZERO.setScale(2, BigDecimal.ROUND_HALF_UP));
         }
 
         return user;

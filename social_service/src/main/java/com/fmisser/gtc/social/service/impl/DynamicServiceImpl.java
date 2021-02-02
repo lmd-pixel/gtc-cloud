@@ -287,6 +287,28 @@ public class DynamicServiceImpl implements DynamicService {
         return _prepareDynamicDtoResponse(dynamicDtos);
     }
 
+    @Override
+    public int delete(User user, Long dynamicId) throws ApiException {
+        Optional<Dynamic> dynamicOptional = dynamicRepository.findById(dynamicId);
+        if (!dynamicOptional.isPresent()) {
+            throw new ApiException(-1, "动态不存在，无法删除!");
+        }
+
+        Dynamic dynamic = dynamicOptional.get();
+        if (!dynamic.getUserId().equals(user.getId())) {
+            throw new ApiException(-1, "您没有权限这样操作!");
+        }
+
+        if (dynamic.getIsDelete() == 1) {
+            throw new ApiException(-1, "动态不存在,无法删除!");
+        }
+
+        dynamic.setIsDelete(1);
+        dynamicRepository.save(dynamic);
+
+        return 1;
+    }
+
     private List<DynamicCommentDto> _prepareDynamicCommentDtoResponse(List<DynamicCommentDto> dynamicCommentDtos, Long selfUserId) {
         for (DynamicCommentDto commentDto :
                 dynamicCommentDtos) {

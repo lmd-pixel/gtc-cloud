@@ -174,6 +174,8 @@ public class UserManagerServiceImpl implements UserManagerService {
         user.setMsgProfitRatio(asset.getMsgProfitRatio());
         user.setGiftProfitRatio(asset.getGiftProfitRatio());
 
+        user.setBirthDay(user.getBirth());
+
         return userService.profile(user);
     }
 
@@ -194,6 +196,11 @@ public class UserManagerServiceImpl implements UserManagerService {
 
     @Override
     public int configRecommend(String digitId, int type, int recommend, Long level) throws ApiException {
+
+        if (Objects.nonNull(level) && level > 999999) {
+            throw new ApiException(-1, "推荐值过大，不超过999999");
+        }
+
         User user = userService.getUserByDigitId(digitId);
         Optional<Recommend> optionalRecommend = recommendRepository.findByUserIdAndType(user.getId(), type);
         Recommend recommendDo;

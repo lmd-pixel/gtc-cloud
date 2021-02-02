@@ -21,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import java.math.BigDecimal;
@@ -136,7 +137,7 @@ public class UserManagerController {
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
             @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query"),
             @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query"),
-            @ApiImplicitParam(name = "type", value = "推荐模块 0: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人", required = true, paramType = "query"),
+            @ApiImplicitParam(name = "type", value = "推荐模块 0: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人 3：通话推荐主播", required = true, paramType = "query"),
             @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
@@ -144,7 +145,7 @@ public class UserManagerController {
     @PreAuthorize("hasAnyRole('MANAGER')")
     ApiResp<List<RecommendDto>> getRecommendList(@RequestParam(value = "digitId", required = false) String digitId,
                                                  @RequestParam(value = "nick", required = false) String nick,
-                                                 @RequestParam(value = "type") @Range(min = 0, max = 2, message = "type参数范围不合法") Integer type,
+                                                 @RequestParam(value = "type") @Range(min = 0, max = 3, message = "type参数范围不合法") Integer type,
                                                  @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
                                                  @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
         Pair<List<RecommendDto>, Map<String, Object>> recommendDtoList =
@@ -252,11 +253,7 @@ public class UserManagerController {
 
     @ApiOperation(value = "更新用户信息")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
-            @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date"),
-            @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date"),
-            @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
-            @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
+            @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     })
     @PostMapping(value = "/update-user-profile")
     @PreAuthorize("hasAnyRole('MANAGER')")
@@ -276,6 +273,33 @@ public class UserManagerController {
 
         User user = userService.updateProfile(userDo, nick, birth, city, profession,
                 intro, labels, callPrice, videoPrice, messagePrice, request.getFileMap());
+
+        return ApiResp.succeed(user);
+    }
+
+    @ApiOperation(value = "更新用户信息-基础数据")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    })
+    @PostMapping(value = "/update-user-profile-base")
+    @PreAuthorize("hasAnyRole('MANAGER')")
+    ApiResp<User> uploadProfileBase(
+                                @RequestParam(value = "digitId") String digitId,
+                                @RequestParam(value = "nick", required = false) String nick,
+                                @RequestParam(value = "birth", required = false) String birth,
+                                @RequestParam(value = "city", required = false) String city,
+                                @RequestParam(value = "profession", required = false) String profession,
+                                @RequestParam(value = "intro", required = false) String intro,
+                                @RequestParam(value = "labels", required = false) String labels,
+                                @RequestParam(value = "callPrice", required = false) String callPrice,
+                                @RequestParam(value = "videoPrice", required = false) String videoPrice,
+                                @RequestParam(value = "messagePrice", required = false) String messagePrice) {
+
+        User userDo = userService.getUserByDigitId(digitId);
+
+        Map<String, MultipartFile> multipartFileMap = new HashMap<>();
+        User user = userService.updateProfile(userDo, nick, birth, city, profession,
+                intro, labels, callPrice, videoPrice, messagePrice, multipartFileMap);
 
         return ApiResp.succeed(user);
     }

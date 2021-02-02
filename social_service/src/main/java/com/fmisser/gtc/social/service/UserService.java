@@ -18,6 +18,8 @@ public interface UserService {
     // 通过数字id查找用户实体
     User getUserByDigitId(String digitId) throws ApiException;
 
+    User getUserById(Long id) throws ApiException;
+
     // 获取用户的完整信息
     User profile(User user) throws ApiException;
 
@@ -28,7 +30,7 @@ public interface UserService {
                        Map<String, MultipartFile> multipartFileMap) throws ApiException;
 
     // 更新用户照片
-    User updatePhotos(User user, Map<String, MultipartFile> multipartFileMap) throws ApiException;
+    User updatePhotos(User user, String existsPhotos, Map<String, MultipartFile> multipartFileMap) throws ApiException;
 
     // 更新用户认证照片
     User updateVerifyImage(User user, Map<String, MultipartFile> multipartFileMap) throws ApiException;
@@ -44,4 +46,7 @@ public interface UserService {
 
     // 获取主播信息，包括和自己关联的信息
     User getAnchorProfile(User user, User selfUser) throws ApiException;
+
+    // 随机寻找n个主播
+    List<User> getRandAnchorList(int count) throws ApiException;
 }

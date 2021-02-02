@@ -33,4 +33,6 @@ public interface DynamicService {
     List<DynamicDto> getLatestDynamicList(User selfUser, int pageIndex, int pageSize) throws ApiException;
     // 获取关注的人的最新动态
     List<DynamicDto> getFollowLatestDynamicList(User selfUser, int pageIndex, int pageSize) throws ApiException;
+    // 删除动态
+    int delete(User user, Long dynamicId) throws ApiException;
 }

@@ -67,6 +67,12 @@ public class Asset {
     @Column(nullable = false, columnDefinition = "decimal(6,2) default 0.60")
     private BigDecimal videoProfitRatio = BigDecimal.valueOf(0.60);
 
+    @Column
+    private String alipayName;
+
+    @Column
+    private String alipayNumber;
+
     @JsonIgnore
     @Version
     private Long version;

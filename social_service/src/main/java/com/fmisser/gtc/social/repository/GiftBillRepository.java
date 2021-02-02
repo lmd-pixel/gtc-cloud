@@ -1,9 +1,6 @@
 package com.fmisser.gtc.social.repository;
 
-import com.fmisser.gtc.base.dto.social.AnchorCallBillDto;
-import com.fmisser.gtc.base.dto.social.AnchorGiftBillDto;
-import com.fmisser.gtc.base.dto.social.CommonBillDto;
-import com.fmisser.gtc.base.dto.social.ConsumerGiftBillDto;
+import com.fmisser.gtc.base.dto.social.*;
 import com.fmisser.gtc.base.dto.social.calc.CalcGiftProfitDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcMessageProfitDto;
 import com.fmisser.gtc.social.domain.GiftBill;
@@ -76,7 +73,7 @@ public interface GiftBillRepository extends JpaRepository<GiftBill, Long> {
 
     // 统计礼物收益相关数据： 数据总条数，收益总额等
     @Query(value = "SELECT " +
-            "SUM(tgb.id) AS giftCount, " +
+            "COUNT(tgb.id) AS giftCount, " +
             "COUNT(tgb.id) AS count, " +
             "SUM(tgb.origin_coin) AS consume, " +
             "SUM(tgb.profit_coin) AS profit, " +
@@ -96,4 +93,15 @@ public interface GiftBillRepository extends JpaRepository<GiftBill, Long> {
     CalcGiftProfitDto calcGiftProfit(String consumerDigitId, String consumerNick,
                                         String anchorDigitId, String anchorNick,
                                         Date startTime, Date endTime);
+
+
+
+    // 统计接收到的礼物，按照数量从多到少排序
+    @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.RecvGiftDto( " +
+            "COUNT(tgb.id), tg.name, tg.image) " +
+            "FROM GiftBill tgb " +
+            "INNER JOIN Gift tg ON tgb.giftId = tg.id " +
+            "WHERE tgb.valid = 1 AND tgb.userIdTo = ?1 " +
+            "GROUP BY tgb.giftId ORDER BY COUNT(tgb.id) DESC")
+    List<RecvGiftDto> getRecvGiftList(Long userIdTo);
 }

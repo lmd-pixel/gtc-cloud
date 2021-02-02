@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.service.impl;
 
+import com.fmisser.gtc.base.dto.social.RecvGiftDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.OssConfProp;
 import com.fmisser.gtc.social.domain.*;
@@ -111,6 +112,12 @@ public class GiftServiceImpl implements GiftService {
         return 1;
     }
 
+    @Override
+    public List<RecvGiftDto> getRecvGiftList(User user, int pageIndex, int pageSize) throws ApiException {
+        List<RecvGiftDto> recvGiftDtoList = giftBillRepository.getRecvGiftList(user.getId());
+        return _prepareRecvGiftResponse(recvGiftDtoList);
+    }
+
     private List<Gift> _prepareGiftResponse(List<Gift> giftList) {
         for (Gift gift: giftList) {
             if (!StringUtils.isEmpty(gift.getImage())) {
@@ -122,5 +129,18 @@ public class GiftServiceImpl implements GiftService {
             }
         }
         return giftList;
+    }
+
+    private List<RecvGiftDto> _prepareRecvGiftResponse(List<RecvGiftDto> recvGiftDtoList) {
+        for (RecvGiftDto recvGiftDto: recvGiftDtoList) {
+            if (!StringUtils.isEmpty(recvGiftDto.getGiftImage())) {
+                String imageUrl = String.format("%s/%s/%s",
+                        ossConfProp.getMinioVisitUrl(),
+                        ossConfProp.getGiftBucket(),
+                        recvGiftDto.getGiftImage());
+                recvGiftDto.setGiftImageUrl(imageUrl);
+            }
+        }
+        return recvGiftDtoList;
     }
 }

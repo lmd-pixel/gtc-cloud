@@ -49,7 +49,11 @@ public class UserController {
     @PostMapping("/sms-login")
     public ApiResp<TokenDto> phoneCodeLogin(@RequestParam("phone") @Size(min = 11, max = 11, message = "请输入有效的手机号") String phone,
                                        @RequestParam("code") String code) throws ApiException {
-        return ApiResp.succeed(userService.smsLogin(phone, code));
+        try {
+            return ApiResp.succeed(userService.smsLogin(phone, code));
+        } catch (Exception e) {
+            return ApiResp.failed(-1, "验证码不正确，请重试!");
+        }
     }
 
     @PostMapping("/apple-login")

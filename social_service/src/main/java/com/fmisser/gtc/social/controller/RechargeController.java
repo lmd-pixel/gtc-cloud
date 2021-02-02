@@ -41,7 +41,8 @@ public class RechargeController {
 
     @PostMapping(value = "/iap-receipt-verify")
     public ApiResp<String> setIapCertificate(@RequestParam("receipt") String receipt,
-                                             @RequestParam("env") int env,
+                                             @RequestParam(value = "env", required = false, defaultValue = "0") int env,
+                                             @RequestParam(value = "env_ex", required = false, defaultValue = "1") int env_ex,
                                              @RequestParam("productId") String productId,
                                              @RequestParam("transactionId") String transactionId,
                                              @RequestParam("purchaseDate") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date purchaseDate) {
@@ -55,7 +56,7 @@ public class RechargeController {
         }
 
         String ret = rechargeService.IapVerifyReceipt(userDo, receipt,
-                env,
+                env_ex,
                 productId, transactionId, purchaseDate);
         return ApiResp.succeed(ret);
     }
@@ -73,4 +74,16 @@ public class RechargeController {
         return ApiResp.succeed(ret);
     }
 
+    @ApiOperation("获取充值次数")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @PostMapping(value = "/total-count")
+    public ApiResp<Long> getRechargeTotalCount() {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        Long count = rechargeService.getUserRechargeCount(userDo);
+        return ApiResp.succeed(count);
+    }
 }

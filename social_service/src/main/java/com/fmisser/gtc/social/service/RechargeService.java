@@ -10,4 +10,6 @@ public interface RechargeService {
                             String receipt, int env,
                             String productId, String transactionId,
                             Date purchaseDate) throws ApiException;
+
+    Long getUserRechargeCount(User user) throws ApiException;
 }

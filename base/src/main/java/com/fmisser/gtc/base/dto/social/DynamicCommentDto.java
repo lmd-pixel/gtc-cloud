@@ -15,7 +15,7 @@ public class DynamicCommentDto {
                              Long userIdFrom, Long userIdTo,
                              String userDigitIdFrom, String userDigitIdTo,
                              String content, Date createTime,
-                             String nickFrom, String nickTo, String head) {
+                             String nickFrom, String nickTo, String head, int gender) {
         this.id = id;
         this.dynamicId = dynamicId;
         this.commentIdTo = commentIdTo;
@@ -28,6 +28,7 @@ public class DynamicCommentDto {
         this.nickFrom = nickFrom;
         this.nickTo = nickTo;
         this.head = head;
+        this.gender = gender;
     }
 
     private Long id;
@@ -47,4 +48,5 @@ public class DynamicCommentDto {
     private String headUrl;
     private String headThumbnailUrl;    // 头像缩略图
     private Long isSelf;
+    private int gender;
 }

@@ -21,11 +21,15 @@ public interface CouponService {
     boolean isCouponValid(Coupon coupon) throws ApiException;
 
     // 添加普通的消息免费券
-    int addCommMsgFreeCoupon(Long userId, int count) throws ApiException;
+    int addCommMsgFreeCoupon(Long userId, int count, int source) throws ApiException;
 
     // 添加普通的语音免费券
-    int addCommVoiceCoupon(Long userId, int count) throws ApiException;
+    int addCommVoiceCoupon(Long userId, int count, int source) throws ApiException;
 
     // 添加普通的视频免费券
-    int addCommVideoCoupon(Long userId, int count) throws ApiException;
+    int addCommVideoCoupon(Long userId, int count, int source) throws ApiException;
+
+    List<Coupon> getRegAward(User user) throws ApiException;
+
+    List<Coupon> getFirstRechargeAward(User user) throws ApiException;
 }

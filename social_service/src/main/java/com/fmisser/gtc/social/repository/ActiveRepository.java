@@ -19,4 +19,6 @@ public interface ActiveRepository extends JpaRepository<Active, Long> {
     @Query(value = "SELECT COUNT(DISTINCT (user_id)) FROM t_active WHERE " +
             "active_time BETWEEN ?2 AND ?3 GROUP BY identity",nativeQuery = true)
     List<Long> countActiveOnce(Date startTime, Date endTime);
+
+    Active findTopByUserIdAndStatusIn(Long userId, List<Integer> statusList);
 }

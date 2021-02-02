@@ -5,9 +5,7 @@ import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.Asset;
 import com.fmisser.gtc.social.domain.IdentityAudit;
 import com.fmisser.gtc.social.domain.User;
-import com.fmisser.gtc.social.service.AssetService;
-import com.fmisser.gtc.social.service.IdentityAuditService;
-import com.fmisser.gtc.social.service.UserService;
+import com.fmisser.gtc.social.service.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -33,13 +31,19 @@ public class UserController {
     private final UserService userService;
     private final AssetService assetService;
     private final IdentityAuditService identityAuditService;
+    private final GreetService greetService;
+    private final SysConfigService sysConfigService;
 
     public UserController(UserService userService,
                           AssetService assetService,
-                          IdentityAuditService identityAuditService) {
+                          IdentityAuditService identityAuditService,
+                          GreetService greetService,
+                          SysConfigService sysConfigService) {
         this.userService = userService;
         this.assetService = assetService;
         this.identityAuditService = identityAuditService;
+        this.greetService = greetService;
+        this.sysConfigService = sysConfigService;
     }
 
     @ApiOperation(value = "创建用户")
@@ -59,7 +63,7 @@ public class UserController {
         User user = userService.create(username, gender, invite);
 
         // 针对版本审核
-        if (version.equals("v16")) {
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
             user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
@@ -91,7 +95,7 @@ public class UserController {
                 intro, labels, callPrice, videoPrice, messagePrice, request.getFileMap());
 
         // 针对版本审核
-        if (version.equals("v16")) {
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
             user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
@@ -104,16 +108,17 @@ public class UserController {
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/update-photos")
     ApiResp<User> uploadPhotos(MultipartHttpServletRequest request,
-                               @RequestHeader(value = "version", required = false, defaultValue = "v1") String version) {
+                               @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+                               @RequestParam(value = "existPhotos", required = false) String existPhotos) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
         //
         // TODO: 2020/11/10 check params
-        User user = userService.updatePhotos(userDo, request.getFileMap());
+        User user = userService.updatePhotos(userDo, existPhotos, request.getFileMap());
 
         // 针对版本审核
-        if (version.equals("v16")) {
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
             user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
@@ -135,7 +140,7 @@ public class UserController {
         User user = userService.updateVideo(userDo, request.getFileMap());
 
         // 针对版本审核
-        if (version.equals("v16")) {
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
             user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
@@ -152,10 +157,16 @@ public class UserController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
+
+        // 打招呼信息
+        if (sysConfigService.isMsgGreetEnable()) {
+            greetService.createGreet(userDo);
+        }
+
         User user = userService.profile(userDo);
 
         // 针对版本审核
-        if (version.equals("v16")) {
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
             user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
@@ -196,8 +207,21 @@ public class UserController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
+
         Asset asset = assetService.getAsset(userDo);
         return ApiResp.succeed(asset);
+    }
+
+    @PostMapping(value = "/bind-alipay")
+    ApiResp<Asset> bindAlipay(@RequestParam("alipayName") String alipayName,
+                                @RequestParam("alipayNumber") String alipayNumber) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        Asset asset = assetService.bindAlipay(userDo, alipayName, alipayNumber);
+        return ApiResp.succeed(asset);
+
     }
 
     @ApiOperation(value = "请求身份审核")
@@ -210,7 +234,7 @@ public class UserController {
         User userDo = userService.getUserByUsername(username);
 
         // 针对版本审核
-        if (version.equals("v16")) {
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
             // 这里只是审核判断，实际值并没有写入用户信息
             if (Objects.isNull(userDo.getMessagePrice())) {
                 userDo.setMessagePrice(BigDecimal.valueOf(1).setScale(2, BigDecimal.ROUND_HALF_UP));

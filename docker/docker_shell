@@ -1,9 +1,21 @@
 ##
 
-# 修改服务器的本地时间和时区，docker启动的时候设置进去
-
+## 修改服务器的本地时间和时区，docker启动的时候设置进去
 echo "Asia/shanghai" > /etc/timezone
 cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+
+## rabbit mq 增加 delay message queue
+插件下载地址： https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/tag/3.8.9
+拷贝插件到容器： docker cp rabbitmq_delayed_message_exchange-3.8.9-0199d11c.ez gtc_cloud_mq:/plugins
+进入容器启动插件： rabbitmq-plugins enable rabbitmq_delayed_message_exchange
+查看插件是否已加载: rabbitmq-plugins list
+
+
+## docker mysql backup
+docker exec -it gtc_cloud_db mysqldump -uroot -pgtc_cloud@123456 gtc-social-db > /root/docker/mysql_backup/gtc-social-db_20210125.sql
+docker exec -it gtc_cloud_db mysqldump -uroot -pgtc_cloud@123456 gtc-auth-db > /root/docker/mysql_backup/gtc-auth-db_20210125.sql
+
 
 ## docker origin:
 

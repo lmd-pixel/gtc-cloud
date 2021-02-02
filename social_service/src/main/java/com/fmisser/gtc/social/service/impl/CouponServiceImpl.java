@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class CouponServiceImpl implements CouponService {
@@ -25,7 +26,10 @@ public class CouponServiceImpl implements CouponService {
 
     @Override
     public List<Coupon> getCouponList(User user) throws ApiException {
-        return couponRepository.findByUserId(user.getId());
+        List<Coupon> couponList = couponRepository.findByUserId(user.getId());
+        return couponList.stream()
+                .filter(coupon -> coupon.getCount() > 0)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -77,14 +81,15 @@ public class CouponServiceImpl implements CouponService {
     }
 
     @Override
-    public int addCommMsgFreeCoupon(Long userId, int count) throws ApiException {
-        Coupon coupon = couponRepository.findByUserIdAndName(userId, CommonFreeMsgCoupon);
+    public int addCommMsgFreeCoupon(Long userId, int count, int source) throws ApiException {
+        Coupon coupon = couponRepository.findByUserIdAndNameAndSource(userId, CommonFreeMsgCoupon, source);
         if (Objects.isNull(coupon)) {
             coupon = new Coupon();
             coupon.setUserId(userId);
             coupon.setType(10);
             coupon.setName(CommonFreeMsgCoupon);
             coupon.setCount(count);
+            coupon.setSource(source);
         } else {
             coupon.setCount(count + coupon.getCount());
         }
@@ -95,14 +100,15 @@ public class CouponServiceImpl implements CouponService {
     }
 
     @Override
-    public int addCommVoiceCoupon(Long userId, int count) throws ApiException {
-        Coupon coupon = couponRepository.findByUserIdAndName(userId, CommonFreeVoiceCoupon);
+    public int addCommVoiceCoupon(Long userId, int count, int source) throws ApiException {
+        Coupon coupon = couponRepository.findByUserIdAndNameAndSource(userId, CommonFreeVoiceCoupon, source);
         if (Objects.isNull(coupon)) {
             coupon = new Coupon();
             coupon.setUserId(userId);
             coupon.setType(20);
             coupon.setName(CommonFreeVoiceCoupon);
             coupon.setCount(count);
+            coupon.setSource(source);
         } else {
             coupon.setCount(count + coupon.getCount());
         }
@@ -113,14 +119,15 @@ public class CouponServiceImpl implements CouponService {
     }
 
     @Override
-    public int addCommVideoCoupon(Long userId, int count) throws ApiException {
-        Coupon coupon = couponRepository.findByUserIdAndName(userId, CommonFreeVideoCoupon);
+    public int addCommVideoCoupon(Long userId, int count, int source) throws ApiException {
+        Coupon coupon = couponRepository.findByUserIdAndNameAndSource(userId, CommonFreeVideoCoupon, source);
         if (Objects.isNull(coupon)) {
             coupon = new Coupon();
             coupon.setUserId(userId);
             coupon.setType(30);
             coupon.setName(CommonFreeVideoCoupon);
             coupon.setCount(count);
+            coupon.setSource(source);
         } else {
             coupon.setCount(count + coupon.getCount());
         }
@@ -128,5 +135,15 @@ public class CouponServiceImpl implements CouponService {
         couponRepository.save(coupon);
 
         return 1;
+    }
+
+    @Override
+    public List<Coupon> getRegAward(User user) throws ApiException {
+        return couponRepository.findByUserIdAndSource(user.getId(), 10);
+    }
+
+    @Override
+    public List<Coupon> getFirstRechargeAward(User user) throws ApiException {
+        return couponRepository.findByUserIdAndSource(user.getId(), 20);
     }
 }

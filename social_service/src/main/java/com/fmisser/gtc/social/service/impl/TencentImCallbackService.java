@@ -4,15 +4,11 @@ import com.fmisser.gtc.base.dto.im.ImAfterSendMsgDto;
 import com.fmisser.gtc.base.dto.im.ImBeforeSendMsgDto;
 import com.fmisser.gtc.base.dto.im.ImCbResp;
 import com.fmisser.gtc.base.dto.im.ImStateChangeDto;
-import com.fmisser.gtc.social.domain.Asset;
-import com.fmisser.gtc.social.domain.Coupon;
-import com.fmisser.gtc.social.domain.MessageBill;
-import com.fmisser.gtc.social.domain.User;
-import com.fmisser.gtc.social.repository.AssetRepository;
-import com.fmisser.gtc.social.repository.CouponRepository;
-import com.fmisser.gtc.social.repository.MessageBillRepository;
-import com.fmisser.gtc.social.repository.UserRepository;
+import com.fmisser.gtc.base.utils.DateUtils;
+import com.fmisser.gtc.social.domain.*;
+import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.CouponService;
+import com.fmisser.gtc.social.service.GreetService;
 import com.fmisser.gtc.social.service.ImCallbackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.annotation.Retryable;
@@ -35,21 +31,52 @@ public class TencentImCallbackService implements ImCallbackService {
 
     private final CouponRepository couponRepository;
 
+    private final ActiveRepository activeRepository;
+
+    private final GreetService greetService;
+
     public TencentImCallbackService(AssetRepository assetRepository,
                                     UserRepository userRepository,
                                     MessageBillRepository messageBillRepository,
                                     CouponService couponService,
-                                    CouponRepository couponRepository) {
+                                    CouponRepository couponRepository,
+                                    ActiveRepository activeRepository,
+                                    GreetService greetService) {
         this.assetRepository = assetRepository;
         this.userRepository = userRepository;
         this.messageBillRepository = messageBillRepository;
         this.couponService = couponService;
         this.couponRepository = couponRepository;
+        this.activeRepository = activeRepository;
+        this.greetService = greetService;
     }
 
     @Override
     public ImCbResp stateChangeCallback(ImStateChangeDto imStateChangeDto) {
-        return null;
+        ImCbResp resp = new ImCbResp();
+        resp.setActionStatus("OK");
+        resp.setErrorCode(0);
+
+        if (imStateChangeDto.getInfo().getAction().equals("Login")) {
+            // 上线
+            String digitId = imStateChangeDto.getInfo().getTo_Account();
+            Optional<User> userOptional = userRepository.findByDigitId(digitId);
+            if (userOptional.isPresent()) {
+                // 更新用户状态
+                // TODO: 2021/1/25 改成active service 中创建该逻辑
+                Active active = new Active();
+                active.setUserId(userOptional.get().getId());
+                active.setIdentity(userOptional.get().getIdentity());
+                active.setStatus(41);   // login
+                activeRepository.save(active);
+
+                // 打招呼功能
+                // 审核， 不处理打招呼逻辑
+//                greetService.createGreet(userOptional.get());
+            }
+        }
+
+        return resp;
     }
 
     @Override
@@ -67,6 +94,7 @@ public class TencentImCallbackService implements ImCallbackService {
         Optional<User> optionalUserTo = userRepository.findByDigitId(userDigitIdTo);
         if (!optionalUserTo.isPresent() ||
                 !optionalUserFrom.isPresent()) {
+
             // 用户数据错误
             resp.setActionStatus("FAIL");
             resp.setErrorCode(-1);
@@ -139,6 +167,11 @@ public class TencentImCallbackService implements ImCallbackService {
 
         User userFrom = optionalUserFrom.get();
         User userTo = optionalUserTo.get();
+
+        // 打招呼功能
+        greetService.userReplyToday(userFrom, userTo, imAfterSendMsgDto.getMsgSeq());
+
+        // 结算功能
         if (userTo.getIdentity() == 0) {
             // 目标身份是普通用户，则不用计算金币和收益
             return resp;

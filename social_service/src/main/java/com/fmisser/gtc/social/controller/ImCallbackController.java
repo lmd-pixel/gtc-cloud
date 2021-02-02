@@ -42,6 +42,8 @@ public class ImCallbackController {
             // https://cloud.tencent.com/document/product/269/2714
             // TODO: 2020/11/20 考虑此接口的安全性，是否存在被刷的可能
 
+            System.out.println("im recv callback");
+
             // check SdkAppid
             if (SdkAppid != imConfProp.getSdkAppId()) {
                 return new ImCbResp();
@@ -56,12 +58,18 @@ public class ImCallbackController {
                 dto.setOptPlatform(OptPlatform);
                 return imCallbackService.stateChangeCallback(dto);
             } else if (CallbackCommand.equals("C2C.CallbackBeforeSendMsg")) {
+
+                System.out.println("im recv msg callback before");
+
                 // 发送消息之前
                 ImBeforeSendMsgDto dto = objectMapper.readValue(content, ImBeforeSendMsgDto.class);
                 dto.setClientIP(ClientIP);
                 dto.setOptPlatform(OptPlatform);
                 return imCallbackService.beforeSendMsg(dto);
             } else if (CallbackCommand.equals("C2C.CallbackAfterSendMsg")) {
+
+                System.out.println("im recv msg callback after");
+
                 // 发送消息之后
                 ImAfterSendMsgDto dto = objectMapper.readValue(content, ImAfterSendMsgDto.class);
                 dto.setClientIP(ClientIP);

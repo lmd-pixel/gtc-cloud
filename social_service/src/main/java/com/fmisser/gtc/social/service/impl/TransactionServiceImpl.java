@@ -121,8 +121,8 @@ public class TransactionServiceImpl implements TransactionService {
         Long count = rechargeRepository.countByUserIdAndStatusGreaterThanEqual(iapReceipt.getUserId(), 20);
         if (count == 1) {
             // 首充
-            couponService.addCommVideoCoupon(iapReceipt.getUserId(), 1);
-            couponService.addCommMsgFreeCoupon(iapReceipt.getUserId(), 100);
+            couponService.addCommVideoCoupon(iapReceipt.getUserId(), 1, 20);
+            couponService.addCommMsgFreeCoupon(iapReceipt.getUserId(), 100, 20);
         }
 
         // step3  处理成功，iap receipt 关联 recharge id，设置完成交易

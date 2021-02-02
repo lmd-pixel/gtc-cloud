@@ -51,6 +51,19 @@ public class DynamicController {
         return ApiResp.succeed(dynamicDto);
     }
 
+    @ApiOperation(value = "删除动态")
+    @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
+    @PostMapping(value = "/del")
+    @PreAuthorize("hasAnyRole('USER')")
+    ApiResp<Integer> createDynamic(@RequestParam("dynamicId") Long dynamicId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        int ret = dynamicService.delete(userDo, dynamicId);
+        return ApiResp.succeed(ret);
+    }
+
     @ApiOperation(value = "点赞或者取消")
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/heart")
@@ -102,15 +115,22 @@ public class DynamicController {
     @ApiOperation(value = "获取评论列表")
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/list-comments")
-    @PreAuthorize("hasAnyRole('USER')")
+//    @PreAuthorize("hasAnyRole('USER')")
     ApiResp<List<DynamicCommentDto>> listComments(@RequestParam("commentId") Long commentId,
                                                   @RequestParam("pageIndex") int pageIndex,
                                                   @RequestParam("pageSize") int pageSize) {
+        User selfUser = null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getPrincipal().toString();
-        User userDo = userService.getUserByUsername(username);
+        if (authentication.isAuthenticated()) {
+            String username = authentication.getPrincipal().toString();
+            // 未授权默认登录的账户名字未 anonymousUser
+            if (!username.equals("anonymousUser")) {
+                selfUser = userService.getUserByUsername(username);
+            }
+        }
 
-        List<DynamicCommentDto> dynamicCommentDtos = dynamicService.getDynamicCommentList(commentId, userDo, pageIndex, pageSize);
+        // TODO: 2021/1/26 这里 commentId 应该是 dynamicId
+        List<DynamicCommentDto> dynamicCommentDtos = dynamicService.getDynamicCommentList(commentId, selfUser, pageIndex, pageSize);
         return ApiResp.succeed(dynamicCommentDtos);
     }
 

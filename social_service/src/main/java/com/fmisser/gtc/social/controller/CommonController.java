@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.controller;
 
+import com.fmisser.gtc.base.dto.social.RecvGiftDto;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.service.*;
@@ -24,17 +25,20 @@ public class CommonController {
     private final DistrictService districtService;
     private final LabelService labelService;
     private final GiftService giftService;
+    private final SysConfigService sysConfigService;
 
     public CommonController(UserService userService,
                             ProductService productService,
                             DistrictService districtService,
                             LabelService labelService,
-                            GiftService giftService) {
+                            GiftService giftService,
+                            SysConfigService sysConfigService) {
         this.userService = userService;
         this.productService = productService;
         this.districtService = districtService;
         this.labelService = labelService;
         this.giftService = giftService;
+        this.sysConfigService = sysConfigService;
     }
 
     @ApiOperation(value = "获取主播列表")
@@ -48,7 +52,7 @@ public class CommonController {
         List<User> userList = userService.getAnchorList(type, gender, pageIndex, pageSize);
 
         // 针对版本审核
-        if (version.equals("v16")) {
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
             for (User user:
                  userList) {
                 user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
@@ -80,7 +84,7 @@ public class CommonController {
         User userDto = userService.getAnchorProfile(user, selfUser);
 
         // 针对版本审核
-        if (version.equals("v16")) {
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
             userDto.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             userDto.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             userDto.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
@@ -163,5 +167,15 @@ public class CommonController {
     public ApiResp<List<Gift>> getGiftList() {
         List<Gift> giftList = giftService.getGiftList();
         return ApiResp.succeed(giftList);
+    }
+
+    @ApiOperation("收到的礼物列表")
+    @GetMapping("/recv-list")
+    public ApiResp<List<RecvGiftDto>> getRecvGiftList(@RequestParam("digitId") String digitId,
+                                                      @RequestParam("pageIndex") int pageIndex,
+                                                      @RequestParam("pageSize") int pageSize) {
+        User userDo = userService.getUserByDigitId(digitId);
+        List<RecvGiftDto> recvGiftDtoList = giftService.getRecvGiftList(userDo, pageIndex, pageSize);
+        return ApiResp.succeed(recvGiftDtoList);
     }
 }

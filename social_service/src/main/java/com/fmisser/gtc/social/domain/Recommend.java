@@ -37,7 +37,7 @@ public class Recommend {
     @Column
     private int type;
 
-    // 等级 排序用
+    // 等级 排序用, 最大不超过 999999
     @Column
     private Long level;
 

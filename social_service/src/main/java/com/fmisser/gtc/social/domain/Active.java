@@ -33,6 +33,7 @@ public class Active {
     @Column(nullable = false)
     private Long userId;
 
+    // TODO: 2021/1/25 身份会随着时间改变，根据此字段判断的逻辑可能存在问题，建议动态获取
     @Column(nullable = false)
     private int identity;
 

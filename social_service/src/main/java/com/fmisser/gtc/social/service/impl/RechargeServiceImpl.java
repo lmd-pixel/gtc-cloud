@@ -132,4 +132,9 @@ public class RechargeServiceImpl implements RechargeService {
             throw new ApiException(-1, "充值异常");
         }
     }
+
+    @Override
+    public Long getUserRechargeCount(User user) throws ApiException {
+        return rechargeRepository.countByUserIdAndStatusGreaterThanEqual(user.getId(), 20);
+    }
 }

@@ -16,7 +16,7 @@ public interface DynamicCommentRepository extends JpaRepository<DynamicComment, 
 
     @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.DynamicCommentDto" +
             "(tdc.id, tdc.dynamicId, tdc.commentIdTo, tu.id, tu2.id, tu.digitId, tu2.digitId, " +
-            "tdc.content, tdc.createTime, tu.nick, tu2.nick, tu.head) " +
+            "tdc.content, tdc.createTime, tu.nick, tu2.nick, tu.head, tu.gender) " +
             "FROM DynamicComment tdc " +
             "INNER JOIN User tu ON tu.id = tdc.userIdFrom " +
             "LEFT JOIN User tu2 ON tu2.id = tdc.userIdTo " +

@@ -49,9 +49,9 @@ public class User {
     @Column
     private String head;
 
-    @JsonIgnore
+//    @JsonIgnore
     @Column
-    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+//    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date birth;
 
@@ -84,7 +84,6 @@ public class User {
     /**
      * 上传的照片,多张照片逗号隔开
      */
-    @JsonIgnore
     @Column(length = 4096)
     private String photos;
 
@@ -208,4 +207,8 @@ public class User {
     // 是否被别人关注
     @Transient
     private int isFollow;
+
+    @Transient
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date birthDay;
 }

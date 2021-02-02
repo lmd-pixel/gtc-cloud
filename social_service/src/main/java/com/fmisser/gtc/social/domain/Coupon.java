@@ -35,12 +35,21 @@ public class Coupon {
      * 20： 语音聊天券
      * 30： 视频聊天券
      */
-    @Column
+    @Column(nullable = false)
     private Integer type;
 
     // 券数量
-    @Column
+    @Column(nullable = false)
     private Integer count;
+
+    /**
+     * 券来源
+     * 0：通用，包括购买
+     * 10: 注册送
+     * 20：首冲送
+     */
+    @Column(nullable = false)
+    private Integer source;
 
     // 券的名称，每个用户的name唯一
     @Column(nullable = false)
