@@ -10,6 +10,7 @@ import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.CouponService;
 import com.fmisser.gtc.social.service.GreetService;
 import com.fmisser.gtc.social.service.ImCallbackService;
+import com.fmisser.gtc.social.service.ImService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -35,13 +36,16 @@ public class TencentImCallbackService implements ImCallbackService {
 
     private final GreetService greetService;
 
+    private final ImService imService;
+
     public TencentImCallbackService(AssetRepository assetRepository,
                                     UserRepository userRepository,
                                     MessageBillRepository messageBillRepository,
                                     CouponService couponService,
                                     CouponRepository couponRepository,
                                     ActiveRepository activeRepository,
-                                    GreetService greetService) {
+                                    GreetService greetService,
+                                    ImService imService) {
         this.assetRepository = assetRepository;
         this.userRepository = userRepository;
         this.messageBillRepository = messageBillRepository;
@@ -49,6 +53,7 @@ public class TencentImCallbackService implements ImCallbackService {
         this.couponRepository = couponRepository;
         this.activeRepository = activeRepository;
         this.greetService = greetService;
+        this.imService = imService;
     }
 
     @Override
@@ -130,7 +135,7 @@ public class TencentImCallbackService implements ImCallbackService {
         if (msgFreeCoupon <= 0 && coinFrom.compareTo(messagePrice) < 0) {
             // 没有免费券 同时 聊币不够
             resp.setErrorCode(121001);
-            resp.setErrorInfo("金币不够了，快去充值吧");
+            resp.setErrorInfo("聊币余额不足，请先充值");
         }
 
         return resp;
@@ -234,6 +239,9 @@ public class TencentImCallbackService implements ImCallbackService {
             messageBill.setCommissionCoin(BigDecimal.ZERO);
             messageBill.setProfitCoin(BigDecimal.ZERO);
 
+            // 发送消息给发送者
+//            imService.sendAfterSendMsg(userFrom, userTo,103, 0, 1);
+
         } else {
             // 扣金币
             assetRepository.subCoin(assetFrom.getUserId(), messagePrice);
@@ -253,6 +261,9 @@ public class TencentImCallbackService implements ImCallbackService {
             messageBill.setCommissionRatio(commissionRatio);
             messageBill.setCommissionCoin(commissionCoin);
             messageBill.setProfitCoin(coinProfit);
+
+            // 发送消息给发送者
+//            imService.sendAfterSendMsg(userFrom, userTo, 102, messagePrice.intValue(), 0);
         }
 
         // 保存流水

@@ -20,7 +20,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "t_call",
-        indexes = {@Index(columnList = "userIdFrom, createdTime")})
+        indexes = {@Index(columnList = "userIdFrom, createdTime"), @Index(columnList = "userIdTo, createdTime")})
 @Data
 @EntityListeners(AuditingEntityListener.class)
 @DynamicInsert
@@ -45,6 +45,15 @@ public class Call {
     // 谁接收
     @Column(nullable = false)
     private Long userIdTo;
+
+    /**
+     * 0：用户给主播拨打
+     * 1：主播给用户拨打
+     * 3：用户给用户拨打, 暂时不允许
+     * 4：主播给主播拨打
+     */
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private int callMode = 0;
 
     /**
      * 0：语音

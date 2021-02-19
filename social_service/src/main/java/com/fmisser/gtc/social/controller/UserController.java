@@ -261,7 +261,23 @@ public class UserController {
         return ApiResp.succeed(identityAuditList);
     }
 
+    @ApiOperation(value = "通话预检查")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @GetMapping("call-pre-check")
+    ApiResp<Integer> callPreCheck(@RequestParam("digitId") String digitId,
+                                  @RequestParam("type") Integer type ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
 
+        // 审核检查
+        if (sysConfigService.isAppAudit()) {
+            return ApiResp.succeed(1);
+        }
+
+        User userDest = userService.getUserByDigitId(digitId);
+        return ApiResp.succeed(userService.callPreCheck(userDo, userDest, type));
+    }
 
 
 }

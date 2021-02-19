@@ -55,6 +55,8 @@ mysql 优化：https://zhuanlan.zhihu.com/p/106061137
 
 nginx 降低https延迟 https://zhuanlan.zhihu.com/p/346618690
 
+分布式事务 https://blog.csdn.net/paolei/article/details/77854532
+
 ################## 业务逻辑相关 ##################
 
 1. 增加认证相关的记录到db

@@ -17,16 +17,22 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
 
     private final AccessDeniedHandler accessDeniedHandler;
 
+    private final CommonAccessDecisionManager commonAccessDecisionManager;
+
     public ResourceServerConfig(@Qualifier("auth_ex_handler") AuthenticationEntryPoint authenticationEntryPoint,
-                                @Qualifier("access_denied_handler") AccessDeniedHandler accessDeniedHandler) {
+                                @Qualifier("access_denied_handler") AccessDeniedHandler accessDeniedHandler,
+                                CommonAccessDecisionManager commonAccessDecisionManager) {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.accessDeniedHandler = accessDeniedHandler;
+        this.commonAccessDecisionManager = commonAccessDecisionManager;
     }
 
     @Override
     public void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests()
+                // 自定义鉴权
+//                .accessDecisionManager(commonAccessDecisionManager)
                 .antMatchers("/test/**").permitAll()
                 .antMatchers("/dynamic/**").permitAll()
                 .antMatchers("/comm/**").permitAll()

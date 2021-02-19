@@ -573,6 +573,30 @@ public class UserServiceImpl implements UserService {
         return userRepository.findRandAnchorList(count);
     }
 
+    @Override
+    public Integer callPreCheck(User fromUser, User toUser, int type) throws ApiException {
+
+        BigDecimal callPrice = type == 0 ? toUser.getCallPrice() : toUser.getVideoPrice();
+        if (Objects.isNull(callPrice)) {
+            return 1;
+        }
+
+        List<Coupon> couponList = couponService.getCallFreeCoupon(fromUser, type);
+        for (Coupon coupon :
+                couponList) {
+            if (couponService.isCouponValid(coupon)) {
+                return 1;
+            }
+        }
+
+        Asset assetFrom = assetRepository.findByUserId(fromUser.getId());
+        if (assetFrom.getCoin().compareTo(callPrice) >= 0) {
+            return 1;
+        }
+
+        return 0;
+    }
+
     // TODO: 2020/12/30 整理到其他地方
     // minio 存储原始图片和缩略图
     @SneakyThrows

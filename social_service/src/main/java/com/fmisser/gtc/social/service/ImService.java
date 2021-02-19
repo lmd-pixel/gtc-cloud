@@ -36,4 +36,6 @@ public interface ImService {
     int sendToUser(User fromUser, User toUser, String content) throws ApiException;
 
     int sendGiftMsg(User userFrom, User userTo, Gift gift, int count) throws ApiException;
+
+    int sendAfterSendMsg(User userFrom, User userTo, int tag, int coin, int card) throws ApiException;
 }

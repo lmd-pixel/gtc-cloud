@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -28,10 +29,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final CommonAuthenticationProvider commonAuthenticationProvider;
+
     public WebSecurityConfig(@Qualifier("top") UserDetailsService userDetailsService,
-                             PasswordEncoder passwordEncoder) {
+                             PasswordEncoder passwordEncoder,
+                             CommonAuthenticationProvider commonAuthenticationProvider) {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
+        this.commonAuthenticationProvider = commonAuthenticationProvider;
     }
 
     @Bean
@@ -48,5 +53,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //                .password(passwordEncoder().encode("123456")).roles("USER");
         auth.userDetailsService(userDetailsService)
                 .passwordEncoder(passwordEncoder);
+//        auth.authenticationProvider(commonAuthenticationProvider);
     }
+
+//    @Override
+//    protected void configure(HttpSecurity http) throws Exception {
+//        http.sessionManagement().maximumSessions(1);
+//    }
 }

@@ -17,6 +17,7 @@ public class SystemTips {
     // 新用户注册消息
     public String assistNewUserMsg(String nick) {
         String localeMsg = localeMessageUtil.getLocaleMessage("msg.assist.new_user");
-        return String.format(localeMsg, nick);
+//        return String.format(localeMsg, nick);
+        return localeMsg;
     }
 }

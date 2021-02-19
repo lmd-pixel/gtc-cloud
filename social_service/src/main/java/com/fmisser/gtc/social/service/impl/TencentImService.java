@@ -86,11 +86,31 @@ public class TencentImService implements ImService {
 
     @Override
     public Long call(User userFrom, User userTo, int type) throws ApiException {
+
+        if (userFrom.getIdentity() == 0 && userTo.getIdentity() == 0) {
+            return -1L;
+        }
+
         // 创建通话房间
         Call call = new Call();
         call.setType(type);
-        call.setUserIdFrom(userFrom.getId());
-        call.setUserIdTo(userTo.getId());
+//        call.setUserIdFrom(userFrom.getId());
+//        call.setUserIdTo(userTo.getId());
+
+        if (userFrom.getIdentity() == 1 && userTo.getIdentity() == 0) {
+            call.setUserIdFrom(userTo.getId());
+            call.setUserIdTo(userFrom.getId());
+            call.setCallMode(1);
+        } else if (userFrom.getIdentity() == 0 && userTo.getIdentity() == 1) {
+            call.setUserIdFrom(userFrom.getId());
+            call.setUserIdTo(userTo.getId());
+            call.setCallMode(0);
+        } else if (userFrom.getIdentity() == 1 && userTo.getIdentity() == 1) {
+            call.setUserIdFrom(userFrom.getId());
+            call.setUserIdTo(userTo.getId());
+            call.setCallMode(3);
+        }
+
         call.setRoomId(Long.valueOf(genRoomId()));
         call.setCommId(UUID.randomUUID().toString());
 
@@ -381,7 +401,7 @@ public class TencentImService implements ImService {
 //                .buildGiftMsg(null, userFrom.getDigitId(), "赠送礼物成功!", 201, gift.getId(), count, true);
 
         ImSendMsgDto msgCustom = ImMsgFactory.buildGiftMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                "您收到一个礼物，快去看看吧", 203, gift.getId(), count, true);
+                "您收到一个礼物，快去看看吧", 203, gift.getId(), count, gift.getName(),true);
 
         // 获取管理员的 usersig
         String admin = imConfProp.getAdmin();
@@ -415,6 +435,25 @@ public class TencentImService implements ImService {
 
         return 1;
 
+    }
+
+    @Override
+    public int sendAfterSendMsg(User userFrom, User userTo, int tag, int coin, int card) throws ApiException {
+        ImSendMsgDto msgCustom = ImMsgFactory.buildChargingMsg(userFrom.getDigitId(), userTo.getDigitId(),
+                "一条扣费信息", tag, coin, card, true);
+
+        // 获取管理员的 usersig
+        String admin = imConfProp.getAdmin();
+        String adminSig = genAdminSig(admin);
+
+        ImSendMsgCbResp imSendMsgCbResp = imFeign
+                .sendMsg(imConfProp.getSdkAppId(), admin, adminSig, new Random().nextInt(), "json", msgCustom);
+
+        if (!imSendMsgCbResp.getActionStatus().equals("OK")) {
+            throw new ApiException(-1, imSendMsgCbResp.getErrorInfo());
+        }
+
+        return 1;
     }
 
     /**

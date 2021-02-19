@@ -76,7 +76,7 @@ public class GiftServiceImpl implements GiftService {
         Asset assetTo = assetRepository.findByUserId(toUser.getId());
 
         if (assetFrom.getCoin().compareTo(totalPrice) < 0) {
-            throw new ApiException(2001, "金币不足，请先充值!");
+            throw new ApiException(2001, "聊币不足，请先充值!");
         }
 
         // 扣款

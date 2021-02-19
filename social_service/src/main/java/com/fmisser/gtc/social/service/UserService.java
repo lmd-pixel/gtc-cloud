@@ -49,4 +49,7 @@ public interface UserService {
 
     // 随机寻找n个主播
     List<User> getRandAnchorList(int count) throws ApiException;
+
+    // 通话前检查
+    Integer callPreCheck(User fromUser, User toUser, int type) throws ApiException;
 }
