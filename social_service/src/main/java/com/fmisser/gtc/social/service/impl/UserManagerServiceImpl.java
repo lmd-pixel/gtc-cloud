@@ -49,13 +49,13 @@ public class UserManagerServiceImpl implements UserManagerService {
                                          Date startTime, Date endTime,
                                          int pageIndex, int pageSize,
                                          int sortColumn, int sortDirection) throws ApiException {
-        Sort.Direction direction;
+//        Sort.Direction direction;
         String sortProp;
-        if (sortDirection == 0) {
-            direction = Sort.Direction.ASC;
-        } else {
-            direction = Sort.Direction.DESC;
-        }
+//        if (sortDirection == 0) {
+//            direction = Sort.Direction.ASC;
+//        } else {
+//            direction = Sort.Direction.DESC;
+//        }
 
         switch (sortColumn) {
             case 0:
@@ -90,17 +90,29 @@ public class UserManagerServiceImpl implements UserManagerService {
                 break;
         }
 
-        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize, direction, sortProp);
-        Page<AnchorDto> anchorDtoPage = userRepository
-                .anchorStatistics(digitId, nick, phone, gender, startTime, endTime, pageable);
+        if (sortDirection == 0) {
+            sortProp += " ASC";
+        } else {
+            sortProp += " DESC";
+        }
+
+//        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize, direction, sortProp);
+//        Page<AnchorDto> anchorDtoPage = userRepository
+//                .anchorStatistics(digitId, nick, phone, gender, startTime, endTime, pageable);
+
+        List<AnchorDto> anchorDtoList = userRepository
+                .anchorStatisticsEx(digitId, nick, phone, gender, startTime, endTime, pageSize, pageIndex - 1, sortProp);
+
+        Long totalCount = userRepository.countAnchorStatisticsEx(digitId, nick, phone, gender, startTime, endTime);
+        Long totalPage = (totalCount / pageSize) + 1;
 
         Map<String, Object> extra = new HashMap<>();
-        extra.put("totalPage", anchorDtoPage.getTotalPages());
-        extra.put("totalEle", anchorDtoPage.getTotalElements());
+        extra.put("totalPage", totalPage);
+        extra.put("totalEle", totalCount);
         extra.put("currPage", pageIndex);
-        extra.put("totalUser", anchorDtoPage.getTotalElements());
+        extra.put("totalUser", totalCount);
 
-        return Pair.of(anchorDtoPage.getContent(), extra);
+        return Pair.of(anchorDtoList, extra);
     }
 
     @Override
@@ -108,13 +120,13 @@ public class UserManagerServiceImpl implements UserManagerService {
                                              Date startTime, Date endTime,
                                              int pageIndex, int pageSize,
                                              int sortColumn, int sortDirection) throws ApiException {
-        Sort.Direction direction;
+//        Sort.Direction direction;
         String sortProp;
-        if (sortDirection == 0) {
-            direction = Sort.Direction.ASC;
-        } else {
-            direction = Sort.Direction.DESC;
-        }
+//        if (sortDirection == 0) {
+//            direction = Sort.Direction.ASC;
+//        } else {
+//            direction = Sort.Direction.DESC;
+//        }
 
         switch (sortColumn) {
             case 0:
@@ -146,20 +158,31 @@ public class UserManagerServiceImpl implements UserManagerService {
                 break;
         }
 
-        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize, direction, sortProp);
-        Page<ConsumerDto> consumerDtoPage = userRepository
-                .consumerStatistics(digitId, nick, phone, startTime, endTime, pageable);
+        if (sortDirection == 0) {
+            sortProp += " ASC";
+        } else {
+            sortProp += " DESC";
+        }
+
+//        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize, direction, sortProp);
+//        Page<ConsumerDto> consumerDtoPage = userRepository
+//                .consumerStatistics(digitId, nick, phone, startTime, endTime, pageable);
+
+        List<ConsumerDto> consumerDtoList = userRepository
+                .consumerStatisticsEx(digitId, nick, phone, startTime, endTime, pageSize, pageIndex - 1, sortProp);
 
         CalcConsumeDto calcConsumeDto = userRepository.calcConsume(digitId, nick, phone, startTime, endTime);
+        Long totalCount = calcConsumeDto.getCount();
+        Long totalPage = (totalCount / pageSize) + 1;
 
         Map<String, Object> extra = new HashMap<>();
-        extra.put("totalPage", consumerDtoPage.getTotalPages());
-        extra.put("totalEle", consumerDtoPage.getTotalElements());
+        extra.put("totalPage", totalPage);
+        extra.put("totalEle", totalCount);
         extra.put("currPage", pageIndex);
         extra.put("totalUser", calcConsumeDto.getCount());
         extra.put("totalRecharge", calcConsumeDto.getRecharge());
 
-        return Pair.of(consumerDtoPage.getContent(), extra);
+        return Pair.of(consumerDtoList, extra);
     }
 
     @Override

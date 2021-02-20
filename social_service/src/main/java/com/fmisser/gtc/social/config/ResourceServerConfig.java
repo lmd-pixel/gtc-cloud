@@ -32,7 +32,7 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
         http.csrf().disable()
                 .authorizeRequests()
                 // 自定义鉴权
-//                .accessDecisionManager(commonAccessDecisionManager)
+                .accessDecisionManager(commonAccessDecisionManager)
                 .antMatchers("/test/**").permitAll()
                 .antMatchers("/dynamic/**").permitAll()
                 .antMatchers("/comm/**").permitAll()
@@ -51,7 +51,7 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
 
     @Override
     public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
-        // 自定义认证异常返回数据
+        // 自定义认证鉴权异常返回数据
         resources.authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler);
     }

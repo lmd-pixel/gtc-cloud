@@ -24,10 +24,10 @@ public interface ImService {
     int accept(User userFrom, User userTo, Long roomId) throws ApiException;
 
     // 挂断通话
-    Map<String, Object> hangup(User user, Long roomId) throws ApiException;
+    Map<String, Object> hangup(User user, Long roomId, String version) throws ApiException;
 
     // 更新通话并计费
-    Map<String, Object> updateCall(User user, Long roomId) throws ApiException;
+    Map<String, Object> updateCall(User user, Long roomId, String version) throws ApiException;
 
     // 生成 user sig
     String genUserSign(User user) throws ApiException;

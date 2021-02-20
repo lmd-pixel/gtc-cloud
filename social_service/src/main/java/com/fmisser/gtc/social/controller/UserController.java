@@ -264,20 +264,30 @@ public class UserController {
     @ApiOperation(value = "通话预检查")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @GetMapping("call-pre-check")
-    ApiResp<Integer> callPreCheck(@RequestParam("digitId") String digitId,
-                                  @RequestParam("type") Integer type ) {
+    ApiResp<Integer> callPreCheck(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam("digitId") String digitId,
+            @RequestParam("type") Integer type ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
 
         // 审核检查
-        if (sysConfigService.isAppAudit()) {
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
             return ApiResp.succeed(1);
         }
 
         User userDest = userService.getUserByDigitId(digitId);
-        return ApiResp.succeed(userService.callPreCheck(userDo, userDest, type));
+        Integer ret = userService.callPreCheck(userDo, userDest, type);
+        if (ret == -1) {
+            return ApiResp.succeed(ret, "对方非主播用户，暂不支持通话");
+        } else if (ret == 0) {
+            return ApiResp.succeed(ret, "聊币余额不足，请尽快充值");
+        } else if (ret == -2) {
+            return ApiResp.succeed(ret, "对方余额不足，无法发起通话");
+        } else {
+            return ApiResp.succeed(ret);
+        }
     }
-
 
 }

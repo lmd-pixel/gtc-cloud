@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-public class CustomAffirmativeBased extends AffirmativeBased {
-    public CustomAffirmativeBased(List<AccessDecisionVoter<?>> decisionVoters) {
-        super(decisionVoters);
-    }
-}
+//public class CustomAffirmativeBased extends AffirmativeBased {
+//    public CustomAffirmativeBased(List<AccessDecisionVoter<?>> decisionVoters) {
+//        super(decisionVoters);
+//    }
+//}

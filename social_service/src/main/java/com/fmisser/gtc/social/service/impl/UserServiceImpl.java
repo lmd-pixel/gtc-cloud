@@ -576,12 +576,32 @@ public class UserServiceImpl implements UserService {
     @Override
     public Integer callPreCheck(User fromUser, User toUser, int type) throws ApiException {
 
-        BigDecimal callPrice = type == 0 ? toUser.getCallPrice() : toUser.getVideoPrice();
+        // 拨打是用户，接听是用户
+        if (fromUser.getIdentity() == 0 && toUser.getIdentity() == 0) {
+            // 对方不是主播无法发起通话
+            return -1;
+        }
+
+        BigDecimal callPrice;
+        List<Coupon> couponList;
+        Asset asset;
+
+        if (toUser.getIdentity() == 1 ) {
+            // 接听是主播
+            callPrice = type == 0 ? toUser.getCallPrice() : toUser.getVideoPrice();
+            asset = assetRepository.findByUserId(fromUser.getId());
+            couponList = couponService.getCallFreeCoupon(fromUser, type);
+        } else {
+            // 接听是用户
+            callPrice = type == 0 ? fromUser.getCallPrice() : fromUser.getVideoPrice();
+            asset = assetRepository.findByUserId(toUser.getId());
+            couponList = couponService.getCallFreeCoupon(toUser, type);
+        }
+
         if (Objects.isNull(callPrice)) {
             return 1;
         }
 
-        List<Coupon> couponList = couponService.getCallFreeCoupon(fromUser, type);
         for (Coupon coupon :
                 couponList) {
             if (couponService.isCouponValid(coupon)) {
@@ -589,12 +609,17 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        Asset assetFrom = assetRepository.findByUserId(fromUser.getId());
-        if (assetFrom.getCoin().compareTo(callPrice) >= 0) {
+        if (asset.getCoin().compareTo(callPrice) >= 0) {
             return 1;
         }
 
-        return 0;
+        if (toUser.getIdentity() == 0) {
+            // 对方余额不足，无法接听通话
+            return -2;
+        } else {
+            // 当前自己余额不足，无法发起通话
+            return 0;
+        }
     }
 
     // TODO: 2020/12/30 整理到其他地方

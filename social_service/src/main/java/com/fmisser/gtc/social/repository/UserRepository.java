@@ -181,6 +181,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
                                        Date startTime, Date endTime,
                                        int limit, int offset, String order);
 
+    // 统计主播查询的总数量
+    @Query(value = "SELECT COUNT(tu.id) " +
+            "FROM t_user tu " +
+            "WHERE tu.identity = 1 AND " +
+            "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+            "(tu.phone LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
+            "(tu.gender LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) AND " +
+            "(tu.create_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL) ",
+    nativeQuery = true)
+    Long countAnchorStatisticsEx(String digitId, String nick, String phone, Integer gender,
+                                 Date startTime, Date endTime);
+
     // 改良版 用户数据模糊查询
     @Query(value = "SELECT tu.digitId AS digitId, tu.nick AS nick, tu.phone AS phone, " +
             "tu.createTime AS createTime, " +
@@ -198,9 +211,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "(tu_inner.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
             "(tu_inner.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
             "(tu_inner.phone LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
-            "(tu_inner.gender LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) AND " +
-            "(tu_inner.create_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL) " +
-            "LIMIT ?7 OFFSET ?8 " +
+            "(tu_inner.create_time BETWEEN ?4 AND ?5 OR ?4 IS NULL OR ?5 IS NULL) " +
+            "LIMIT ?6 OFFSET ?7 " +
             ")tu " +
             "LEFT JOIN t_recharge tr ON tr.user_id = tu.id AND tr.status >= 20 " +
             "LEFT JOIN t_call_bill tcb ON tcb.user_id_from = tu.id " +
@@ -209,11 +221,24 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "LEFT JOIN t_asset tas ON tas.user_id = tu.id " +
             "LEFT JOIN t_active ta ON ta.user_id = tu.id " +
             "GROUP BY tu.digitId, tu.nick, tu.phone, tu.createTime, tas.coin " +
-            "ORDER BY ?9 ",
+            "ORDER BY ?8 ",
             nativeQuery = true)
     List<ConsumerDto> consumerStatisticsEx(String digitId, String nick, String phone,
                                          Date startTime, Date endTime,
                                          int limit, int offset, String order);
+
+
+    // 统计用户总数量
+    @Query(value = "SELECT COUNT(tu.digit_id) " +
+            "FROM t_user tu " +
+            "WHERE tu.identity = 0 AND " +
+            "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+            "(tu.phone LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
+            "(tu.create_time BETWEEN ?4 AND ?5 OR ?4 IS NULL OR ?5 IS NULL) ",
+            nativeQuery = true)
+    Long countConsumerStatisticsEx(String digitId, String nick, String phone,
+                                   Date startTime, Date endTime);
 
 
     // 用户数据模糊查询

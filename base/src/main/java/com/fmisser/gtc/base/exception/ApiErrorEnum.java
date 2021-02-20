@@ -23,6 +23,8 @@ public enum ApiErrorEnum {
 
     BAD_CREDENTIALS(1002, "msg.api.err.bad_credentials"),
 
+    FORBIDDEN_ACCOUNT(1010, "msg.api.err.forbidden_account"),
+
     // domain error
 
     USER_ALREADY_EXIST(10001, "msg.api.err.user_already_exist"),

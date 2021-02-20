@@ -7,10 +7,7 @@ import com.fmisser.gtc.base.dto.im.ImStateChangeDto;
 import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.repository.*;
-import com.fmisser.gtc.social.service.CouponService;
-import com.fmisser.gtc.social.service.GreetService;
-import com.fmisser.gtc.social.service.ImCallbackService;
-import com.fmisser.gtc.social.service.ImService;
+import com.fmisser.gtc.social.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -38,6 +35,8 @@ public class TencentImCallbackService implements ImCallbackService {
 
     private final ImService imService;
 
+    private final SysConfigService sysConfigService;
+
     public TencentImCallbackService(AssetRepository assetRepository,
                                     UserRepository userRepository,
                                     MessageBillRepository messageBillRepository,
@@ -45,7 +44,8 @@ public class TencentImCallbackService implements ImCallbackService {
                                     CouponRepository couponRepository,
                                     ActiveRepository activeRepository,
                                     GreetService greetService,
-                                    ImService imService) {
+                                    ImService imService,
+                                    SysConfigService sysConfigService) {
         this.assetRepository = assetRepository;
         this.userRepository = userRepository;
         this.messageBillRepository = messageBillRepository;
@@ -54,6 +54,7 @@ public class TencentImCallbackService implements ImCallbackService {
         this.activeRepository = activeRepository;
         this.greetService = greetService;
         this.imService = imService;
+        this.sysConfigService = sysConfigService;
     }
 
     @Override
@@ -76,7 +77,6 @@ public class TencentImCallbackService implements ImCallbackService {
                 activeRepository.save(active);
 
                 // 打招呼功能
-                // 审核， 不处理打招呼逻辑
 //                greetService.createGreet(userOptional.get());
             }
         }
@@ -89,6 +89,11 @@ public class TencentImCallbackService implements ImCallbackService {
         ImCbResp resp = new ImCbResp();
         resp.setActionStatus("OK");
         resp.setErrorCode(0);
+
+        if (sysConfigService.isAppAudit()) {
+            // 审核中，消息聊天不扣费
+            return resp;
+        }
 
         // TODO: 2020/11/20 记录数据
 
@@ -148,6 +153,11 @@ public class TencentImCallbackService implements ImCallbackService {
         ImCbResp resp = new ImCbResp();
         resp.setActionStatus("OK");
         resp.setErrorCode(0);
+
+        if (sysConfigService.isAppAudit()) {
+            // 审核中消息聊天不扣费
+            return resp;
+        }
 
         // TODO: 2020/11/20 记录数据
 

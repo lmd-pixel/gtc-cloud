@@ -29,14 +29,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final PasswordEncoder passwordEncoder;
 
-    private final CommonAuthenticationProvider commonAuthenticationProvider;
+//    private final CommonAuthenticationProvider commonAuthenticationProvider;
 
     public WebSecurityConfig(@Qualifier("top") UserDetailsService userDetailsService,
-                             PasswordEncoder passwordEncoder,
-                             CommonAuthenticationProvider commonAuthenticationProvider) {
+                             PasswordEncoder passwordEncoder) {
+//                             CommonAuthenticationProvider commonAuthenticationProvider) {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
-        this.commonAuthenticationProvider = commonAuthenticationProvider;
+//        this.commonAuthenticationProvider = commonAuthenticationProvider;
     }
 
     @Bean
@@ -51,9 +51,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //        auth.inMemoryAuthentication()
 //                .withUser("fmisser")
 //                .password(passwordEncoder().encode("123456")).roles("USER");
+
+//        auth.authenticationProvider(commonAuthenticationProvider);
         auth.userDetailsService(userDetailsService)
                 .passwordEncoder(passwordEncoder);
-//        auth.authenticationProvider(commonAuthenticationProvider);
     }
 
 //    @Override

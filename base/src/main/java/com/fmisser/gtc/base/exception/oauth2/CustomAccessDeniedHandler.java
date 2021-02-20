@@ -16,7 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * 自定义security禁止访问异常返回结构
+ * 自定义访问异常返回结构
+ * 权限不足等
  */
 @Component("access_denied_handler")
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
@@ -35,8 +36,17 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException, ServletException {
 
-        ApiException exception =  new ApiException(ApiErrorEnum.ACCESS_DENIED.getCode(),
-                localeMessageUtil.getLocaleErrorMessage(ApiErrorEnum.ACCESS_DENIED));
+        ApiException exception;
+
+        if (accessDeniedException instanceof ForbiddenAccountAccessDeniedException) {
+            // 账号封禁
+            exception = new ApiException(ApiErrorEnum.FORBIDDEN_ACCOUNT.getCode(),
+                    accessDeniedException.getMessage());
+        } else {
+            // 通用访问失败
+            exception = new ApiException(ApiErrorEnum.ACCESS_DENIED.getCode(),
+                    localeMessageUtil.getLocaleErrorMessage(ApiErrorEnum.ACCESS_DENIED));
+        }
 
         response.setContentType("application/json;charset=utf-8");
         response.getWriter().print(objectMapper.writeValueAsString(ApiResp.failed(exception)));

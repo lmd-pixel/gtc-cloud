@@ -45,20 +45,27 @@ public class Forbidden {
     @Column
     private String message;
 
+    /**
+     * 封禁天数
+     * 0表示永久，大于0为具体天数
+     */
+    @Column
+    private Integer days;
+
     // 开始时间
-    @Column(nullable = false)
+    @Column
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date startTime;
 
-    // 结束时间，如果为null，则表示永久
+    // 结束时间
     @Column
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date endTime;
 
-    @Column(nullable = false, columnDefinition = "int default 1")
-    private int disable = 1;
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private int disable = 0;
 
     @CreatedDate
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")

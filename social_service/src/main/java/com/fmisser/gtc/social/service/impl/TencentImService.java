@@ -98,14 +98,17 @@ public class TencentImService implements ImService {
 //        call.setUserIdTo(userTo.getId());
 
         if (userFrom.getIdentity() == 1 && userTo.getIdentity() == 0) {
+            // 主播打给用户
             call.setUserIdFrom(userTo.getId());
             call.setUserIdTo(userFrom.getId());
             call.setCallMode(1);
         } else if (userFrom.getIdentity() == 0 && userTo.getIdentity() == 1) {
+            // 用户打给用户
             call.setUserIdFrom(userFrom.getId());
             call.setUserIdTo(userTo.getId());
             call.setCallMode(0);
         } else if (userFrom.getIdentity() == 1 && userTo.getIdentity() == 1) {
+            // 主播打给主播
             call.setUserIdFrom(userFrom.getId());
             call.setUserIdTo(userTo.getId());
             call.setCallMode(3);
@@ -125,7 +128,7 @@ public class TencentImService implements ImService {
     }
 
     @Override
-    public Map<String, Object> hangup(User user, Long roomId) throws ApiException {
+    public Map<String, Object> hangup(User user, Long roomId, String version) throws ApiException {
         // 结束不进行任何结算
 
         Map<String, Object> resultMap = new HashMap<>();
@@ -152,8 +155,8 @@ public class TencentImService implements ImService {
         }
 
         // 判断是否在审核
-        if (sysConfigService.isAppAudit()) {
-            // 过审 不显示时间
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
+            // 过审版本 不显示时间
             resultMap.put("duration", 0);
         } else {
             resultMap.put("duration", call.getDuration());
@@ -200,7 +203,7 @@ public class TencentImService implements ImService {
 
     @Transactional
     @Override
-    public Map<String, Object> updateCall(User user, Long roomId) throws ApiException {
+    public Map<String, Object> updateCall(User user, Long roomId, String version) throws ApiException {
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("need_close", 0);
         resultMap.put("need_recharge", 0);
@@ -238,8 +241,8 @@ public class TencentImService implements ImService {
 
         BigDecimal callPrice;
         // 判断是否在审核
-        if (sysConfigService.isAppAudit()) {
-            // 过审 不计费
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
+            // 过审版本 不计费
             callPrice = BigDecimal.ZERO;
         } else {
             // 获取通话费用

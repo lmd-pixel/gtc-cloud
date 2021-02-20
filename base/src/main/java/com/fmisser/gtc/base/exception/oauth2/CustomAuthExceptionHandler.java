@@ -17,6 +17,7 @@ import java.io.IOException;
 
 /**
  * 自定义认证失败异常返回结构
+ * token无效提示等
  */
 
 @Component("auth_ex_handler")
