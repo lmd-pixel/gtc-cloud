@@ -65,8 +65,12 @@ public class GreetServiceImpl implements GreetService {
 
         // 寻找count个主播
 //        List<User> anchorList = userService.getRandAnchorList(totalCount);
-        List<RecommendAnchorDto> anchorList = recommendService.getRandRecommendAnchorList(totalCount);
-        List<GreetMessage> greetMessageList = greetMessageService.getRandGreetMessage(totalCount);
+
+        // 男用户选择女主播骚扰， 女用户选择男主播骚扰
+        List<RecommendAnchorDto> anchorList = recommendService
+                .getRandRecommendAnchorList(totalCount, user.getGender() == 0 ? 1 : 0);
+        List<GreetMessage> greetMessageList = greetMessageService
+                .getRandGreetMessage(totalCount, user.getGender() == 0 ? 1 : 0);
         List<Greet> greetList = new ArrayList<>();
         for (int i = 0; i < anchorList.size(); i++) {
 //            User anchor = anchorList.get(i);

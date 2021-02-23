@@ -137,7 +137,7 @@ public class UserManagerController {
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
             @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query"),
             @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query"),
-            @ApiImplicitParam(name = "type", value = "推荐模块 0: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人 3：通话推荐主播", required = true, paramType = "query"),
+            @ApiImplicitParam(name = "type", value = "推荐模块 0: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人 3：私聊推荐主播 4： 通话推荐主播", required = true, paramType = "query"),
             @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
@@ -145,11 +145,12 @@ public class UserManagerController {
     @PreAuthorize("hasAnyRole('MANAGER')")
     ApiResp<List<RecommendDto>> getRecommendList(@RequestParam(value = "digitId", required = false) String digitId,
                                                  @RequestParam(value = "nick", required = false) String nick,
-                                                 @RequestParam(value = "type") @Range(min = 0, max = 3, message = "type参数范围不合法") Integer type,
+                                                 @RequestParam(value = "gender", required = false) Integer gender,
+                                                 @RequestParam(value = "type") @Range(min = 0, max = 4, message = "type参数范围不合法") Integer type,
                                                  @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
                                                  @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
         Pair<List<RecommendDto>, Map<String, Object>> recommendDtoList =
-                userManagerService.getRecommendList(digitId, nick, type, pageIndex, pageSize);
+                userManagerService.getRecommendList(digitId, nick, gender, type, pageIndex, pageSize);
         return ApiResp.succeed(recommendDtoList.getFirst(), recommendDtoList.getSecond());
     }
 
@@ -157,13 +158,13 @@ public class UserManagerController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
             @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query", required = true),
-            @ApiImplicitParam(name = "type", value = "推荐模块 0: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人 3：通话推荐主播", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "type", value = "推荐模块 0: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人 3：私聊推荐主播 4： 通话推荐主播", paramType = "query", defaultValue = "0", dataType = "Integer"),
             @ApiImplicitParam(name = "recommend", value = "是否推荐 0：取消推荐 1：设置成推荐", paramType = "query", defaultValue = "0", dataType = "Integer"),
             @ApiImplicitParam(name = "level", value = "推荐排序数值 如果取消推荐，这个字段可以不填", paramType = "query", dataType = "Integer")
     })
     @PostMapping(value = "/config-recommend")
     ApiResp<Integer> configRecommend(@RequestParam(value = "digitId") String digitId,
-                                     @RequestParam(value = "type") @Range(min = 0, max = 3, message = "type参数范围不合法") int type,
+                                     @RequestParam(value = "type") @Range(min = 0, max = 4, message = "type参数范围不合法") int type,
                                      @RequestParam(value = "recommend") @Range(min = 0, max = 1, message = "recommend参数范围不合法") int recommend,
                                      @RequestParam(value = "level", required = false) Long level) {
         // check params

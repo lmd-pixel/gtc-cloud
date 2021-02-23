@@ -109,7 +109,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<Long> userStatistics(Date start, Date end);
 
 
-    // 主播数据模糊查询
+    // 主播数据模糊查询(错误)
     @Query(value = "SELECT tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.gender AS gender, " +
             "tu.follows AS follows, tu.create_time AS createTime, " +
             "SUM(IF(tc.type=0,tc.duration,0)) AS audioDuration, " +
@@ -146,7 +146,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<AnchorDto> anchorStatistics(String digitId, String nick, String phone, Integer gender,
                                      Date startTime, Date endTime, Pageable pageable);
 
-    // 改良版主播数据模糊查询
+    // 改良版主播数据模糊查询(也是错的)
     @Query(value = "SELECT tu.digitId AS digitId, tu.nick AS nick, tu.phone AS phone, tu.gender AS gender, " +
             "tu.follows AS follows, tu.createTime AS createTime, " +
             "SUM(IF(tc.type=0,tc.duration,0)) AS audioDuration, " +
@@ -158,7 +158,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "tas.coin As coin, " +
             "MAX(ta.active_time) AS activeTime " +
             "FROM " +
-            "(SELECT tu_inner.id, tu_inner.digit_id AS digitId, tu_inner.nick AS nick, tu_inner.phone AS phone, " +
+            "(SELECT tu_inner.id AS id, tu_inner.digit_id AS digitId, tu_inner.nick AS nick, tu_inner.phone AS phone, " +
             "tu_inner.gender AS gender, tu_inner.follows AS follows, tu_inner.create_time AS createTime " +
             "FROM t_user tu_inner WHERE tu_inner.identity = 1 AND " +
             "(tu_inner.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
@@ -181,6 +181,30 @@ public interface UserRepository extends JpaRepository<User, Long> {
                                        Date startTime, Date endTime,
                                        int limit, int offset, String order);
 
+    // 改良版主播数据模糊查询（正确了？）
+    @Query(value = "SELECT tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.gender AS gender, " +
+            "tu.follows AS follows, tu.create_time AS createTime, " +
+            "(SELECT SUM(tc.duration) FROM t_call tc WHERE tc.user_id_to = tu.id AND type = 0) AS audioDuration, " +
+            "(SELECT SUM(tc.duration) FROM t_call tc WHERE tc.user_id_to = tu.id AND type = 1) AS videoDuration, " +
+            "(SELECT SUM(tcb.profit_coin) FROM t_call_bill tcb WHERE tcb.user_id_to = tu.id AND type = 0) AS audioProfit, " +
+            "(SELECT SUM(tcb.profit_coin) FROM t_call_bill tcb WHERE tcb.user_id_to = tu.id AND type = 1) AS videoProfit, " +
+            "(SELECT SUM(tmb.profit_coin) FROM t_message_bill tmb WHERE tmb.user_id_to = tu.id) AS messageProfit, " +
+            "(SELECT SUM(tgb.profit_coin) FROM t_gift_bill tgb WHERE tgb.user_id_to = tu.id) AS giftProfit, " +
+            "(SELECT tas.coin FROM t_asset tas WHERE tas.user_id = tu.id) AS coin, " +
+            "(SELECT MAX(ta.active_time) FROM t_active ta WHERE ta.user_id = tu.id) AS activeTime " +
+            "FROM t_user tu WHERE tu.identity = 1 AND " +
+            "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+            "(tu.phone LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
+            "(tu.gender LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) AND " +
+            "(tu.create_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL) " +
+            "ORDER BY ?9 " +
+            "LIMIT ?7 OFFSET ?8 ",
+            nativeQuery = true)
+    List<AnchorDto> anchorStatisticsEx2(String digitId, String nick, String phone, Integer gender,
+                                       Date startTime, Date endTime,
+                                       int limit, int offset, String order);
+
     // 统计主播查询的总数量
     @Query(value = "SELECT COUNT(tu.id) " +
             "FROM t_user tu " +
@@ -194,7 +218,29 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Long countAnchorStatisticsEx(String digitId, String nick, String phone, Integer gender,
                                  Date startTime, Date endTime);
 
-    // 改良版 用户数据模糊查询
+    // 改良版 用户数据模糊查询（正确？）
+    @Query(value = "SELECT tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, " +
+            "tu.create_time AS createTime, " +
+            "(SELECT SUM(tr.coin) FROM t_recharge tr WHERE tr.user_id = tu.id AND tr.status >= 20) AS rechargeCoin, " +
+            "(SELECT SUM(tcb.origin_coin) FROM t_call_bill tcb WHERE tcb.user_id_from = tu.id AND type = 0) AS audioCoin, " +
+            "(SELECT SUM(tcb.origin_coin) FROM t_call_bill tcb WHERE tcb.user_id_from = tu.id AND type = 1) AS videoCoin, " +
+            "(SELECT SUM(tmb.origin_coin) FROM t_message_bill tmb WHERE tmb.user_id_from = tu.id) AS messageCoin, " +
+            "(SELECT SUM(tgb.origin_coin) FROM t_gift_bill tgb WHERE tgb.user_id_from = tu.id ) AS giftCoin, " +
+            "(SELECT tas.coin FROM t_asset tas WHERE tas.user_id = tu.id) AS coin, " +
+            "(SELECT MAX(ta.active_time) FROM t_active ta WHERE ta.user_id = tu.id) AS activeTime " +
+            "FROM t_user tu WHERE tu.identity = 0 AND " +
+            "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+            "(tu.phone LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
+            "(tu.create_time BETWEEN ?4 AND ?5 OR ?4 IS NULL OR ?5 IS NULL) " +
+            "ORDER BY ?8 " +
+            "LIMIT ?6 OFFSET ?7 ",
+            nativeQuery = true)
+    List<ConsumerDto> consumerStatisticsEx2(String digitId, String nick, String phone,
+                                            Date startTime, Date endTime,
+                                            int limit, int offset, String order);
+
+    // 改良版 用户数据模糊查询（还是不对）
     @Query(value = "SELECT tu.digitId AS digitId, tu.nick AS nick, tu.phone AS phone, " +
             "tu.createTime AS createTime, " +
             "SUM(tr.coin) AS rechargeCoin, " +
@@ -227,7 +273,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
                                          Date startTime, Date endTime,
                                          int limit, int offset, String order);
 
-
     // 统计用户总数量
     @Query(value = "SELECT COUNT(tu.digit_id) " +
             "FROM t_user tu " +
@@ -241,7 +286,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                                    Date startTime, Date endTime);
 
 
-    // 用户数据模糊查询
+    // 用户数据模糊查询(不对)
     @Query(value = "SELECT tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, " +
             "tu.create_time AS createTime, " +
             "SUM(tr.coin) AS rechargeCoin, " +

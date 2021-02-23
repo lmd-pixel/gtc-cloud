@@ -7,5 +7,6 @@ import com.fmisser.gtc.base.exception.ApiException;
 import java.util.List;
 
 public interface RecommendService {
-    List<RecommendAnchorDto> getRandRecommendAnchorList(Integer count) throws ApiException;
+    // 获取随机私聊推荐主播
+    List<RecommendAnchorDto> getRandRecommendAnchorList(Integer count, int gender) throws ApiException;
 }

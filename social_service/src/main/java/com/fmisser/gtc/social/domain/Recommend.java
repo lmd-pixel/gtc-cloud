@@ -33,7 +33,7 @@ public class Recommend {
     @Column(nullable = false)
     private Long userId;
 
-    // 0: 推荐 1：活跃 2： 新人  3: 通话主播
+    // 0: 推荐 1：活跃 2： 新人  3: 私聊男女主播
     @Column
     private int type;
 

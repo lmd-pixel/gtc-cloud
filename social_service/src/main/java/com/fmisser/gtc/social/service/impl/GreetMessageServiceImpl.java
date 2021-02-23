@@ -16,8 +16,8 @@ public class GreetMessageServiceImpl implements GreetMessageService {
     private GreetMessageRepository greetMessageRepository;
 
     @Override
-    public List<GreetMessage> getRandGreetMessage(int count) throws ApiException {
-        return greetMessageRepository.findRandGreetMessageList(count);
+    public List<GreetMessage> getRandGreetMessage(int count, int type) throws ApiException {
+        return greetMessageRepository.findRandGreetMessageList(count, type);
     }
 
     @Override

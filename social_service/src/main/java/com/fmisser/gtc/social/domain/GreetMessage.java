@@ -27,6 +27,10 @@ public class GreetMessage {
     @Column(nullable = false)
     private String message;
 
+    // 0: 女性用语 1: 男性用语
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private int type = 0;
+
     @Column(nullable = false, columnDefinition = "int default 0")
     private int disable = 0;
 }

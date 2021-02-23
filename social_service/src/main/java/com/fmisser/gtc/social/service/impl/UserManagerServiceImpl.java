@@ -101,7 +101,7 @@ public class UserManagerServiceImpl implements UserManagerService {
 //                .anchorStatistics(digitId, nick, phone, gender, startTime, endTime, pageable);
 
         List<AnchorDto> anchorDtoList = userRepository
-                .anchorStatisticsEx(digitId, nick, phone, gender, startTime, endTime, pageSize, pageIndex - 1, sortProp);
+                .anchorStatisticsEx2(digitId, nick, phone, gender, startTime, endTime, pageSize, pageIndex - 1, sortProp);
 
         Long totalCount = userRepository.countAnchorStatisticsEx(digitId, nick, phone, gender, startTime, endTime);
         Long totalPage = (totalCount / pageSize) + 1;
@@ -169,7 +169,7 @@ public class UserManagerServiceImpl implements UserManagerService {
 //                .consumerStatistics(digitId, nick, phone, startTime, endTime, pageable);
 
         List<ConsumerDto> consumerDtoList = userRepository
-                .consumerStatisticsEx(digitId, nick, phone, startTime, endTime, pageSize, pageIndex - 1, sortProp);
+                .consumerStatisticsEx2(digitId, nick, phone, startTime, endTime, pageSize, pageIndex - 1, sortProp);
 
         CalcConsumeDto calcConsumeDto = userRepository.calcConsume(digitId, nick, phone, startTime, endTime);
         Long totalCount = calcConsumeDto.getCount();
@@ -203,11 +203,11 @@ public class UserManagerServiceImpl implements UserManagerService {
     }
 
     @Override
-    public Pair<List<RecommendDto>, Map<String, Object>> getRecommendList(String digitId, String nick, Integer type,
-                                               int pageIndex, int pageSize) throws ApiException {
+    public Pair<List<RecommendDto>, Map<String, Object>> getRecommendList(String digitId, String nick, Integer gender,
+                                                                          Integer type, int pageIndex, int pageSize) throws ApiException {
         Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
         Page<RecommendDto> recommendDtoPage =
-                recommendRepository.getRecommendList(digitId, nick, type, pageable);
+                recommendRepository.getRecommendList(digitId, nick, gender, type, pageable);
 
         Map<String, Object> extra = new HashMap<>();
         extra.put("totalPage", recommendDtoPage.getTotalPages());
@@ -333,6 +333,9 @@ public class UserManagerServiceImpl implements UserManagerService {
                     // TODO: 2020/12/5 主播认证通过
                     user.setIdentity(1);
                     userRepository.save(user);
+
+                    // 加入到私聊推荐池
+                    configRecommend(user.getDigitId(), 3, 1, 1L);
                 }
             }
         }

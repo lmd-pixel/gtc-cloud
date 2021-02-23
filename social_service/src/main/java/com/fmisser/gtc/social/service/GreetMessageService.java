@@ -6,6 +6,6 @@ import com.fmisser.gtc.social.domain.GreetMessage;
 import java.util.List;
 
 public interface GreetMessageService {
-    List<GreetMessage> getRandGreetMessage(int count) throws ApiException;
+    List<GreetMessage> getRandGreetMessage(int count, int type) throws ApiException;
     List<GreetMessage> getMessageList(List<Integer> idList) throws ApiException;
 }

@@ -27,8 +27,9 @@ public class RecommendServiceImpl implements RecommendService {
     }
 
     @Override
-    public List<RecommendAnchorDto> getRandRecommendAnchorList(Integer count) throws ApiException {
-        List<RecommendAnchorDto> recommendAnchorDtoList = recommendRepository.getRandRecommendAnchor();
+    public List<RecommendAnchorDto> getRandRecommendAnchorList(Integer count, int gender) throws ApiException {
+        List<RecommendAnchorDto> recommendAnchorDtoList =
+                recommendRepository.getRandRecommendAnchorWithGender(3, gender);
         List<RecommendAnchorDto> randList = new ArrayList<>();
 
         count = Math.min(count, recommendAnchorDtoList.size());

@@ -30,8 +30,9 @@ public class RecommendController {
 //    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @GetMapping(value = "/rand-anchor-list")
     ApiResp<List<RecommendAnchorDto>> gerRandRecommendAnchorList(
-            @RequestParam(value = "count", required = false, defaultValue = "6") Integer count ) {
-        List<RecommendAnchorDto> recommendDtoList = recommendService.getRandRecommendAnchorList(count);
+            @RequestParam(value = "count", required = false, defaultValue = "6") Integer count,
+            @RequestParam(value = "gender", required = false, defaultValue = "0") Integer gender) {
+        List<RecommendAnchorDto> recommendDtoList = recommendService.getRandRecommendAnchorList(count, gender);
         return ApiResp.succeed(recommendDtoList);
     }
 }
