@@ -38,7 +38,7 @@ public interface UserManagerService {
                                         int pageIndex, int pageSize) throws ApiException;
 
     // 设置主播推荐
-    int configRecommend(String digitId, int type, int recommend, Long level) throws ApiException;
+    int configRecommend(String digitId, int type, int recommend, Long level, Date startTime, Date endTime) throws ApiException;
 
     // 获取主播审核列表
     Pair<List<IdentityAudit>, Map<String, Object>> getAnchorAuditList(String digitId, String nick,

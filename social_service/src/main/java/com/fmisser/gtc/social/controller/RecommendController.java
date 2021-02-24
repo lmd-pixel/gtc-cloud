@@ -32,7 +32,7 @@ public class RecommendController {
     ApiResp<List<RecommendAnchorDto>> gerRandRecommendAnchorList(
             @RequestParam(value = "count", required = false, defaultValue = "6") Integer count,
             @RequestParam(value = "gender", required = false, defaultValue = "0") Integer gender) {
-        List<RecommendAnchorDto> recommendDtoList = recommendService.getRandRecommendAnchorList(count, gender);
+        List<RecommendAnchorDto> recommendDtoList = recommendService.getRandRecommendAnchorListForCall(count);
         return ApiResp.succeed(recommendDtoList);
     }
 }

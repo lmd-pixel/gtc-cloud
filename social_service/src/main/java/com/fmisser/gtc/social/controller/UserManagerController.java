@@ -160,19 +160,23 @@ public class UserManagerController {
             @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query", required = true),
             @ApiImplicitParam(name = "type", value = "推荐模块 0: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人 3：私聊推荐主播 4： 通话推荐主播", paramType = "query", defaultValue = "0", dataType = "Integer"),
             @ApiImplicitParam(name = "recommend", value = "是否推荐 0：取消推荐 1：设置成推荐", paramType = "query", defaultValue = "0", dataType = "Integer"),
-            @ApiImplicitParam(name = "level", value = "推荐排序数值 如果取消推荐，这个字段可以不填", paramType = "query", dataType = "Integer")
+            @ApiImplicitParam(name = "level", value = "推荐排序数值 如果取消推荐，这个字段可以不填", paramType = "query", dataType = "Integer"),
+            @ApiImplicitParam(name = "startTime", value = "起始时间, 如果是通话推荐主播，这个字段必须", paramType = "query", dataType = "date"),
+            @ApiImplicitParam(name = "endTime", value = "结束时间，如果是通话推荐主播，这个字段必须", paramType = "query", dataType = "date")
     })
     @PostMapping(value = "/config-recommend")
     ApiResp<Integer> configRecommend(@RequestParam(value = "digitId") String digitId,
                                      @RequestParam(value = "type") @Range(min = 0, max = 4, message = "type参数范围不合法") int type,
                                      @RequestParam(value = "recommend") @Range(min = 0, max = 1, message = "recommend参数范围不合法") int recommend,
-                                     @RequestParam(value = "level", required = false) Long level) {
+                                     @RequestParam(value = "level", required = false) Long level,
+                                     @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "HH:mm:ss") Date startTime,
+                                     @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "HH:mm:ss") Date endTime) {
         // check params
         if (recommend == 1 && Objects.isNull(level)) {
             return ApiResp.failed(-1, "排序值未设置");
         }
 
-        int ret = userManagerService.configRecommend(digitId, type, recommend, level);
+        int ret = userManagerService.configRecommend(digitId, type, recommend, level, startTime, endTime);
         return ApiResp.succeed(ret, "设置成功");
     }
 

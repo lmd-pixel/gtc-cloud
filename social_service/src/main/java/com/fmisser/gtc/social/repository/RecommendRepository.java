@@ -39,7 +39,7 @@ public interface RecommendRepository extends JpaRepository<Recommend, Long> {
     // 获取随机推荐主播
     // jpa sql 无法使用 rand 函数，这里取出所有数据再筛选
     @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.RecommendAnchorDto(" +
-            "tu.id, tu.digitId, tu.nick, tu.gender, tu.head) " +
+            "tu.id, tu.digitId, tu.nick, tu.gender, tu.head, tr.startTime, tr.endTime) " +
             "FROM Recommend tr " +
             "INNER JOIN User tu ON tu.id = tr.userId " +
             "WHERE tr.recommend = 1 AND tr.type = ?1 " +
@@ -50,7 +50,7 @@ public interface RecommendRepository extends JpaRepository<Recommend, Long> {
     // 获取随机推荐主播,分男女
     // jpa sql 无法使用 rand 函数，这里取出所有数据再筛选
     @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.RecommendAnchorDto(" +
-            "tu.id, tu.digitId, tu.nick, tu.gender, tu.head) " +
+            "tu.id, tu.digitId, tu.nick, tu.gender, tu.head, tr.startTime, tr.endTime) " +
             "FROM Recommend tr " +
             "INNER JOIN User tu ON tu.id = tr.userId AND tu.gender = ?2 " +
             "WHERE tr.recommend = 1 AND tr.type = ?1 " +

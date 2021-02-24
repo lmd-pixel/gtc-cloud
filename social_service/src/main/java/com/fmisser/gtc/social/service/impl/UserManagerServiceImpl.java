@@ -218,7 +218,7 @@ public class UserManagerServiceImpl implements UserManagerService {
     }
 
     @Override
-    public int configRecommend(String digitId, int type, int recommend, Long level) throws ApiException {
+    public int configRecommend(String digitId, int type, int recommend, Long level, Date startTime, Date endTime) throws ApiException {
 
         if (Objects.nonNull(level) && level > 999999) {
             throw new ApiException(-1, "推荐值过大，不超过999999");
@@ -236,6 +236,12 @@ public class UserManagerServiceImpl implements UserManagerService {
             recommendDo.setType(type);
             recommendDo.setRecommend(1);
             recommendDo.setLevel(level);
+
+            if (type == 4) {
+                // 通话主播需要设定排班时间段
+
+            }
+
         } else {
             recommendDo = optionalRecommend.get();
             recommendDo.setRecommend(recommend);
@@ -314,7 +320,7 @@ public class UserManagerServiceImpl implements UserManagerService {
             } else {
                 // 判断是否不同的审核都已满足,如果都通过，则完成了认证
                 boolean allPass = true;
-                for (int type = 0; type < 3; type++) {
+                for (int type = 1; type <= 3; type++) {
                     if (type == identityAudit.getType()) {
                         continue;
                     }
@@ -335,7 +341,7 @@ public class UserManagerServiceImpl implements UserManagerService {
                     userRepository.save(user);
 
                     // 加入到私聊推荐池
-                    configRecommend(user.getDigitId(), 3, 1, 1L);
+                    configRecommend(user.getDigitId(), 3, 1, 1L, null, null);
                 }
             }
         }

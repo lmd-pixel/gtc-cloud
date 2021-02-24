@@ -280,11 +280,11 @@ public class UserController {
         User userDest = userService.getUserByDigitId(digitId);
         Integer ret = userService.callPreCheck(userDo, userDest, type);
         if (ret == -1) {
-            return ApiResp.succeed(ret, "对方非主播用户，暂不支持通话");
+            return ApiResp.failed(ret, "对方非主播用户，暂不支持通话");
         } else if (ret == 0) {
-            return ApiResp.succeed(ret, "聊币余额不足，请尽快充值");
+            return ApiResp.failed(ret, "聊币余额不足，请尽快充值");
         } else if (ret == -2) {
-            return ApiResp.succeed(ret, "对方余额不足，无法发起通话");
+            return ApiResp.failed(ret, "对方余额不足，无法发起通话");
         } else {
             return ApiResp.succeed(ret);
         }
