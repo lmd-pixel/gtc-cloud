@@ -27,6 +27,7 @@ public interface UserService {
     User updateProfile(User user,
                        String nick, String birth, String city,
                        String profession, String intro, String labels, String callPrice, String videoPrice, String messagePrice,
+                       Integer mode, Integer rest, String restStartDate, String restEndDate,
                        Map<String, MultipartFile> multipartFileMap) throws ApiException;
 
     // 更新用户照片

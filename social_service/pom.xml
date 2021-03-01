@@ -89,6 +89,12 @@
             <version>0.4.13</version>
         </dependency>
 
+        <!-- redis       -->
+        <!--        <dependency>-->
+        <!--            <groupId>org.springframework.boot</groupId>-->
+        <!--            <artifactId>spring-boot-starter-data-redis</artifactId>-->
+        <!--        </dependency>-->
+
         <!-- 腾讯推送 -->
         <dependency>
             <groupId>com.github.xingePush</groupId>
@@ -96,11 +102,14 @@
             <version>1.2.4</version>
         </dependency>
 
-        <!-- redis       -->
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.boot</groupId>-->
-<!--            <artifactId>spring-boot-starter-data-redis</artifactId>-->
-<!--        </dependency>-->
+        <!-- 腾讯云 -->
+        <dependency>
+            <groupId>com.tencentcloudapi</groupId>
+            <artifactId>tencentcloud-sdk-java</artifactId>
+            <!-- go to https://search.maven.org/search?q=tencentcloud-sdk-java and get the latest version. -->
+            <!-- 请到https://search.maven.org/search?q=tencentcloud-sdk-java查询所有版本，最新版本如下 -->
+            <version>3.1.214</version>
+        </dependency>
 
         <dependency>
             <groupId>com.fmisser.gtc</groupId>

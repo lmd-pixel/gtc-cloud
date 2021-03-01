@@ -1,6 +1,9 @@
 package com.fmisser.gtc.social.service;
 
 import com.fmisser.gtc.base.exception.ApiException;
+import org.springframework.data.util.Pair;
+
+import java.math.BigDecimal;
 
 public interface SysConfigService {
 
@@ -12,4 +15,8 @@ public interface SysConfigService {
 
     // 消息骚扰是否打开
     boolean isMsgGreetEnable() throws ApiException;
+
+    // 获取提现配置
+    // 返回提现手续费和最低提现金额
+    Pair<BigDecimal, BigDecimal> getWithdrawConfig() throws ApiException;
 }

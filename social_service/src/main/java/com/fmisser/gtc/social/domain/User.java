@@ -113,6 +113,26 @@ public class User {
     @Column(nullable = false, columnDefinition = "int default 0")
     private int identity = 0;
 
+    // 模式 0: 音视频 1: 音频 2: 视频
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private int mode = 0;
+
+    // 休息状态 0： 不休息  1： 休息
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private int rest = 0;
+
+    // 休息开始时间
+    @JsonFormat(timezone = "GMT+8", pattern = "HH:mm")
+    @DateTimeFormat(pattern = "HH:mm")
+    @Column
+    private Date restStartDate;
+
+    // 休息停止时间
+    @JsonFormat(timezone = "GMT+8", pattern = "HH:mm")
+    @DateTimeFormat(pattern = "HH:mm")
+    @Column
+    private Date restEndDate;
+
     // 关注数量
     @Column(nullable = false, columnDefinition = "int default 0")
     private int follows = 0;

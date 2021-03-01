@@ -85,14 +85,20 @@ public class UserController {
                                 @RequestParam(value = "labels", required = false) String labels,
                                 @RequestParam(value = "callPrice", required = false) String callPrice,
                                 @RequestParam(value = "videoPrice", required = false) String videoPrice,
-                                @RequestParam(value = "messagePrice", required = false) String messagePrice) {
+                                @RequestParam(value = "messagePrice", required = false) String messagePrice,
+                                @RequestParam(value = "mode", required = false) Integer mode,
+                                @RequestParam(value = "rest", required = false) Integer rest,
+                                @RequestParam(value = "restStartDate", required = false) String restStartDate,
+                                @RequestParam(value = "restEndDate", required = false) String restEndDate) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
         //
         // TODO: 2020/11/10 check params
         User user = userService.updateProfile(userDo, nick, birth, city, profession,
-                intro, labels, callPrice, videoPrice, messagePrice, request.getFileMap());
+                intro, labels, callPrice, videoPrice, messagePrice,
+                mode, rest, restStartDate, restEndDate,
+                request.getFileMap());
 
         // 针对版本审核
         if (sysConfigService.getAppAuditVersion().equals(version)) {
@@ -213,13 +219,15 @@ public class UserController {
     }
 
     @PostMapping(value = "/bind-alipay")
-    ApiResp<Asset> bindAlipay(@RequestParam("alipayName") String alipayName,
-                                @RequestParam("alipayNumber") String alipayNumber) {
+    ApiResp<Asset> bindAlipay(
+            @RequestParam("alipayName") String alipayName,
+            @RequestParam("alipayNumber") String alipayNumber,
+            @RequestParam("phone") String phone) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
 
-        Asset asset = assetService.bindAlipay(userDo, alipayName, alipayNumber);
+        Asset asset = assetService.bindAlipay(userDo, alipayName, alipayNumber, phone);
         return ApiResp.succeed(asset);
 
     }

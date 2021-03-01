@@ -38,4 +38,7 @@ public interface ImService {
     int sendGiftMsg(User userFrom, User userTo, Gift gift, int count) throws ApiException;
 
     int sendAfterSendMsg(User userFrom, User userTo, int tag, int coin, int card) throws ApiException;
+
+    // 腾讯api 结束房间
+    int trtcDismissRoom(Long roomId) throws ApiException;
 }

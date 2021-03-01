@@ -21,6 +21,8 @@ public interface WithdrawAuditRepository extends JpaRepository<WithdrawAudit, Lo
 
     Optional<WithdrawAudit> findByOrderNumber(String orderNumber);
 
+    WithdrawAudit findByUserIdAndStatusLessThan(Long userId, int status);
+
     // 获取待审核列表
     @Query(value = "SELECT twa.order_number AS orderNumber, twa.draw_curr AS drawCurr, " +
             "twa.draw_max AS drawMax, twa.draw_actual As drawActual, " +

@@ -92,6 +92,9 @@ public class WithdrawAudit {
     @Column
     private String payToAccount;
 
+    @Column
+    private String payToPhone;
+
     /**
      * 0: 未审核
      * 10：审核中

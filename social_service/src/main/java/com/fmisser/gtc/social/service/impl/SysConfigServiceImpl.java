@@ -5,9 +5,11 @@ import com.fmisser.gtc.social.domain.SysConfig;
 import com.fmisser.gtc.social.repository.SysConfigRepository;
 import com.fmisser.gtc.social.service.SysConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 @Service
@@ -45,5 +47,13 @@ public class SysConfigServiceImpl implements SysConfigService {
             return false;
         }
         return sysConfig.getValue1().equals("1");
+    }
+
+    @Override
+    public Pair<BigDecimal, BigDecimal> getWithdrawConfig() throws ApiException {
+        SysConfig sysConfig = sysConfigRepository.findByName("withdraw_audit");
+        BigDecimal commFee = BigDecimal.valueOf(Double.parseDouble(sysConfig.getValue1()));
+        BigDecimal commMinWithdraw = BigDecimal.valueOf(Double.parseDouble(sysConfig.getValue2()));
+        return Pair.of(commFee, commMinWithdraw);
     }
 }

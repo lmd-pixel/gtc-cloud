@@ -11,5 +11,5 @@ import com.fmisser.gtc.social.domain.User;
 public interface AssetService {
     Asset getAsset(User user) throws ApiException;
 
-    Asset bindAlipay(User user, String alipayName, String alipayNumber) throws ApiException;
+    Asset bindAlipay(User user, String alipayName, String alipayNumber, String phone) throws ApiException;
 }

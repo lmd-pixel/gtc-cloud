@@ -67,13 +67,25 @@ public class Asset {
     @Column(nullable = false, columnDefinition = "decimal(6,2) default 0.60")
     private BigDecimal videoProfitRatio = BigDecimal.valueOf(0.60);
 
+    // 提现相关需要的手机号
+    @Column
+    private String phone;
+
+    // 提现相关需要的支付宝用户
     @Column
     private String alipayName;
 
+    // 提现相关需要的支付宝账号
     @Column
     private String alipayNumber;
 
     @JsonIgnore
     @Version
     private Long version;
+
+    @Transient
+    private BigDecimal commWithdrawFee;
+
+    @Transient
+    private BigDecimal commMinWithdraw;
 }

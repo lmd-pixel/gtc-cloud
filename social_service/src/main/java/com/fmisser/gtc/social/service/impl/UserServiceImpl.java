@@ -31,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -206,6 +207,7 @@ public class UserServiceImpl implements UserService {
     public User updateProfile(User user,
                               String nick, String birth, String city, String profession,
                               String intro, String labels, String callPrice, String videoPrice, String messagePrice,
+                              Integer mode, Integer rest, String restStartDate, String restEndDate,
                               Map<String, MultipartFile> multipartFileMap) throws ApiException {
 
         if (user.getIdentity() == 1) {
@@ -250,6 +252,20 @@ public class UserServiceImpl implements UserService {
         if (messagePrice != null && !messagePrice.isEmpty()) {
             BigDecimal price = BigDecimal.valueOf(Long.parseLong(messagePrice));
             user.setMessagePrice(price);
+        }
+        if (Objects.nonNull(mode)) {
+            user.setMode(mode);
+        }
+        if (Objects.nonNull(rest)) {
+            user.setRest(rest);
+        }
+        if (Objects.nonNull(restStartDate)) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+            user.setRestStartDate(dateFormat.parse(restStartDate));
+        }
+        if (Objects.nonNull(restEndDate)) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+            user.setRestEndDate(dateFormat.parse(restEndDate));
         }
 
         // 处理表单
@@ -573,6 +589,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findRandAnchorList(count);
     }
 
+    @SneakyThrows
     @Override
     public Integer callPreCheck(User fromUser, User toUser, int type) throws ApiException {
 
@@ -588,6 +605,43 @@ public class UserServiceImpl implements UserService {
 
         if (toUser.getIdentity() == 1 ) {
             // 接听是主播
+
+            if ((type == 0 && toUser.getMode() == 2) ||
+                    (type == 1 && toUser.getMode() == 1)) {
+                // 主播通话类型不支持
+                return -3;
+            }
+
+            if (toUser.getRest() == 1) {
+                Date now = new Date();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+                Date finalNow = dateFormat.parse(dateFormat.format(now));
+
+                Date dayEnd = dateFormat.parse("23:59");
+                Date dayStart = dateFormat.parse("00:00");
+
+                if (Objects.nonNull(toUser.getRestStartDate()) && Objects.nonNull(toUser.getRestEndDate())) {
+                    // 休息时间都不为空
+                    if (toUser.getRestStartDate().before(toUser.getRestEndDate())) {
+                        // 不超过24点
+                        if (finalNow.after(toUser.getRestStartDate()) && finalNow.before(toUser.getRestEndDate())) {
+                            // 在排班时间内
+                            return -4;
+                        }
+                    } else {
+                        // 超过24点
+                        if ((finalNow.after(toUser.getRestStartDate()) && finalNow.before(dayEnd)) ||
+                                (finalNow.after(dayStart) && finalNow.before(toUser.getRestEndDate()))) {
+                            // 在排班时间内
+                            return -4;
+                        }
+                    }
+                } else {
+                    // 时间为空认为在排班时间内
+                    return -4;
+                }
+            }
+
             callPrice = type == 0 ? toUser.getCallPrice() : toUser.getVideoPrice();
             asset = assetRepository.findByUserId(fromUser.getId());
             couponList = couponService.getCallFreeCoupon(fromUser, type);

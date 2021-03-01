@@ -14,6 +14,13 @@ import com.fmisser.gtc.social.service.CouponService;
 import com.fmisser.gtc.social.service.ImService;
 import com.fmisser.gtc.social.service.SysConfigService;
 import com.fmisser.gtc.social.service.UserService;
+import com.tencentcloudapi.common.Credential;
+import com.tencentcloudapi.common.profile.ClientProfile;
+import com.tencentcloudapi.common.profile.HttpProfile;
+import com.tencentcloudapi.cvm.v20170312.CvmClient;
+import com.tencentcloudapi.trtc.v20190722.TrtcClient;
+import com.tencentcloudapi.trtc.v20190722.models.DismissRoomRequest;
+import com.tencentcloudapi.trtc.v20190722.models.DismissRoomResponse;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.codehaus.jettison.json.JSONObject;
@@ -129,8 +136,11 @@ public class TencentImService implements ImService {
 
     @Override
     public Map<String, Object> hangup(User user, Long roomId, String version) throws ApiException {
-        // 结束不进行任何结算
 
+        // 解散房间
+        trtcDismissRoom(roomId);
+
+        // 结束不进行任何结算
         Map<String, Object> resultMap = new HashMap<>();
 
         // 根据用户不同返回不同类型数据
@@ -455,6 +465,28 @@ public class TencentImService implements ImService {
         if (!imSendMsgCbResp.getActionStatus().equals("OK")) {
             throw new ApiException(-1, imSendMsgCbResp.getErrorInfo());
         }
+
+        return 1;
+    }
+
+    @SneakyThrows
+    @Override
+    public int trtcDismissRoom(Long roomId) throws ApiException {
+        DismissRoomRequest dismissRoomRequest = new DismissRoomRequest();
+        dismissRoomRequest.setRoomId(roomId);
+        dismissRoomRequest.setSdkAppId(imConfProp.getSdkAppId());
+
+        Credential credential = new Credential(imConfProp.getSecretId(), imConfProp.getSecretKey());
+
+
+        HttpProfile httpProfile = new HttpProfile();
+        httpProfile.setEndpoint("trtc.tencentcloudapi.com");
+
+        ClientProfile clientProfile = new ClientProfile();
+        clientProfile.setHttpProfile(httpProfile);
+
+        TrtcClient client = new TrtcClient(credential, "ap-guangzhou", clientProfile);
+        client.DismissRoom(dismissRoomRequest);
 
         return 1;
     }

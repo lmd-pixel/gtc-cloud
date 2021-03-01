@@ -20,6 +20,8 @@ minio 配合ngxin 只允许访问某些类型的文件（.jpg .png .mp4等），
 所有容器以分布式、集群方式部署
 k8s redis: https://www.imooc.com/article/275617
 
+redis 集群 https://zhuanlan.zhihu.com/p/352541346
+
 redis 分布式锁 ： https://zhuanlan.zhihu.com/p/342529829
 
 图片压缩，提供缩略图方式加快进度，图片渐进式加载 Thumbnails
