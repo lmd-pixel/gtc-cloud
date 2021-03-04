@@ -3,6 +3,7 @@ package com.fmisser.gtc.social.domain;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 /**
  * 标签
@@ -11,7 +12,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "t_label", uniqueConstraints = {@UniqueConstraint(columnNames = "name")})
 @Data
-public class Label {
+public class Label implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -154,6 +154,9 @@ FROM(
 
 
 #统计查询
+set @beginTime = '2021-02-28 00:00:00';
+set @endTime = '2021-02-28 23:59:59';
+
 SELECT days,
        SUM(newUser) as newUser,
        SUM(newAnchor) AS newAnchor,

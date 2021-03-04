@@ -45,6 +45,8 @@ public interface UserService {
     // 获取主播列表
     List<User> getAnchorList(Integer type, Integer gender, int pageIndex, int pageSize) throws ApiException;
 
+    List<User> getAuditAnchorList(Integer type, Integer gender, int pageIndex, int pageSize) throws ApiException;
+
     // 获取主播信息，包括和自己关联的信息
     User getAnchorProfile(User user, User selfUser) throws ApiException;
 

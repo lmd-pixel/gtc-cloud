@@ -5,8 +5,10 @@ import com.fmisser.gtc.base.dto.social.ConsumerDto;
 import com.fmisser.gtc.base.dto.social.RecommendDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcUserDto;
 import com.fmisser.gtc.base.response.ApiResp;
+import com.fmisser.gtc.social.domain.Asset;
 import com.fmisser.gtc.social.domain.IdentityAudit;
 import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.social.service.AssetService;
 import com.fmisser.gtc.social.service.UserManagerService;
 import com.fmisser.gtc.social.service.UserService;
 import io.swagger.annotations.Api;
@@ -34,11 +36,14 @@ import java.util.*;
 public class UserManagerController {
     private final UserManagerService userManagerService;
     private final UserService userService;
+    private final AssetService assetService;
 
     public UserManagerController(UserManagerService userManagerService,
-                                 UserService userService) {
+                                 UserService userService,
+                                 AssetService assetService) {
         this.userManagerService = userManagerService;
         this.userService = userService;
+        this.assetService = assetService;
     }
 
     @ApiOperation(value = "获取主播用户列表")
@@ -137,7 +142,7 @@ public class UserManagerController {
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
             @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query"),
             @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query"),
-            @ApiImplicitParam(name = "type", value = "推荐模块 0: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人 3：私聊推荐主播 4： 通话推荐主播", required = true, paramType = "query"),
+            @ApiImplicitParam(name = "type", value = "推荐模块 0: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人 3：私聊推荐主播 4：通话推荐主播 5:审核推荐主播", required = true, paramType = "query"),
             @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
     })
@@ -146,7 +151,7 @@ public class UserManagerController {
     ApiResp<List<RecommendDto>> getRecommendList(@RequestParam(value = "digitId", required = false) String digitId,
                                                  @RequestParam(value = "nick", required = false) String nick,
                                                  @RequestParam(value = "gender", required = false) Integer gender,
-                                                 @RequestParam(value = "type") @Range(min = 0, max = 4, message = "type参数范围不合法") Integer type,
+                                                 @RequestParam(value = "type") @Range(min = 0, max = 5, message = "type参数范围不合法") Integer type,
                                                  @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
                                                  @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
         Pair<List<RecommendDto>, Map<String, Object>> recommendDtoList =
@@ -158,25 +163,30 @@ public class UserManagerController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
             @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query", required = true),
-            @ApiImplicitParam(name = "type", value = "推荐模块 0: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人 3：私聊推荐主播 4： 通话推荐主播", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "type", value = "推荐模块 0: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人 3：私聊推荐主播 4： 通话推荐主播 5: 审核推荐主播", paramType = "query", defaultValue = "0", dataType = "Integer"),
             @ApiImplicitParam(name = "recommend", value = "是否推荐 0：取消推荐 1：设置成推荐", paramType = "query", defaultValue = "0", dataType = "Integer"),
             @ApiImplicitParam(name = "level", value = "推荐排序数值 如果取消推荐，这个字段可以不填", paramType = "query", dataType = "Integer"),
             @ApiImplicitParam(name = "startTime", value = "起始时间, 如果是通话推荐主播，这个字段必须", paramType = "query", dataType = "date"),
-            @ApiImplicitParam(name = "endTime", value = "结束时间，如果是通话推荐主播，这个字段必须", paramType = "query", dataType = "date")
+            @ApiImplicitParam(name = "endTime", value = "结束时间，如果是通话推荐主播，这个字段必须", paramType = "query", dataType = "date"),
+            @ApiImplicitParam(name = "startTime2", value = "起始时间2, 如果是通话推荐主播，这个字段必须", paramType = "query", dataType = "date"),
+            @ApiImplicitParam(name = "endTime2", value = "结束时间2，如果是通话推荐主播，这个字段必须", paramType = "query", dataType = "date")
     })
     @PostMapping(value = "/config-recommend")
     ApiResp<Integer> configRecommend(@RequestParam(value = "digitId") String digitId,
-                                     @RequestParam(value = "type") @Range(min = 0, max = 4, message = "type参数范围不合法") int type,
+                                     @RequestParam(value = "type") @Range(min = 0, max = 5, message = "type参数范围不合法") int type,
                                      @RequestParam(value = "recommend") @Range(min = 0, max = 1, message = "recommend参数范围不合法") int recommend,
                                      @RequestParam(value = "level", required = false) Long level,
                                      @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "HH:mm:ss") Date startTime,
-                                     @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "HH:mm:ss") Date endTime) {
+                                     @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "HH:mm:ss") Date endTime,
+                                     @RequestParam(value = "startTime2", required = false) @DateTimeFormat(pattern = "HH:mm:ss") Date startTime2,
+                                     @RequestParam(value = "endTime2", required = false) @DateTimeFormat(pattern = "HH:mm:ss") Date endTime2) {
         // check params
         if (recommend == 1 && Objects.isNull(level)) {
             return ApiResp.failed(-1, "排序值未设置");
         }
 
-        int ret = userManagerService.configRecommend(digitId, type, recommend, level, startTime, endTime);
+        int ret = userManagerService.configRecommend(digitId, type, recommend, level,
+                startTime, endTime, startTime2, endTime2);
         return ApiResp.succeed(ret, "设置成功");
     }
 
@@ -272,7 +282,7 @@ public class UserManagerController {
                                 @RequestParam(value = "labels", required = false) String labels,
                                 @RequestParam(value = "callPrice", required = false) String callPrice,
                                 @RequestParam(value = "videoPrice", required = false) String videoPrice,
-                                @RequestParam(value = "messagePrice", required = false) String messagePrice) {
+                                @RequestParam(value = "videoProfitRatio", required = false) String messagePrice) {
 
         User userDo = userService.getUserByDigitId(digitId);
 
@@ -300,7 +310,11 @@ public class UserManagerController {
                                 @RequestParam(value = "labels", required = false) String labels,
                                 @RequestParam(value = "callPrice", required = false) String callPrice,
                                 @RequestParam(value = "videoPrice", required = false) String videoPrice,
-                                @RequestParam(value = "messagePrice", required = false) String messagePrice) {
+                                @RequestParam(value = "messagePrice", required = false) String messagePrice,
+                                @RequestParam(value = "videoProfitRatio", required = false) @Range(max = 1) BigDecimal videoProfitRatio,
+                                @RequestParam(value = "voiceProfitRatio", required = false) @Range(max = 1) BigDecimal voiceProfitRatio,
+                                @RequestParam(value = "giftProfitRatio", required = false)@Range(max = 1) BigDecimal giftProfitRatio,
+                                @RequestParam(value = "msgProfitRatio", required = false) @Range(max = 1) BigDecimal msgProfitRatio) {
 
         User userDo = userService.getUserByDigitId(digitId);
 
@@ -310,7 +324,10 @@ public class UserManagerController {
                 null, null, null, null,
                 multipartFileMap);
 
-        return ApiResp.succeed(user);
+        Asset asset = assetService.updateProfitRatio(userDo,
+                videoProfitRatio, voiceProfitRatio, giftProfitRatio, msgProfitRatio);
+
+        return ApiResp.succeed(userManagerService.getUserProfile(digitId));
     }
 
 }

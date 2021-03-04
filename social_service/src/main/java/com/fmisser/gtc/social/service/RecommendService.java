@@ -3,6 +3,7 @@ package com.fmisser.gtc.social.service;
 import com.fmisser.gtc.base.dto.social.RecommendAnchorDto;
 import com.fmisser.gtc.base.dto.social.RecommendDto;
 import com.fmisser.gtc.base.exception.ApiException;
+import com.fmisser.gtc.social.domain.User;
 
 import java.text.ParseException;
 import java.util.List;

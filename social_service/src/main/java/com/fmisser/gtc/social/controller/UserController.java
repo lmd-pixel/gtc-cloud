@@ -164,7 +164,7 @@ public class UserController {
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
 
-        // 打招呼信息
+        // 用户获取信息认为用户活跃，更新打招呼信息
         if (sysConfigService.isMsgGreetEnable()) {
             greetService.createGreet(userDo);
         }
@@ -293,6 +293,12 @@ public class UserController {
             return ApiResp.failed(ret, "聊币余额不足，请尽快充值");
         } else if (ret == -2) {
             return ApiResp.failed(ret, "对方余额不足，无法发起通话");
+        } else if (ret == -3) {
+            return ApiResp.failed(ret, "主播暂不支持该类型通话");
+        } else if (ret == -4) {
+            return ApiResp.failed(ret, "主播在休息中，暂不支持通话");
+        } else if (ret == -5) {
+            return ApiResp.failed(ret, "对方为主播用户，暂不支持通话");
         } else {
             return ApiResp.succeed(ret);
         }

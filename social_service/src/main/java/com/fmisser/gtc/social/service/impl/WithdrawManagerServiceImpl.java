@@ -3,8 +3,11 @@ package com.fmisser.gtc.social.service.impl;
 import com.fmisser.gtc.base.dto.social.PayAuditDto;
 import com.fmisser.gtc.base.dto.social.WithdrawAuditDto;
 import com.fmisser.gtc.base.exception.ApiException;
+import com.fmisser.gtc.social.domain.Asset;
 import com.fmisser.gtc.social.domain.WithdrawAudit;
+import com.fmisser.gtc.social.repository.AssetRepository;
 import com.fmisser.gtc.social.repository.WithdrawAuditRepository;
+import com.fmisser.gtc.social.service.AssetService;
 import com.fmisser.gtc.social.service.WithdrawManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,9 +25,12 @@ import java.util.*;
 public class WithdrawManagerServiceImpl implements WithdrawManagerService {
 
     private final WithdrawAuditRepository withdrawAuditRepository;
+    private final AssetRepository assetRepository;
 
-    public WithdrawManagerServiceImpl(WithdrawAuditRepository withdrawAuditRepository) {
+    public WithdrawManagerServiceImpl(WithdrawAuditRepository withdrawAuditRepository,
+                                      AssetRepository assetRepository) {
         this.withdrawAuditRepository = withdrawAuditRepository;
+        this.assetRepository = assetRepository;
     }
 
     @Override
@@ -63,7 +69,7 @@ public class WithdrawManagerServiceImpl implements WithdrawManagerService {
     }
 
     @Transactional
-    @Retryable
+//    @Retryable
     @Override
     public int withdrawAudit(String orderNumber, int operate, String message) throws ApiException {
         Optional<WithdrawAudit> withdrawAuditOptional = withdrawAuditRepository.findByOrderNumber(orderNumber);
@@ -82,6 +88,9 @@ public class WithdrawManagerServiceImpl implements WithdrawManagerService {
         } else {
             // 审核未通过
             withdrawAudit.setStatus(20);
+
+            // 返还聊币
+            assetRepository.addCoin(withdrawAudit.getUserId(), withdrawAudit.getDrawCurr());
         }
 
         if (Objects.nonNull(message)) {
@@ -93,7 +102,7 @@ public class WithdrawManagerServiceImpl implements WithdrawManagerService {
     }
 
     @Transactional
-    @Retryable
+//    @Retryable
     @Override
     public int payAudit(String orderNumber, int operate, Double payActual, String message) throws ApiException {
         Optional<WithdrawAudit> withdrawAuditOptional = withdrawAuditRepository.findByOrderNumber(orderNumber);
@@ -107,7 +116,7 @@ public class WithdrawManagerServiceImpl implements WithdrawManagerService {
         }
 
         if (operate == 2) {
-            // 部分打款
+            // 部分打款 只针对特殊情况，部分打款不会返还部分聊币
             withdrawAudit.setStatus(42);
             withdrawAudit.setPayActual(BigDecimal.valueOf(payActual));
         } else if (operate == 1) {
@@ -117,6 +126,9 @@ public class WithdrawManagerServiceImpl implements WithdrawManagerService {
         } else {
             // 打款失败
             withdrawAudit.setStatus(41);
+
+            // 返还聊币
+            assetRepository.addCoin(withdrawAudit.getUserId(), withdrawAudit.getDrawCurr());
         }
 
         if (Objects.nonNull(message)) {

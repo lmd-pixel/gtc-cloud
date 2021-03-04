@@ -49,31 +49,10 @@ public class RecommendServiceImpl implements RecommendService {
                 recommendRepository.getRandRecommendAnchor(4);
 
         Date now = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-        Date finalNow = dateFormat.parse(dateFormat.format(now));
-
-        Date dayEnd = dateFormat.parse("23:59:59");
-        Date dayStart = dateFormat.parse("00:00:00");
-
         recommendAnchorDtoList = recommendAnchorDtoList.stream()
-                .filter(dto -> {
-                    if (Objects.nonNull(dto.getStartTime()) && Objects.nonNull(dto.getEndTime())) {
-                        // 排班时间都不为空
-                        if (dto.getStartTime().before(dto.getEndTime())) {
-                            // 不超过24点
-                            return finalNow.after(dto.getStartTime()) && finalNow.before(dto.getEndTime());
-                        } else {
-                            // 超过24点
-                            return (finalNow.after(dto.getStartTime()) && finalNow.before(dayEnd)) ||
-                                    (finalNow.after(dayStart) && finalNow.before(dto.getEndTime()));
-                        }
-                    } else if (Objects.isNull(dto.getStartTime()) && Objects.isNull(dto.getEndTime())) {
-                        // 时间都是空认为是全天
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }).collect(Collectors.toList());
+                .filter(dto -> (isTimeBetween(now, dto.getStartTime(), dto.getEndTime()) ||
+                        isTimeBetween(now, dto.getStartTime2(), dto.getEndTime2())))
+                .collect(Collectors.toList());
 
         List<RecommendAnchorDto> randList = new ArrayList<>();
 
@@ -96,5 +75,37 @@ public class RecommendServiceImpl implements RecommendService {
             }
         }
         return recommendAnchorDtoList;
+    }
+
+    // 判断"HH:mm:ss"时间是否在某个时间段（可能跨天）
+    @SneakyThrows
+    private static boolean isTimeBetween(Date time, Date startTime, Date endTime) {
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        Date finalNow = dateFormat.parse(dateFormat.format(time));
+
+        Date dayEnd = dateFormat.parse("23:59:59");
+        Date dayStart = dateFormat.parse("00:00:00");
+
+        if (Objects.nonNull(startTime) && Objects.nonNull(endTime)) {
+            if (startTime.before(endTime)) {
+                // 不超过24点
+                if ((finalNow.after(startTime) || finalNow.equals(startTime)) &&
+                        finalNow.before(endTime)) {
+                    return true;
+                }
+            } else {
+                // 超过24点
+                if ((finalNow.after(startTime) || finalNow.equals(startTime) && finalNow.before(dayEnd)) ||
+                        (finalNow.after(dayStart) || finalNow.equals(dayStart)) && finalNow.before(endTime)) {
+                    return true;
+                }
+            }
+        } else {
+            // 时间都是空认为是全天
+            return true;
+        }
+
+        return false;
     }
 }

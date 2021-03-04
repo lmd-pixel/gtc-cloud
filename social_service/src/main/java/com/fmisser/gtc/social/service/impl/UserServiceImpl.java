@@ -19,6 +19,7 @@ import com.fmisser.gtc.social.utils.MinioUtils;
 import io.minio.ObjectWriteResponse;
 import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -520,6 +521,7 @@ public class UserServiceImpl implements UserService {
         return 1;
     }
 
+    @Cacheable(cacheNames = "anchorList", key = "#type+':'+#gender+':'+#pageIndex+':'+#pageSize")
     @Override
     public List<User> getAnchorList(Integer type, Integer gender, int pageIndex, int pageSize) throws ApiException {
 
@@ -541,6 +543,16 @@ public class UserServiceImpl implements UserService {
         } else {
             userPage = userRepository.getAnchorListByCreateTime(gender, pageable);
         }
+        return userPage.stream()
+                .map(this::_prepareResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<User> getAuditAnchorList(Integer type, Integer gender, int pageIndex, int pageSize) throws ApiException {
+        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+        Page<User> userPage = userRepository.getAuditAnchorList(gender, pageable);
+
         return userPage.stream()
                 .map(this::_prepareResponse)
                 .collect(Collectors.toList());
@@ -592,11 +604,16 @@ public class UserServiceImpl implements UserService {
     @SneakyThrows
     @Override
     public Integer callPreCheck(User fromUser, User toUser, int type) throws ApiException {
-
         // 拨打是用户，接听是用户
         if (fromUser.getIdentity() == 0 && toUser.getIdentity() == 0) {
             // 对方不是主播无法发起通话
             return -1;
+        }
+
+        // 拨打是主播，接听也是主播
+        if (fromUser.getIdentity() == 1 && toUser.getIdentity() == 1) {
+            // 都是主播无法发起通话
+            return -5;
         }
 
         BigDecimal callPrice;
@@ -606,40 +623,20 @@ public class UserServiceImpl implements UserService {
         if (toUser.getIdentity() == 1 ) {
             // 接听是主播
 
+            // 判断是否休息
+            if (toUser.getRest() == 1) {
+                Date now = new Date();
+                if (isTimeBetween(now, toUser.getRestStartDate(), toUser.getRestEndDate())) {
+                    // 在排班时间内
+                    return -4;
+                }
+            }
+
+            // 判断主播接听类型是否支持
             if ((type == 0 && toUser.getMode() == 2) ||
                     (type == 1 && toUser.getMode() == 1)) {
                 // 主播通话类型不支持
                 return -3;
-            }
-
-            if (toUser.getRest() == 1) {
-                Date now = new Date();
-                SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
-                Date finalNow = dateFormat.parse(dateFormat.format(now));
-
-                Date dayEnd = dateFormat.parse("23:59");
-                Date dayStart = dateFormat.parse("00:00");
-
-                if (Objects.nonNull(toUser.getRestStartDate()) && Objects.nonNull(toUser.getRestEndDate())) {
-                    // 休息时间都不为空
-                    if (toUser.getRestStartDate().before(toUser.getRestEndDate())) {
-                        // 不超过24点
-                        if (finalNow.after(toUser.getRestStartDate()) && finalNow.before(toUser.getRestEndDate())) {
-                            // 在排班时间内
-                            return -4;
-                        }
-                    } else {
-                        // 超过24点
-                        if ((finalNow.after(toUser.getRestStartDate()) && finalNow.before(dayEnd)) ||
-                                (finalNow.after(dayStart) && finalNow.before(toUser.getRestEndDate()))) {
-                            // 在排班时间内
-                            return -4;
-                        }
-                    }
-                } else {
-                    // 时间为空认为在排班时间内
-                    return -4;
-                }
             }
 
             callPrice = type == 0 ? toUser.getCallPrice() : toUser.getVideoPrice();
@@ -813,6 +810,16 @@ public class UserServiceImpl implements UserService {
             user.setMessagePrice(BigDecimal.ZERO.setScale(2, BigDecimal.ROUND_HALF_UP));
         }
 
+        // 是否休息判断
+        user.setCurrRest(0);
+        if (user.getRest() == 1) {
+            Date now = new Date();
+            if (isTimeBetween(now, user.getRestStartDate(), user.getRestEndDate())) {
+                // 在排班时间内
+                user.setCurrRest(1);
+            }
+        }
+
         return user;
     }
 
@@ -962,5 +969,36 @@ public class UserServiceImpl implements UserService {
     public static boolean isAudioSupported(String stuff) {
 //        return stuff.toLowerCase().equals(".mp3");
         return true;
+    }
+
+    // 判断"HH:mm"时间是否在某个时间段（可能跨天）
+    @SneakyThrows
+    private static boolean isTimeBetween(Date time, Date startTime, Date endTime) {
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+        Date finalNow = dateFormat.parse(dateFormat.format(time));
+
+        Date dayEnd = dateFormat.parse("23:59");
+        Date dayStart = dateFormat.parse("00:00");
+
+        if (Objects.nonNull(startTime) && Objects.nonNull(endTime)) {
+            if (startTime.before(endTime)) {
+                // 不超过24点
+                if ((finalNow.after(startTime) || finalNow.equals(startTime)) &&
+                        finalNow.before(endTime)) {
+                    return true;
+                }
+            } else {
+                // 超过24点
+                if ((finalNow.after(startTime) || finalNow.equals(startTime) && finalNow.before(dayEnd)) ||
+                        (finalNow.after(dayStart) || finalNow.equals(dayStart)) && finalNow.before(endTime)) {
+                    return true;
+                }
+            }
+        } else {
+            return true;
+        }
+
+        return false;
     }
 }

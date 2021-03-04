@@ -12,8 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.Random;
+import java.util.*;
 
 @Service
 public class WithdrawServiceImpl implements WithdrawService {
@@ -29,7 +28,7 @@ public class WithdrawServiceImpl implements WithdrawService {
     public WithdrawAudit requestWithdraw(User user, BigDecimal coin) throws ApiException {
         WithdrawAudit withdrawAudit = getCurrWithdraw(user);
         if (withdrawAudit != null) {
-            throw new ApiException(-1, "当前已有提现在审核中，无法发起新的提现");
+            throw new ApiException(-1, "当前已有提现在进行中，无法发起新的提现");
         }
 
         Asset asset = assetRepository.findByUserId(user.getId());
@@ -66,14 +65,28 @@ public class WithdrawServiceImpl implements WithdrawService {
         newAudit.setStatus(10);
         newAudit = withdrawAuditRepository.save(newAudit);
 
+        // 提现减聊币
         assetRepository.subCoin(user.getId(), coin);
 
-        return newAudit;
+        return _prepareResponse(newAudit);
     }
 
     @Override
     public WithdrawAudit getCurrWithdraw(User user) throws ApiException {
-        return withdrawAuditRepository.findByUserIdAndStatusLessThan(user.getId(), 40);
+        // 审核中，审核完成
+        List<Integer> statusList = Arrays.asList(10, 30);
+        WithdrawAudit withdrawAudit = withdrawAuditRepository.findTopByUserIdAndStatusIn(user.getId(), statusList);
+//        WithdrawAudit withdrawAudit = withdrawAuditRepository.findByUserIdAndStatusLessThan(user.getId(), 20);
+        if (Objects.nonNull(withdrawAudit)) {
+            return _prepareResponse(withdrawAudit);
+        } else {
+            return null;
+        }
+    }
+
+    protected WithdrawAudit _prepareResponse(WithdrawAudit withdrawAudit) {
+        withdrawAudit.setDrawCurr(withdrawAudit.getDrawCurr().setScale(2, BigDecimal.ROUND_HALF_UP));
+        return withdrawAudit;
     }
 
     // 创建支付订单号

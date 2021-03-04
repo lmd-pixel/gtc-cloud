@@ -51,11 +51,6 @@ public class GreetServiceImpl implements GreetService {
             return 0;
         }
 
-        if (user.getGender() == 0) {
-            // 现在主播都是女性
-            return 0;
-        }
-
         if (isTodayGreetExist(user)) {
             return 0;
         }

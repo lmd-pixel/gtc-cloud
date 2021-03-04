@@ -35,15 +35,27 @@ public interface UserRepository extends JpaRepository<User, Long> {
     int subUserFollow(Long userId);
 
     // 获取主播列表,根据创建时间排序
-    @Query(value = "SELECT * FROM t_user " +
-            "WHERE identity = 1 " +
-            "AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
+    @Query(value = "SELECT * FROM t_user tu " +
+            "WHERE tu.identity = 1 " +
+            "AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
             "ORDER BY create_time DESC ",
-            countQuery = "SELECT COUNT(*) FROM t_user " +
-                    "WHERE identity = 1 " +
-                    "AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL)",
+            countQuery = "SELECT COUNT(*) FROM t_user tu " +
+                    "WHERE tu.identity = 1 " +
+                    "AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL)",
             nativeQuery = true)
     Page<User> getAnchorListByCreateTime(Integer gender, Pageable pageable);
+
+    // 审核池中的主播
+    @Query(value = "SELECT tu.* FROM t_recommend tr " +
+            "INNER JOIN t_user tu ON tr.user_id = tu.id " +
+            "AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
+            "WHERE tr.type = 5 AND tr.recommend = 1",
+            countQuery = "SELECT COUNT(*) FROM t_recommend tr " +
+                    "INNER JOIN t_user tu ON tr.user_id = tu.id " +
+                    "AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
+                    "WHERE tr.type = 5 AND tr.recommend = 1",
+            nativeQuery = true)
+    Page<User> getAuditAnchorList(Integer gender, Pageable pageable);
 
     // 获取主播列表，根据总收益排序
     @Query(value = "SELECT tu.*, " +
@@ -54,10 +66,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "LEFT JOIN t_message_bill tmb ON tu.id = tmb.user_id_to " +
             "LEFT JOIN t_gift_bill tgb ON tu.id = tgb.user_id_to " +
             "LEFT JOIN t_call_bill tcb ON tu.id = tcb.user_id_to " +
-            "WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
+            "WHERE tu.identity = 1 AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
             "GROUP BY tu.id ORDER BY profit DESC ",
-    countQuery = "SELECT COUNT(*) FROM t_user " +
-            "WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " ,
+    countQuery = "SELECT COUNT(*) FROM t_user tu " +
+            "WHERE tu.identity = 1 AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " ,
     nativeQuery = true)
     Page<User> getAnchorListByProfit(Integer gender, Pageable pageable);
 
@@ -65,46 +77,46 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "SELECT tu.* " +
             "FROM t_user tu " +
             "INNER JOIN t_recommend tr ON tr.type = 0 AND tr.recommend = 1 AND tr.user_id = tu.id " +
-            "WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
+            "WHERE tu.identity = 1 AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
             "ORDER BY tr.level",
             countQuery = "SELECT COUNT(*) " +
             "FROM t_user tu " +
             "INNER JOIN t_recommend tr ON tr.type = 0 AND tr.recommend = 1 AND tr.user_id = tu.id " +
-            "WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) ",
+            "WHERE tu.identity = 1 AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) ",
             nativeQuery = true)
     Page<User> getAnchorListBySystem(Integer gender, Pageable pageable);
 
     // 获取主播列表，根据关注排序
-    @Query(value = "SELECT * FROM t_user " +
-            "WHERE identity = 1 " +
-            "AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
-            "ORDER BY follows DESC ",
-            countQuery = "SELECT COUNT(*) FROM t_user " +
-                    "WHERE identity = 1 " +
-                    "AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL)",
+    @Query(value = "SELECT * FROM t_user tu " +
+            "WHERE tu.identity = 1 " +
+            "AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
+            "ORDER BY tu.follows DESC ",
+            countQuery = "SELECT COUNT(*) FROM t_user tu " +
+                    "WHERE tu.identity = 1 " +
+                    "AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL)",
             nativeQuery = true)
     Page<User> getAnchorListByFollow(Integer gender, Pageable pageable);
 
     // 根据推荐+关注排序
     @Query(value = "(SELECT tu.*, tr.level AS sort1, tu.follows AS sort2 FROM t_user tu " +
             "INNER JOIN t_recommend tr ON tr.type = 0 AND tr.recommend = 1 AND tr.user_id = tu.id " +
-            "WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
+            "WHERE tu.identity = 1 AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
             "ORDER BY tr.level) UNION ALL " +
             "(SELECT tu2.*, 10000000 AS sort1, tu2.follows AS sort2 FROM t_user tu2 " +
             "LEFT JOIN t_recommend tr2 ON tr2.type = 0 AND tr2.recommend = 1 AND tr2.user_id = tu2.id " +
-            "WHERE identity = 1 AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND tr2.id IS NULL) " +
+            "WHERE tu2.identity = 1 AND (tu2.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND tr2.id IS NULL) " +
             "ORDER BY sort1 , sort2 DESC",
-            countQuery = "SELECT COUNT(*) FROM t_user " +
-                    "WHERE identity = 1 " +
-                    "AND (gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL)",
+            countQuery = "SELECT COUNT(*) FROM t_user tu " +
+                    "WHERE tu.identity = 1 " +
+                    "AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL)",
             nativeQuery = true)
     Page<User> getAnchorListBySystemAndFollow(Integer gender, Pageable pageable);
 
     // 获取总注册人数，给定时间内的注册人数，认证用户总人数，给定时间内认证用户人数
     @Query(value = "SELECT COUNT(*) FROM t_user UNION ALL " +
             "SELECT COUNT(*) FROM t_user WHERE create_time BETWEEN ?1 AND ?2 UNION ALL " +
-            "SELECT COUNT(*) FROM t_user WHERE identity = 1 UNION ALL " +
-            "SELECT COUNT(*) FROM t_user WHERE identity = 1 AND create_time BETWEEN ?1 AND ?2",
+            "SELECT COUNT(*) FROM t_user tu WHERE tu.identity = 1 UNION ALL " +
+            "SELECT COUNT(*) FROM t_user tu WHERE tu.identity = 1 AND create_time BETWEEN ?1 AND ?2",
             nativeQuery = true)
     List<Long> userStatistics(Date start, Date end);
 
@@ -346,6 +358,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     CalcConsumeDto calcConsume(String digitId, String nick, String phone, Date startTime, Date endTime);
 
     // 获取随机主播
-    @Query(value = "SELECT * FROM t_user WHERE identity = 1 ORDER BY RAND() LIMIT ?1", nativeQuery = true)
+    @Query(value = "SELECT * FROM t_user tu WHERE tu.identity = 1 ORDER BY RAND() LIMIT ?1", nativeQuery = true)
     List<User> findRandAnchorList(int limit);
 }

@@ -15,7 +15,8 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 public class RecommendAnchorDto {
-    public RecommendAnchorDto(Long id, String digitId, String nick, int gender, String head, Date startTime, Date endTime) {
+    public RecommendAnchorDto(Long id, String digitId, String nick, int gender, String head,
+                              Date startTime, Date endTime, Date startTime2, Date endTime2) {
         this.id = id;
         this.digitId = digitId;
         this.nick = nick;
@@ -23,6 +24,8 @@ public class RecommendAnchorDto {
         this.head = head;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.startTime2 = startTime2;
+        this.endTime2 = endTime2;
     }
 
     Long id;
@@ -36,4 +39,8 @@ public class RecommendAnchorDto {
     Date startTime;
     @JsonFormat(timezone = "GMT+8", pattern = "HH:mm:ss")
     Date endTime;
+    @JsonFormat(timezone = "GMT+8", pattern = "HH:mm:ss")
+    Date startTime2;
+    @JsonFormat(timezone = "GMT+8", pattern = "HH:mm:ss")
+    Date endTime2;
 }

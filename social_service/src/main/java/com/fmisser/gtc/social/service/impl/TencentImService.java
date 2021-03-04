@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Base64Utils;
+import org.springframework.util.StringUtils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -98,6 +99,11 @@ public class TencentImService implements ImService {
             return -1L;
         }
 
+        if (userFrom.getIdentity() == 1 && userTo.getIdentity() == 1) {
+            return -1L;
+        }
+
+
         // 创建通话房间
         Call call = new Call();
         call.setType(type);
@@ -131,6 +137,20 @@ public class TencentImService implements ImService {
     @Override
     public int accept(User userFrom, User userTo, Long roomId) throws ApiException {
         // TODO: 2021/1/8 校验是否匹配
+
+//        if (userFrom.getIdentity() == 0 && userTo.getIdentity() == 0) {
+//            return -1;
+//        }
+//
+//        if (userFrom.getIdentity() == 1 && userTo.getIdentity() == 1) {
+//            return -1;
+//        }
+
+        Call call = callRepository.findByRoomId(roomId);
+        if (call.getIsFinished() == 1) {
+            return -2;
+        }
+
         return 1;
     }
 
@@ -138,7 +158,7 @@ public class TencentImService implements ImService {
     public Map<String, Object> hangup(User user, Long roomId, String version) throws ApiException {
 
         // 解散房间
-        trtcDismissRoom(roomId);
+//        trtcDismissRoom(roomId);
 
         // 结束不进行任何结算
         Map<String, Object> resultMap = new HashMap<>();
@@ -165,7 +185,9 @@ public class TencentImService implements ImService {
         }
 
         // 判断是否在审核
-        if (sysConfigService.getAppAuditVersion().equals(version)) {
+        if (sysConfigService.isAppAudit() &&
+                !StringUtils.isEmpty(version) &&
+                sysConfigService.getAppAuditVersion().equals(version)) {
             // 过审版本 不显示时间
             resultMap.put("duration", 0);
         } else {
@@ -251,7 +273,9 @@ public class TencentImService implements ImService {
 
         BigDecimal callPrice;
         // 判断是否在审核
-        if (sysConfigService.getAppAuditVersion().equals(version)) {
+        if (sysConfigService.isAppAudit() &&
+                !StringUtils.isEmpty(version) &&
+                sysConfigService.getAppAuditVersion().equals(version)) {
             // 过审版本 不计费
             callPrice = BigDecimal.ZERO;
         } else {
@@ -709,8 +733,14 @@ public class TencentImService implements ImService {
 
     // 生成唯一房间id
     private Integer genRoomId() {
-        // TODO: 2021/1/7 换更可靠的方式生成
         Random random = new Random();
-        return Math.abs(random.nextInt());
+
+        // 为了以后能扩展， 保留 1Y以上的房间号
+        Integer randomInt;
+        do {
+            randomInt = Math.abs(random.nextInt());
+        } while (randomInt >= 100000000);
+
+        return randomInt;
     }
 }

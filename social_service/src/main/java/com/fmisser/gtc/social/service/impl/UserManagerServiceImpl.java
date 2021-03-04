@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UserManagerServiceImpl implements UserManagerService {
@@ -101,7 +102,7 @@ public class UserManagerServiceImpl implements UserManagerService {
 //                .anchorStatistics(digitId, nick, phone, gender, startTime, endTime, pageable);
 
         List<AnchorDto> anchorDtoList = userRepository
-                .anchorStatisticsEx2(digitId, nick, phone, gender, startTime, endTime, pageSize, pageIndex - 1, sortProp);
+                .anchorStatisticsEx2(digitId, nick, phone, gender, startTime, endTime, pageSize, (pageIndex - 1) * pageSize, sortProp);
 
         Long totalCount = userRepository.countAnchorStatisticsEx(digitId, nick, phone, gender, startTime, endTime);
         Long totalPage = (totalCount / pageSize) + 1;
@@ -169,7 +170,7 @@ public class UserManagerServiceImpl implements UserManagerService {
 //                .consumerStatistics(digitId, nick, phone, startTime, endTime, pageable);
 
         List<ConsumerDto> consumerDtoList = userRepository
-                .consumerStatisticsEx2(digitId, nick, phone, startTime, endTime, pageSize, pageIndex - 1, sortProp);
+                .consumerStatisticsEx2(digitId, nick, phone, startTime, endTime, pageSize, (pageIndex - 1) * pageSize, sortProp);
 
         CalcConsumeDto calcConsumeDto = userRepository.calcConsume(digitId, nick, phone, startTime, endTime);
         Long totalCount = calcConsumeDto.getCount();
@@ -218,7 +219,12 @@ public class UserManagerServiceImpl implements UserManagerService {
     }
 
     @Override
-    public int configRecommend(String digitId, int type, int recommend, Long level, Date startTime, Date endTime) throws ApiException {
+    public int configRecommend(String digitId, int type, int recommend, Long level,
+                               Date startTime, Date endTime, Date startTime2, Date endTime2) throws ApiException {
+
+        if (Objects.nonNull(level) && level < 1) {
+            throw new ApiException(-1, "推荐值不能小于1");
+        }
 
         if (Objects.nonNull(level) && level > 999999) {
             throw new ApiException(-1, "推荐值过大，不超过999999");
@@ -239,7 +245,10 @@ public class UserManagerServiceImpl implements UserManagerService {
 
             if (type == 4) {
                 // 通话主播需要设定排班时间段
-
+                recommendDo.setStartTime(startTime);
+                recommendDo.setEndTime(endTime);
+                recommendDo.setStartTime2(startTime2);
+                recommendDo.setEndTime2(endTime2);
             }
 
         } else {
@@ -248,8 +257,35 @@ public class UserManagerServiceImpl implements UserManagerService {
             if (Objects.nonNull(level)) {
                 recommendDo.setLevel(level);
             }
+
+            if (recommend == 1 && type == 4) {
+                // 通话主播需要设定排班时间段
+                recommendDo.setStartTime(startTime);
+                recommendDo.setEndTime(endTime);
+                recommendDo.setStartTime2(startTime2);
+                recommendDo.setEndTime2(endTime2);
+            }
         }
-        recommendRepository.save(recommendDo);
+
+        if (recommend == 1) {
+            // 设置推荐
+            List<Recommend> recommendList = recommendRepository
+                    .findByTypeAndLevelGreaterThanEqualAndRecommend(type, level, 1);
+
+            // 将之前等于小于level的都加1
+            List<Recommend> adjustList = recommendList
+                    .stream()
+                    .filter(r -> !r.getId().equals(recommendDo.getId()))
+                    .peek(r -> r.setLevel(r.getLevel() + 1))
+                    .collect(Collectors.toList());
+
+            adjustList.add(recommendDo);
+
+            recommendRepository.saveAll(adjustList);
+        } else {
+            recommendRepository.save(recommendDo);
+        }
+
         return 1;
     }
 
@@ -341,7 +377,8 @@ public class UserManagerServiceImpl implements UserManagerService {
                     userRepository.save(user);
 
                     // 加入到私聊推荐池
-                    configRecommend(user.getDigitId(), 3, 1, 1L, null, null);
+                    configRecommend(user.getDigitId(), 3, 1, 1L,
+                            null, null, null, null);
                 }
             }
         }

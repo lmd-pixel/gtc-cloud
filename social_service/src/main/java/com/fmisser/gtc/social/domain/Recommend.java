@@ -33,7 +33,7 @@ public class Recommend {
     @Column(nullable = false)
     private Long userId;
 
-    // 0: 推荐 1：活跃 2： 新人  3: 私聊男女主播 4. 通话主播
+    // 0: 推荐 1：活跃 2： 新人  3: 私聊男女主播 4. 通话主播 5. 审核主播池
     @Column
     private int type;
 
@@ -57,6 +57,16 @@ public class Recommend {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column
     private Date endTime;
+
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column
+    private Date startTime2;
+
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column
+    private Date endTime2;
 
     @CreatedDate
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
