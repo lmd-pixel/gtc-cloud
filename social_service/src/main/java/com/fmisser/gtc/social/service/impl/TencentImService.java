@@ -178,6 +178,20 @@ public class TencentImService implements ImService {
             if (Objects.isNull(startTime)) {
                 // 还没开始
                 call.setFinishTime(now);
+
+                // 首次挂断如果是主播并且不是主播主动呼叫，则发送主播未接信息到wx
+//                if (call.getCallMode() == 0) {
+//                    if (user.getIdentity() == 1) {
+////                        String message = String.format("【主播拒绝接听提示】用户:%s[%s]于%s发起的通话主播：%s[%s]拒绝接听",
+////                                call.getUserIdFrom())
+//                    } else {
+//                        // 判断用户从拨打到挂断的时间超过20秒，则认为主播未接听
+//                        if (now.getTime() - call.getCreatedTime().getTime() > 20 * 1000) {
+//
+//                        }
+//                    }
+//                }
+
             } else {
                 // 如果已经开始了 则计算总通话时长
                 int deltaTime = (int) Math.ceil( (double) (now.getTime() - startTime.getTime()) / 1000L);

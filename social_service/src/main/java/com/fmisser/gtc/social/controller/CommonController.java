@@ -148,10 +148,10 @@ public class CommonController {
                 BigDecimal.valueOf(350),
                 BigDecimal.valueOf(400),
                 BigDecimal.valueOf(450),
-                BigDecimal.valueOf(500),
-                BigDecimal.valueOf(600),
-                BigDecimal.valueOf(700),
-                BigDecimal.valueOf(800)
+                BigDecimal.valueOf(500)
+//                BigDecimal.valueOf(600),
+//                BigDecimal.valueOf(700),
+//                BigDecimal.valueOf(800)
                 );
         resultMap.put("msgPrice", msgPrice);
         resultMap.put("voicePrice", callPrice);
