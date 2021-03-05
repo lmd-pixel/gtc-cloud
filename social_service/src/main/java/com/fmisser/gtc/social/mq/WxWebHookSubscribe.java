@@ -10,14 +10,14 @@ import org.springframework.messaging.Message;
  * 微信 web hook
  */
 
-//@EnableBinding
-//public class WxWebHookSubscribe {
-//
-//    @StreamListener(WxWebHookBinding.INPUT)
-//    public void processMessage(Message<String> message) throws Exception {
-//        Channel channel = (Channel) message.getHeaders().get(AmqpHeaders.CHANNEL);
-//        Long deliveryTag = (Long) message.getHeaders().get(AmqpHeaders.DELIVERY_TAG);
-//
-//        String payload = message.getPayload();
-//    }
-//}
+@EnableBinding
+public class WxWebHookSubscribe {
+
+    @StreamListener(WxWebHookBinding.INPUT)
+    public void processMessage(Message<String> message) throws Exception {
+        Channel channel = (Channel) message.getHeaders().get(AmqpHeaders.CHANNEL);
+        Long deliveryTag = (Long) message.getHeaders().get(AmqpHeaders.DELIVERY_TAG);
+
+        String payload = message.getPayload();
+    }
+}
