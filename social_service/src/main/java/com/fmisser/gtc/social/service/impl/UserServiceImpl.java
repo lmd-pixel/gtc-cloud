@@ -521,7 +521,7 @@ public class UserServiceImpl implements UserService {
         return 1;
     }
 
-    @Cacheable(cacheNames = "anchorList", key = "#type+':'+#gender+':'+#pageIndex+':'+#pageSize")
+//    @Cacheable(cacheNames = "anchorList", key = "#type+':'+#gender+':'+#pageIndex+':'+#pageSize")
     @Override
     public List<User> getAnchorList(Integer type, Integer gender, int pageIndex, int pageSize) throws ApiException {
 

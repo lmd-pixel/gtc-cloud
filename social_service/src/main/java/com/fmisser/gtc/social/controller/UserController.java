@@ -290,7 +290,7 @@ public class UserController {
         if (ret == -1) {
             return ApiResp.failed(ret, "对方非主播用户，暂不支持通话");
         } else if (ret == 0) {
-            return ApiResp.failed(ret, "聊币余额不足，请尽快充值");
+            return ApiResp.failed(-10, "聊币余额不足，请尽快充值");
         } else if (ret == -2) {
             return ApiResp.failed(ret, "对方余额不足，无法发起通话");
         } else if (ret == -3) {

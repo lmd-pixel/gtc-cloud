@@ -38,6 +38,7 @@ public interface CallRepository extends JpaRepository<Call, Long> {
             "COUNT(*) AS callTimes, " +
             "COUNT(DISTINCT CASE WHEN connected=1 THEN acceptDigitId END) AS acceptUsers, " +
             "COUNT(IF(connected=1,TRUE,NULL)) AS acceptTimes, " +
+            "SUM(duration) AS duration, " +
             "SUM(card) AS videoCard " +
             "FROM ( SELECT " +
             "IF(tc.call_mode=1,tu2.digit_id,tu.digit_id) AS callDigitId, " +
@@ -74,7 +75,7 @@ public interface CallRepository extends JpaRepository<Call, Long> {
             "IF(tc.call_mode=1,tu.digit_id,tu2.digit_id) AS acceptDigitId, " +
             "IF(tc.call_mode=1,tu.nick,tu2.nick) AS acceptNick, " +
             "tc.type AS type, tc.call_mode AS mode, IF(tc.duration>0,1,0) AS connected, " +
-            "tc.duration AS duration, tc.start_time AS startTime, tc.finish_time AS finishTime, " +
+            "tc.duration AS duration, tc.start_time AS startTime, tc.finish_time AS endTime, " +
             "COUNT(IF(tcb.source>0,TRUE,NULL)) AS freeCard " +
             "FROM t_call tc " +
             "INNER JOIN t_user tu ON tc.user_id_from = tu.id " +
@@ -90,7 +91,7 @@ public interface CallRepository extends JpaRepository<Call, Long> {
             "(type LIKE CONCAT('%', ?5, '%') OR ?5 IS NULL) AND " +
             "(connected LIKE CONCAT('%', ?6, '%') OR ?6 IS NULL) AND " +
             "(startTime BETWEEN ?7 AND ?8 OR ?7 IS NULL OR ?8 IS NULL) " +
-            "ORDER BY startTime DESC LIMIT ?9 OFFSET ?10",
+            "ORDER BY callId DESC LIMIT ?9 OFFSET ?10",
     nativeQuery = true)
     List<CallDto> getCallList(String callDigitId, String callNick,
                               String acceptDigitId, String acceptNick,
@@ -101,16 +102,17 @@ public interface CallRepository extends JpaRepository<Call, Long> {
 
     // 通话列表详情
     @Query(value = "SELECT " +
-            "tc.id, " +
+            "tc.id AS callId, " +
             "IF(tc.call_mode=1,tu2.digit_id,tu.digit_id) AS callDigitId, " +
             "IF(tc.call_mode=1,tu2.nick,tu.nick) AS callNick, " +
             "IF(tc.call_mode=1,tu.digit_id,tu2.digit_id) AS acceptDigitId, " +
             "IF(tc.call_mode=1,tu.nick,tu2.nick) AS acceptNick, " +
+            "IF(tc.duration>0,1,0) AS connected, " +
             "tc.duration AS duration, " +
             "tc.type AS type, " +
             "tc.call_mode AS mode, " +
             "tc.start_time AS startTime, " +
-            "tc.finish_time AS finishTime, " +
+            "tc.finish_time AS endTime, " +
             "COUNT(IF(tcb.source>0,TRUE,NULL)) AS freeCard, " +
             "SUM(tcb.origin_coin) AS consume, " +
             "SUM(tcb.profit_coin) AS profit, " +

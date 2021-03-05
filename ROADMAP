@@ -59,6 +59,8 @@ nginx 降低https延迟 https://zhuanlan.zhihu.com/p/346618690
 
 分布式事务 https://blog.csdn.net/paolei/article/details/77854532
 
+redis 限速 https://mp.weixin.qq.com/s/kyFAWH3mVNJvurQDt4vchA
+
 ################## 业务逻辑相关 ##################
 
 1. 增加认证相关的记录到db
@@ -69,7 +71,6 @@ nginx 降低https延迟 https://zhuanlan.zhihu.com/p/346618690
 ################## 项目结构相关 ##################
 
 1. 通用的一些配置统一到base，比如 application.properties， ResourceServerConfig， swagger依赖 以及 SwaggerConfig
-
 
 
 ################## 数据库相关 ##################

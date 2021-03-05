@@ -151,6 +151,9 @@ public class TencentImService implements ImService {
             return -2;
         }
 
+        // 设定开始时间
+        call.setStartTime(new Date());
+
         return 1;
     }
 
@@ -177,7 +180,7 @@ public class TencentImService implements ImService {
                 call.setFinishTime(now);
             } else {
                 // 如果已经开始了 则计算总通话时长
-                int deltaTime = (int) ((now.getTime() - startTime.getTime()) / 1000);
+                int deltaTime = (int) Math.ceil( (double) (now.getTime() - startTime.getTime()) / 1000L);
                 call.setDuration(deltaTime);
             }
 

@@ -48,11 +48,18 @@ public class CallManagerServiceImpl implements CallManagerService {
         extra.put("acceptUsers", calcTotalCallDto.getAcceptUsers());
         extra.put("acceptTimes", calcTotalCallDto.getAcceptTimes());
         extra.put("totalDuration", calcTotalCallDto.getDuration());
-        Long avgDuration = (Long) calcTotalCallDto.getDuration() / calcTotalCallDto.getAcceptTimes();
-        extra.put("avgDuration", avgDuration);
-        BigDecimal connectedRatio = BigDecimal.valueOf(calcTotalCallDto.getAcceptTimes())
-                .divide(BigDecimal.valueOf(calcTotalCallDto.getCallTimes()), 2, BigDecimal.ROUND_HALF_UP);
-        extra.put("connectedRatio", connectedRatio);
+        if (calcTotalCallDto.getAcceptTimes() == 0) {
+            extra.put("avgDuration", 0);
+            extra.put("connectedRatio", 0);
+        } else {
+            Long avgDuration = (Long) calcTotalCallDto.getDuration() / calcTotalCallDto.getAcceptTimes();
+            extra.put("avgDuration", avgDuration);
+
+            BigDecimal connectedRatio = BigDecimal.valueOf(calcTotalCallDto.getAcceptTimes())
+                    .divide(BigDecimal.valueOf(calcTotalCallDto.getCallTimes()), 2, BigDecimal.ROUND_HALF_UP);
+            extra.put("connectedRatio", connectedRatio);
+        }
+        extra.put("videoCard", calcTotalCallDto.getVideoCard());
 
         return Pair.of(callDtoList, extra);
     }
