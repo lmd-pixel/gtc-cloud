@@ -26,6 +26,8 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Base64Utils;
@@ -186,12 +188,23 @@ public class TencentImService implements ImService {
                 // 首次挂断如果是主播并且不是主播主动呼叫，则发送主播未接信息到wx
                 if (call.getCallMode() == 0) {
                     if (user.getIdentity() == 1) {
-//                        String message = String.format("【主播拒绝接听提示】用户:%s[%s]于%s发起的通话主播：%s[%s]拒绝接听",
-//                                call.getUserIdFrom())
+                        Long time = (now.getTime() - call.getCreatedTime().getTime()) / 1000;
+                        String message = String.format("1,%d,%d", call.getId(), time);
+                        Message<String> tipMsg = MessageBuilder.withPayload(message).build();
+                        boolean ret = wxWebHookBinding.wxWebHookOutputChannel().send(tipMsg);
+                        if (!ret) {
+                            // TODO: 2021/1/25 处理发送失败
+                        }
                     } else {
-                        // 判断用户从拨打到挂断的时间超过20秒，则认为主播未接听
-                        if (now.getTime() - call.getCreatedTime().getTime() > 20 * 1000) {
-
+                        // 判断用户从拨打到挂断的时间超过5秒，则认为主播未接听
+                        long time = (now.getTime() - call.getCreatedTime().getTime()) / 1000;
+                        if (time > 5) {
+                            String message = String.format("2,%d,%d", call.getId(), time);
+                            Message<String> tipMsg = MessageBuilder.withPayload(message).build();
+                            boolean ret = wxWebHookBinding.wxWebHookOutputChannel().send(tipMsg);
+                            if (!ret) {
+                                // TODO: 2021/1/25 处理发送失败
+                            }
                         }
                     }
                 }
