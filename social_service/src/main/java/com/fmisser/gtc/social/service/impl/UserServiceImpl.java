@@ -522,6 +522,7 @@ public class UserServiceImpl implements UserService {
     }
 
 //    @Cacheable(cacheNames = "anchorList", key = "#type+':'+#gender+':'+#pageIndex+':'+#pageSize")
+    @SneakyThrows
     @Override
     public List<User> getAnchorList(Integer type, Integer gender, int pageIndex, int pageSize) throws ApiException {
 
@@ -532,20 +533,32 @@ public class UserServiceImpl implements UserService {
 
         // type = 2 按照注册时间倒叙
 
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        Page<User> userPage;
 //        List<User> userList =
 //                userRepository.getAnchorListByCreateTime(gender, pageable).getContent();
         if (type == 0) {
-            userPage = userRepository.getAnchorListBySystemAndFollow(gender, pageable);
+//            userPage = userRepository.getAnchorListBySystemAndFollow(gender, pageable);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+            Date finalNow = dateFormat.parse(dateFormat.format(new Date()));
+            List<User> userList = userRepository.getAnchorListBySystemAndFollowEx(finalNow, gender, pageSize, pageIndex);
+            return userList.stream()
+                    .map(this::_prepareResponse)
+                    .collect(Collectors.toList());
         } else if (type == 1) {
+            // TODO: 2021/3/6 因为无需统计分页 这里可以不用pageable 减少一次sql查询
+            Pageable pageable = PageRequest.of(pageIndex, pageSize);
+            Page<User> userPage;
             userPage = userRepository.getAnchorListByProfit(gender, pageable);
+            return userPage.stream()
+                    .map(this::_prepareResponse)
+                    .collect(Collectors.toList());
         } else {
+            Pageable pageable = PageRequest.of(pageIndex, pageSize);
+            Page<User> userPage;
             userPage = userRepository.getAnchorListByCreateTime(gender, pageable);
+            return userPage.stream()
+                    .map(this::_prepareResponse)
+                    .collect(Collectors.toList());
         }
-        return userPage.stream()
-                .map(this::_prepareResponse)
-                .collect(Collectors.toList());
     }
 
     @Override

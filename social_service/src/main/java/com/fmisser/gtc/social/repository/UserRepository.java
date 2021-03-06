@@ -112,6 +112,32 @@ public interface UserRepository extends JpaRepository<User, Long> {
             nativeQuery = true)
     Page<User> getAnchorListBySystemAndFollow(Integer gender, Pageable pageable);
 
+    // 根据推荐（排班）+关注排序
+    @Query(value = "(SELECT tu.*, tr.level AS sort1, tu.follows AS sort2 FROM t_user tu " +
+            "INNER JOIN t_recommend tr ON tr.type = 0 AND tr.recommend = 1 AND tr.user_id = tu.id " +
+            "AND (" +
+            "(?1 BETWEEN tr.start_time AND tr.end_time OR tr.start_time IS NULL OR tr.end_time IS NULL)" +
+            "OR (?1 BETWEEN tr.start_time2 AND tr.end_time2 OR tr.start_time2 IS NULL OR tr.end_time2 IS NULL ) " +
+            ") " +
+            "WHERE tu.identity = 1 AND (tu.gender LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) " +
+            "ORDER BY tr.level) UNION ALL " +
+            "(SELECT tu2.*, 10000000 AS sort1, tu2.follows AS sort2 FROM t_user tu2 " +
+            "LEFT JOIN t_recommend tr2 ON tr2.type = 0 AND tr2.recommend = 1 AND tr2.user_id = tu2.id " +
+            "WHERE tu2.identity = 1 AND (tu2.gender LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND tr2.id IS NULL) " +
+            "ORDER BY sort1 , sort2 DESC LIMIT ?3 OFFSET ?4",
+//            countQuery = "SELECT COUNT(*) FROM t_user tu " +
+//                    "WHERE tu.identity = 1 " +
+//                    "AND (tu.gender LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL)",
+            nativeQuery = true)
+    List<User> getAnchorListBySystemAndFollowEx(Date date, Integer gender, int limit, int offset);
+//    Page<User> getAnchorListBySystemAndFollowEx(Date date, Integer gender, Pageable pageable);
+
+    // 查询主播总数
+    @Query(value = "SELECT COUNT(*) FROM t_user tu " +
+            "WHERE tu.identity = 1 " +
+            "AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL)", nativeQuery = true)
+    Long getAnchorCount(Integer gender);
+
     // 获取总注册人数，给定时间内的注册人数，认证用户总人数，给定时间内认证用户人数
     @Query(value = "SELECT COUNT(*) FROM t_user UNION ALL " +
             "SELECT COUNT(*) FROM t_user WHERE create_time BETWEEN ?1 AND ?2 UNION ALL " +
