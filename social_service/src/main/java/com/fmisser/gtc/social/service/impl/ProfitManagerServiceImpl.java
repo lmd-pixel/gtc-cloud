@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.dto.social.*;
+import com.fmisser.gtc.base.dto.social.calc.CalcAnchorProfitDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcCallProfitDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcGiftProfitDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcMessageProfitDto;
@@ -217,5 +218,10 @@ public class ProfitManagerServiceImpl implements ProfitManagerService {
         extra.put("consume", calcGiftProfitDto.getConsume());
 
         return Pair.of(consumerGiftBillDtoList, extra);
+    }
+
+    @Override
+    public CalcAnchorProfitDto getAnchorProfit(String digitId, String nick, Date startTime, Date endTime) throws ApiException {
+        return callBillRepository.getAnchorProfit(digitId, nick, startTime, endTime);
     }
 }

@@ -42,18 +42,20 @@ public class CommonAccessDecisionManager implements AccessDecisionManager {
 
         if (authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(a -> a.equals("USER_ROLE"))) {
+                .anyMatch(a -> a.equals("ROLE_USER"))) {
             // 如果有普通用户权限
-            User user = userService.getUserByUsername(username);
-            Forbidden forbidden = forbiddenService.getUserForbidden(user);
-            if (forbidden != null) {
-                if (forbidden.getDays() == 0) {
-                    throw new ForbiddenAccountAccessDeniedException("当前账号存在严重违规行为，已被系统永久禁封");
-                } else {
-                    SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("MM月dd日HH:mm");
-                    String msg = String.format("当前账号存在违规行为，已被系统封禁%d天，将于%s解封",
-                            forbidden.getDays(), dateTimeFormatter.format(forbidden.getEndTime()));
-                    throw new ForbiddenAccountAccessDeniedException(msg);
+            if (userService.isUserExist(username)) {
+                User user = userService.getUserByUsername(username);
+                Forbidden forbidden = forbiddenService.getUserForbidden(user);
+                if (forbidden != null) {
+                    if (forbidden.getDays() == 0) {
+                        throw new ForbiddenAccountAccessDeniedException("当前账号存在严重违规行为，已被系统永久禁封");
+                    } else {
+                        SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("MM月dd日HH:mm");
+                        String msg = String.format("当前账号存在违规行为，已被系统封禁%d天，将于%s解封",
+                                forbidden.getDays(), dateTimeFormatter.format(forbidden.getEndTime()));
+                        throw new ForbiddenAccountAccessDeniedException(msg);
+                    }
                 }
             }
         }

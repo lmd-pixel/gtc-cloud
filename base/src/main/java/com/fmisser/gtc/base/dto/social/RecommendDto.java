@@ -19,4 +19,8 @@ public interface RecommendDto {
     Date getStartTime();
     @JsonFormat(timezone = "GMT+8", pattern = "HH:mm:ss")
     Date getEndTime();
+    @JsonFormat(timezone = "GMT+8", pattern = "HH:mm:ss")
+    Date getStartTime2();
+    @JsonFormat(timezone = "GMT+8", pattern = "HH:mm:ss")
+    Date getEndTime2();
 }

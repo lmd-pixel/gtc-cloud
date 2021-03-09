@@ -15,6 +15,8 @@ public interface UserService {
     // 通过用户名查找用户实体
     User getUserByUsername(String username) throws ApiException;
 
+    boolean isUserExist(String username) throws ApiException;
+
     // 通过数字id查找用户实体
     User getUserByDigitId(String digitId) throws ApiException;
 

@@ -37,6 +37,8 @@ public class TencentImCallbackService implements ImCallbackService {
 
     private final SysConfigService sysConfigService;
 
+    private final ForbiddenService forbiddenService;
+
     public TencentImCallbackService(AssetRepository assetRepository,
                                     UserRepository userRepository,
                                     MessageBillRepository messageBillRepository,
@@ -45,7 +47,8 @@ public class TencentImCallbackService implements ImCallbackService {
                                     ActiveRepository activeRepository,
                                     GreetService greetService,
                                     ImService imService,
-                                    SysConfigService sysConfigService) {
+                                    SysConfigService sysConfigService,
+                                    ForbiddenService forbiddenService) {
         this.assetRepository = assetRepository;
         this.userRepository = userRepository;
         this.messageBillRepository = messageBillRepository;
@@ -55,6 +58,7 @@ public class TencentImCallbackService implements ImCallbackService {
         this.greetService = greetService;
         this.imService = imService;
         this.sysConfigService = sysConfigService;
+        this.forbiddenService = forbiddenService;
     }
 
     @Override
@@ -113,6 +117,16 @@ public class TencentImCallbackService implements ImCallbackService {
         }
 
         User userFrom = optionalUserFrom.get();
+
+        // 封号检查
+        Forbidden forbidden = forbiddenService.getUserForbidden(userFrom);
+        if (forbidden != null) {
+            resp.setActionStatus("FAIL");
+            resp.setErrorCode(-1);
+            resp.setErrorInfo("账号存在违规行为已被封禁，请联系客服处理!");
+            return resp;
+        }
+
         User userTo = optionalUserTo.get();
         if (userTo.getIdentity() == 0) {
             // 目标用户是普通用户，则不用考虑金币问题

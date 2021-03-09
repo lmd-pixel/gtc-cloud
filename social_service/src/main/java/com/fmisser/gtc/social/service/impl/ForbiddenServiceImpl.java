@@ -1,16 +1,21 @@
 package com.fmisser.gtc.social.service.impl;
 
+import com.fmisser.gtc.base.dto.social.ForbiddenDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.Forbidden;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.repository.ForbiddenRepository;
 import com.fmisser.gtc.social.service.ForbiddenService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -60,7 +65,28 @@ public class ForbiddenServiceImpl implements ForbiddenService {
 
     @Override
     public Forbidden getUserForbidden(User user) throws ApiException {
-        Date now = new Date();
-        return forbiddenRepository.getCurrentForbidden(user.getId(), now);
+        return forbiddenRepository.getCurrentForbidden(user.getId());
+    }
+
+    @Override
+    public List<ForbiddenDto> getForbiddenList(String digitId, String nick, Integer identity,
+                                               Integer pageSize, Integer pageIndex) throws ApiException {
+        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
+        Page<ForbiddenDto> forbiddenDtoPage = forbiddenRepository.getForbiddenList(digitId, nick, identity, pageable);
+        return forbiddenDtoPage.getContent();
+    }
+
+    @Override
+    public int disableForbidden(Long forbiddenId) throws ApiException {
+        Optional<Forbidden> optionalForbidden = forbiddenRepository.findById(forbiddenId);
+        if (!optionalForbidden.isPresent()) {
+            throw new ApiException(-1, "封号不存在!");
+        }
+
+        Forbidden forbidden = optionalForbidden.get();
+        forbidden.setDisable(1);
+        forbiddenRepository.save(forbidden);
+
+        return 1;
     }
 }

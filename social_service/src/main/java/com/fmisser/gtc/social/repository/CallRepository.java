@@ -2,6 +2,7 @@ package com.fmisser.gtc.social.repository;
 
 import com.fmisser.gtc.base.dto.social.CallDetailDto;
 import com.fmisser.gtc.base.dto.social.CallDto;
+import com.fmisser.gtc.base.dto.social.calc.CalcAnchorProfitDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcTotalCallDto;
 import com.fmisser.gtc.social.domain.Call;
 import org.springframework.data.domain.Page;
@@ -46,7 +47,7 @@ public interface CallRepository extends JpaRepository<Call, Long> {
             "IF(tc.call_mode=1,tu.digit_id,tu2.digit_id) AS acceptDigitId, " +
             "IF(tc.call_mode=1,tu.nick,tu2.nick) AS acceptNick, " +
             "tc.type AS type, tc.call_mode AS mode, IF(tc.duration>0,1,0) AS connected, " +
-            "tc.duration AS duration, tc.start_time AS startTime, tc.finish_time AS finishTime, " +
+            "tc.duration AS duration, tc.created_time AS startTime, tc.finish_time AS finishTime, " +
             "COUNT(IF(tcb.source>0,TRUE,NULL)) AS card " +
             "FROM t_call tc " +
             "INNER JOIN t_user tu ON tc.user_id_from = tu.id " +
@@ -75,7 +76,7 @@ public interface CallRepository extends JpaRepository<Call, Long> {
             "IF(tc.call_mode=1,tu.digit_id,tu2.digit_id) AS acceptDigitId, " +
             "IF(tc.call_mode=1,tu.nick,tu2.nick) AS acceptNick, " +
             "tc.type AS type, tc.call_mode AS mode, IF(tc.duration>0,1,0) AS connected, " +
-            "tc.duration AS duration, tc.start_time AS startTime, tc.finish_time AS endTime, " +
+            "tc.duration AS duration, tc.created_time AS startTime, tc.finish_time AS endTime, " +
             "COUNT(IF(tcb.source>0,TRUE,NULL)) AS freeCard " +
             "FROM t_call tc " +
             "INNER JOIN t_user tu ON tc.user_id_from = tu.id " +
@@ -111,7 +112,7 @@ public interface CallRepository extends JpaRepository<Call, Long> {
             "tc.duration AS duration, " +
             "tc.type AS type, " +
             "tc.call_mode AS mode, " +
-            "tc.start_time AS startTime, " +
+            "tc.created_time AS startTime, " +
             "tc.finish_time AS endTime, " +
             "COUNT(IF(tcb.source>0,TRUE,NULL)) AS freeCard, " +
             "SUM(tcb.origin_coin) AS consume, " +

@@ -181,6 +181,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public boolean isUserExist(String username) throws ApiException {
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        return userOptional.isPresent();
+    }
+
+    @Override
     public User getUserByDigitId(String digitId) throws ApiException {
         Optional<User> userOptional = userRepository.findByDigitId(digitId);
         if (!userOptional.isPresent()) {
@@ -539,7 +545,7 @@ public class UserServiceImpl implements UserService {
 //            userPage = userRepository.getAnchorListBySystemAndFollow(gender, pageable);
             SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
             Date finalNow = dateFormat.parse(dateFormat.format(new Date()));
-            List<User> userList = userRepository.getAnchorListBySystemAndFollowEx(finalNow, gender, pageSize, pageIndex);
+            List<User> userList = userRepository.getAnchorListBySystemAndFollowEx(finalNow, gender, pageSize, pageSize * pageIndex);
             return userList.stream()
                     .map(this::_prepareResponse)
                     .collect(Collectors.toList());

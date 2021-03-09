@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.service;
 
 import com.fmisser.gtc.base.dto.social.*;
+import com.fmisser.gtc.base.dto.social.calc.CalcAnchorProfitDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import org.springframework.data.util.Pair;
 
@@ -47,4 +48,7 @@ public interface ProfitManagerService {
                                                         String anchorDigitId, String anchorNick,
                                                         Date startTime, Date endTime,
                                                         int pageIndex, int pageSize) throws ApiException;
+
+    // 获取主播各项收益
+    CalcAnchorProfitDto getAnchorProfit(String digitId, String nick, Date startTime, Date endTime) throws ApiException;
 }

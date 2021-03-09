@@ -116,13 +116,24 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "(SELECT tu.*, tr.level AS sort1, tu.follows AS sort2 FROM t_user tu " +
             "INNER JOIN t_recommend tr ON tr.type = 0 AND tr.recommend = 1 AND tr.user_id = tu.id " +
             "AND (" +
-            "(?1 BETWEEN tr.start_time AND tr.end_time OR tr.start_time IS NULL OR tr.end_time IS NULL)" +
-            "OR (?1 BETWEEN tr.start_time2 AND tr.end_time2 OR tr.start_time2 IS NULL OR tr.end_time2 IS NULL ) " +
+            "(IF(tr.end_time>tr.start_time, " +
+            "(?1 BETWEEN tr.start_time AND tr.end_time), " +
+            "((?1 BETWEEN tr.start_time AND '1970-01-01 23:59:59') OR (?1 BETWEEN '1970-01-01 00:00:00' AND tr.end_time))) " +
+            "OR tr.start_time IS NULL OR tr.end_time IS NULL)" +
+            "OR " +
+            "(IF(tr.end_time2>tr.start_time2, " +
+            "(?1 BETWEEN tr.start_time2 AND tr.end_time2), " +
+            "((?1 BETWEEN tr.start_time2 AND '1970-01-01 23:59:59') OR (?1 BETWEEN '1970-01-01 00:00:00' AND tr.end_time2))) " +
+            "OR tr.start_time2 IS NULL OR tr.end_time2 IS NULL)" +
             ") " +
             "WHERE tu.identity = 1 AND (tu.gender LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) " +
             "ORDER BY tr.level) UNION ALL " +
             "(SELECT tu2.*, 10000000 AS sort1, tu2.follows AS sort2 FROM t_user tu2 " +
             "LEFT JOIN t_recommend tr2 ON tr2.type = 0 AND tr2.recommend = 1 AND tr2.user_id = tu2.id " +
+            "AND (" +
+            "(?1 BETWEEN tr2.start_time AND tr2.end_time OR tr2.start_time IS NULL OR tr2.end_time IS NULL)" +
+            "OR (?1 BETWEEN tr2.start_time2 AND tr2.end_time2 OR tr2.start_time2 IS NULL OR tr2.end_time2 IS NULL ) " +
+            ") " +
             "WHERE tu2.identity = 1 AND (tu2.gender LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND tr2.id IS NULL) " +
             "ORDER BY sort1 , sort2 DESC LIMIT ?3 OFFSET ?4",
 //            countQuery = "SELECT COUNT(*) FROM t_user tu " +

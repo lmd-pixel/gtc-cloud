@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.controller;
 
 import com.fmisser.gtc.base.dto.social.*;
+import com.fmisser.gtc.base.dto.social.calc.CalcAnchorProfitDto;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.service.ProfitManagerService;
 import io.swagger.annotations.Api;
@@ -193,5 +194,24 @@ public class ProfitManagerController {
                 .getConsumerGiftBillList(consumerDigitId, consumerNick,
                         anchorDigitId, anchorNick, startTime, endTime, pageIndex, pageSize);
         return ApiResp.succeed(consumerGiftBillDtoList.getFirst(), consumerGiftBillDtoList.getSecond());
+    }
+
+    @ApiOperation(value = "获取主播收益统计")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
+            @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query", required = false),
+            @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query", required = false),
+            @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
+            @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false)
+    })
+    @PreAuthorize("hasAnyRole('MANAGER')")
+    @RequestMapping(value = "/calc-anchor-profit", method = RequestMethod.GET)
+    ApiResp<CalcAnchorProfitDto> calcAnchorProfit(
+            @RequestParam(value = "digitId", required = false) String digitId,
+            @RequestParam(value = "nick", required = false) String nick,
+            @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
+            @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime) {
+        CalcAnchorProfitDto calcAnchorProfitDto = profitManagerService.getAnchorProfit(digitId, nick, startTime, endTime);
+        return ApiResp.succeed(calcAnchorProfitDto);
     }
 }

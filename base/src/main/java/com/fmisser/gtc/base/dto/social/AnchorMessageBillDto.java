@@ -8,7 +8,7 @@ import java.util.Date;
 public interface AnchorMessageBillDto {
     String getDigitId();
     String getNick();
-    String getPhone();
+    int getCard();
     BigDecimal getProfit();
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     Date getCreateTime();

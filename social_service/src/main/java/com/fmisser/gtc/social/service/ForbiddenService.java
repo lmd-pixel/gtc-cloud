@@ -1,10 +1,12 @@
 package com.fmisser.gtc.social.service;
 
+import com.fmisser.gtc.base.dto.social.ForbiddenDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.Forbidden;
 import com.fmisser.gtc.social.domain.User;
 
 import java.util.Date;
+import java.util.List;
 
 public interface ForbiddenService {
     /**
@@ -22,4 +24,15 @@ public interface ForbiddenService {
      * 获取用户当前封号，如果没有，返回null
      */
     Forbidden getUserForbidden(User user) throws ApiException;
+
+    /**
+     * 获取当前封号列表
+     */
+    List<ForbiddenDto> getForbiddenList(String digitId, String nick, Integer identity,
+                                        Integer pageSize, Integer pageIndex) throws ApiException;
+
+    /**
+     * 根据forbidden id 封号
+     */
+    int disableForbidden(Long forbiddenId) throws ApiException;
 }

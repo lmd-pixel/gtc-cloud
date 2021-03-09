@@ -12,9 +12,9 @@ import java.util.Date;
 public interface AnchorCallBillDto {
     String getDigitId();
     String getNick();
-    String getPhone();
     BigDecimal getProfit();
     int getDuration();
+    int getCard();
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     Date getCreateTime();
 }

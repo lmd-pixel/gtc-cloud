@@ -30,7 +30,8 @@ public interface MessageBillRepository extends JpaRepository<MessageBill, Long> 
 
     // 查询主播私信收益列表
     @Query(value = "SELECT SUM(tmb.profit_coin) AS profit, tmb.creat_time AS createTime, " +
-            "tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone " +
+            "tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, " +
+            "SUM(IF(tmb.source>0,1,0)) AS card " +
             "FROM t_message_bill tmb " +
             "INNER JOIN t_user tu ON tu.id = tmb.user_id_to AND " +
             "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
