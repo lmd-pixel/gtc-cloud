@@ -33,11 +33,13 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
                 .authorizeRequests()
                 // 自定义鉴权
                 .accessDecisionManager(commonAccessDecisionManager)
+                // 放行 path
                 .antMatchers("/test/**").permitAll()
                 .antMatchers("/dynamic/**").permitAll()
                 .antMatchers("/comm/**").permitAll()
                 .antMatchers("/im_cb/**").permitAll()
                 .antMatchers("/recommend/**").permitAll()
+                .antMatchers("/banner/").permitAll()
 //                swagger
                 .antMatchers("/swagger-ui.html").permitAll()
                 .antMatchers("/webjars/**").permitAll()

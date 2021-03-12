@@ -8,9 +8,12 @@ import com.fmisser.gtc.base.dto.im.ImCbResp;
 import com.fmisser.gtc.base.dto.im.ImStateChangeDto;
 import com.fmisser.gtc.base.prop.ImConfProp;
 import com.fmisser.gtc.social.service.ImCallbackService;
+import com.fmisser.gtc.social.service.ModerationService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Objects;
 
 @Api(description = "Tencent IM Callback")
 @RestController
@@ -29,6 +32,13 @@ public class ImCallbackController {
         this.objectMapper = objectMapper;
         this.imCallbackService = imCallbackService;
         this.imConfProp = imConfProp;
+
+    }
+
+    @GetMapping
+    public Integer testTextModeration(@RequestParam("userId") String userId,
+                                      @RequestParam("content") String content) {
+        return imCallbackService.textModeration(userId, content);
     }
 
     @PostMapping("/entry")

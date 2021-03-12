@@ -55,6 +55,7 @@ public class ImMsgFactory {
 
     static public ImSendMsgDto buildGiftMsg(String fromAccount, String toAccount, String content,
                                             int tag, Long giftId, int giftCount, String giftName,
+                                            String recvNick, String sendHead,
                                             boolean syncMsg) {
         ImSendMsgDto imSendMsgDto = new ImSendMsgDto();
         imSendMsgDto.setSyncOtherMachine(syncMsg ? 1 : 2);
@@ -79,8 +80,8 @@ public class ImMsgFactory {
         customMsgBody.setMsgType("TIMCustomElem");
         ImMsgBody.ImMsgContent customMsgContent = new ImMsgBody.ImMsgContent();
 
-        String msgData = String.format("{\"tag\":%d,\"giftId\":%d,\"giftCount\":%d,\"giftName\":\"%s\"}",
-                tag, giftId, giftCount, giftName);
+        String msgData = String.format("{\"tag\":%d,\"giftId\":%d,\"giftCount\":%d,\"giftName\":\"%s\",\"recvNick\":\"%s\",\"sendHead\":\"%s\"}",
+                tag, giftId, giftCount, giftName, recvNick, sendHead);
         customMsgContent.setData(msgData);
 
         customMsgContent.setDesc("这是一个礼物");

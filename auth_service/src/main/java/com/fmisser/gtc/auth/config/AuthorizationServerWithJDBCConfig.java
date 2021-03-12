@@ -76,6 +76,15 @@ public class AuthorizationServerWithJDBCConfig extends AuthorizationServerConfig
     }
 
     @Bean
+    public CommonTokenService commonTokenService() {
+        CommonTokenService commonTokenService = new CommonTokenService();
+        commonTokenService.setTokenStore(tokenStore());
+        commonTokenService.setSupportRefreshToken(true);
+        commonTokenService.setTokenEnhancer(jwtAccessTokenConverter);
+        return commonTokenService;
+    }
+
+    @Bean
     public ClientDetailsService clientDetailsService() {
         return new JdbcClientDetailsService(dataSource);
     }
@@ -101,7 +110,8 @@ public class AuthorizationServerWithJDBCConfig extends AuthorizationServerConfig
                 .tokenStore(tokenStore())
                 .accessTokenConverter(jwtAccessTokenConverter)
                 .userDetailsService(userDetailsService)
-                .authenticationManager(authenticationManager);
+                .authenticationManager(authenticationManager)
+                .tokenServices(commonTokenService()); // 自定义token service
 
         // 自定义异常返回
         // controller封装了一层oauth/token的调用，不用再处理自定义异常

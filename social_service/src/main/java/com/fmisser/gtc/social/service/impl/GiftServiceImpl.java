@@ -9,7 +9,6 @@ import com.fmisser.gtc.social.repository.GiftBillRepository;
 import com.fmisser.gtc.social.repository.GiftRepository;
 import com.fmisser.gtc.social.service.GiftService;
 import com.fmisser.gtc.social.service.ImService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -49,7 +48,7 @@ public class GiftServiceImpl implements GiftService {
 
     @Override
     public List<Gift> getGiftList() throws ApiException {
-        return _prepareGiftResponse(giftRepository.findAll());
+        return _prepareGiftResponse(giftRepository.getGiftList());
     }
 
     @Transactional
@@ -123,7 +122,7 @@ public class GiftServiceImpl implements GiftService {
             if (!StringUtils.isEmpty(gift.getImage())) {
                 String imageUrl = String.format("%s/%s/%s",
                         ossConfProp.getMinioVisitUrl(),
-                        ossConfProp.getGiftBucket(),
+                        ossConfProp.getSystemConfigBucket(),
                         gift.getImage());
                 gift.setImageUrl(imageUrl);
             }
@@ -136,7 +135,7 @@ public class GiftServiceImpl implements GiftService {
             if (!StringUtils.isEmpty(recvGiftDto.getGiftImage())) {
                 String imageUrl = String.format("%s/%s/%s",
                         ossConfProp.getMinioVisitUrl(),
-                        ossConfProp.getGiftBucket(),
+                        ossConfProp.getSystemConfigBucket(),
                         recvGiftDto.getGiftImage());
                 recvGiftDto.setGiftImageUrl(imageUrl);
             }

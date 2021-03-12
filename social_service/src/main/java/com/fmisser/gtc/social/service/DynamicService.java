@@ -7,8 +7,11 @@ import com.fmisser.gtc.social.domain.Dynamic;
 import com.fmisser.gtc.social.domain.DynamicComment;
 import com.fmisser.gtc.social.domain.DynamicHeart;
 import com.fmisser.gtc.social.domain.User;
+import com.tencentcloudapi.ssa.v20180608.models.DataEvent;
+import org.springframework.data.util.Pair;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -35,4 +38,10 @@ public interface DynamicService {
     List<DynamicDto> getFollowLatestDynamicList(User selfUser, int pageIndex, int pageSize) throws ApiException;
     // 删除动态
     int delete(User user, Long dynamicId) throws ApiException;
+
+    ///// 管理接口
+    Pair<List<DynamicDto>, Map<String, Object>> managerListDynamic(String digitId, String nick, String content,
+                                                                   Date startTime, Date endTime,
+                                                                   int pageIndex, int pageSize) throws ApiException;
+    int deleteDynamic(Long dynamicId) throws ApiException;
 }

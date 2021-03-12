@@ -20,6 +20,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -250,6 +251,11 @@ public class UserDetailServiceImpl implements UserService {
 
         // 认证过后，如果数据库没有这条数据，则创建一条
         return _innerCreateByUsername(subject, 11);
+    }
+
+    @Override
+    public int logout(User user) throws ApiException {
+        return 0;
     }
 
     private User _innerCreateByUsername(String username, int type) {

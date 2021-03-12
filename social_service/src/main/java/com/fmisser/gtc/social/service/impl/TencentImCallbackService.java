@@ -1,20 +1,25 @@
 package com.fmisser.gtc.social.service.impl;
 
-import com.fmisser.gtc.base.dto.im.ImAfterSendMsgDto;
-import com.fmisser.gtc.base.dto.im.ImBeforeSendMsgDto;
-import com.fmisser.gtc.base.dto.im.ImCbResp;
-import com.fmisser.gtc.base.dto.im.ImStateChangeDto;
-import com.fmisser.gtc.base.utils.DateUtils;
+import com.fmisser.gtc.base.dto.im.*;
+import com.fmisser.gtc.base.prop.ImConfProp;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.retry.annotation.Retryable;
+import com.tencentcloudapi.common.Credential;
+import com.tencentcloudapi.common.profile.ClientProfile;
+import com.tencentcloudapi.common.profile.HttpProfile;
+import com.tencentcloudapi.tms.v20201229.TmsClient;
+import com.tencentcloudapi.tms.v20201229.models.DetailResults;
+import com.tencentcloudapi.tms.v20201229.models.TextModerationRequest;
+import com.tencentcloudapi.tms.v20201229.models.TextModerationResponse;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Base64Utils;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 public class TencentImCallbackService implements ImCallbackService {
@@ -39,6 +44,10 @@ public class TencentImCallbackService implements ImCallbackService {
 
     private final ForbiddenService forbiddenService;
 
+    private final ImConfProp imConfProp;
+
+    private final ModerationService moderationService;
+
     public TencentImCallbackService(AssetRepository assetRepository,
                                     UserRepository userRepository,
                                     MessageBillRepository messageBillRepository,
@@ -48,7 +57,9 @@ public class TencentImCallbackService implements ImCallbackService {
                                     GreetService greetService,
                                     ImService imService,
                                     SysConfigService sysConfigService,
-                                    ForbiddenService forbiddenService) {
+                                    ForbiddenService forbiddenService,
+                                    ImConfProp imConfProp,
+                                    ModerationService moderationService) {
         this.assetRepository = assetRepository;
         this.userRepository = userRepository;
         this.messageBillRepository = messageBillRepository;
@@ -59,6 +70,8 @@ public class TencentImCallbackService implements ImCallbackService {
         this.imService = imService;
         this.sysConfigService = sysConfigService;
         this.forbiddenService = forbiddenService;
+        this.imConfProp = imConfProp;
+        this.moderationService = moderationService;
     }
 
     @Override
@@ -93,6 +106,22 @@ public class TencentImCallbackService implements ImCallbackService {
         ImCbResp resp = new ImCbResp();
         resp.setActionStatus("OK");
         resp.setErrorCode(0);
+
+        // 安全打击
+        if (imBeforeSendMsgDto.getMsgBody().size() > 0) {
+            for (ImMsgBody msgbody :
+                    imBeforeSendMsgDto.getMsgBody()) {
+                if (msgbody.getMsgType().equals("TIMTextElem")) {
+                    int ret = textModeration(imBeforeSendMsgDto.getFrom_Account(), msgbody.getMsgContent().getText());
+                    if (ret == 0) {
+                        resp.setActionStatus("FAIL");
+                        resp.setErrorCode(-1);
+                        resp.setErrorInfo("违禁词!");
+                        return resp;
+                    }
+                }
+            }
+        }
 
         if (sysConfigService.isAppAudit()) {
             // 审核中，消息聊天不扣费
@@ -304,5 +333,54 @@ public class TencentImCallbackService implements ImCallbackService {
         return String.format("%d%010d",
                 new Date().getTime(),
                 new Random().nextInt(Integer.MAX_VALUE));
+    }
+
+    @SneakyThrows
+    @Override
+    public int textModeration(String userId, String text) {
+
+        text = Base64Utils.encodeToUrlSafeString(text.getBytes());
+
+        Credential credential = new Credential(imConfProp.getSecretId(), imConfProp.getSecretKey());
+
+        HttpProfile httpProfile = new HttpProfile();
+        httpProfile.setEndpoint("tms.tencentcloudapi.com");
+
+        ClientProfile clientProfile = new ClientProfile();
+        clientProfile.setHttpProfile(httpProfile);
+
+        TmsClient client = new TmsClient(credential, "ap-guangzhou", clientProfile);
+
+        TextModerationRequest req = new TextModerationRequest();
+        req.setContent(text);
+        com.tencentcloudapi.tms.v20201229.models.User user = new com.tencentcloudapi.tms.v20201229.models.User();
+        user.setUserId(userId);
+        req.setUser(user);
+        req.setDataId("chat text");
+
+        TextModerationResponse resp = client.TextModeration(req);
+
+        List<Moderation> moderationList = moderationService.getModerationList();
+
+        DetailResults[] detailResults = resp.getDetailResults();
+        for (DetailResults result :
+                detailResults) {
+            AtomicBoolean needBlock = new AtomicBoolean(false);
+            moderationList.stream()
+                    .filter(moderation -> {
+                        return result.getLabel().equals(moderation.getLabel()) &&
+                                result.getSuggestion().equals(moderation.getSuggestion()) &&
+                                result.getScore() >= moderation.getScore();
+
+                    })
+                    .findAny()
+                    .ifPresent(moderation -> needBlock.set(true));
+
+            if (needBlock.get()) {
+                return 0;
+            }
+        }
+
+        return 1;
     }
 }

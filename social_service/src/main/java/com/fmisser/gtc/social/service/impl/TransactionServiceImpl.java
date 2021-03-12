@@ -136,7 +136,7 @@ public class TransactionServiceImpl implements TransactionService {
     // 创建支付订单号
     public static String createRechargeOrderNumber(Long userId) {
         // 订单号 = 当前时间戳 + 用户id（格式化成10位） + 随机4位数
-        return String.format("%d%010d%4d",
+        return String.format("%d%010d%04d",
                 new Date().getTime(),
                 userId,
                 new Random().nextInt(9999));

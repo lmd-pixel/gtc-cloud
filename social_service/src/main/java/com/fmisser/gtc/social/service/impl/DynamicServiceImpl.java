@@ -23,6 +23,7 @@ import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -298,6 +299,42 @@ public class DynamicServiceImpl implements DynamicService {
         if (!dynamic.getUserId().equals(user.getId())) {
             throw new ApiException(-1, "您没有权限这样操作!");
         }
+
+        if (dynamic.getIsDelete() == 1) {
+            throw new ApiException(-1, "动态不存在,无法删除!");
+        }
+
+        dynamic.setIsDelete(1);
+        dynamicRepository.save(dynamic);
+
+        return 1;
+    }
+
+    @Override
+    public Pair<List<DynamicDto>, Map<String, Object>> managerListDynamic(String digitId, String nick, String content,
+                                   Date startTime, Date endTime,
+                                   int pageIndex, int pageSize) throws ApiException {
+        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
+        Page<DynamicDto> dynamicDtoPage =
+                dynamicRepository.getManagerDynamicList(digitId, nick, content, startTime, endTime, pageable);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", dynamicDtoPage.getTotalPages());
+        extra.put("totalEle", dynamicDtoPage.getTotalElements());
+        extra.put("currPage", pageIndex);
+
+        return Pair.of(dynamicDtoPage.getContent(), extra);
+
+    }
+
+    @Override
+    public int deleteDynamic(Long dynamicId) throws ApiException {
+        Optional<Dynamic> dynamicOptional = dynamicRepository.findById(dynamicId);
+        if (!dynamicOptional.isPresent()) {
+            throw new ApiException(-1, "动态不存在，无法删除!");
+        }
+
+        Dynamic dynamic = dynamicOptional.get();
 
         if (dynamic.getIsDelete() == 1) {
             throw new ApiException(-1, "动态不存在,无法删除!");

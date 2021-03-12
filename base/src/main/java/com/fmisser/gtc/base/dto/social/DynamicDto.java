@@ -22,6 +22,32 @@ public class DynamicDto {
 
     public DynamicDto(Long id, Long userId, String digitId, String content, int type, String video, String pictures,
                       Date createTime, Date modifyTime, BigDecimal longitude, BigDecimal latitude,
+                      Long heartCount, Long commentCount,
+                      String nick, Date birth, int gender, String head) {
+
+        this.id = id;
+        this.userId = userId;
+        this.digitId = digitId;
+        this.content = content;
+        this.type = type;
+        this.video = video;
+        this.pictures = pictures;
+        this.createTime = createTime;
+        this.modifyTime = modifyTime;
+        this.longitude = longitude;
+        this.latitude = latitude;
+        this.heartCount = heartCount;
+        this.selfHeart = 0L;
+        this.commentCount = commentCount;
+        this.follow = 0L;
+        this.nick = nick;
+        this.birth = birth;
+        this.gender = gender;
+        this.head = head;
+    }
+
+    public DynamicDto(Long id, Long userId, String digitId, String content, int type, String video, String pictures,
+                      Date createTime, Date modifyTime, BigDecimal longitude, BigDecimal latitude,
                       Long heartCount, Long selfHeart, Long commentCount,
                       String nick, Date birth, int gender, String head) {
         this.id = id;

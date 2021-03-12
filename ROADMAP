@@ -61,6 +61,8 @@ nginx 降低https延迟 https://zhuanlan.zhihu.com/p/346618690
 
 redis 限速 https://mp.weixin.qq.com/s/kyFAWH3mVNJvurQDt4vchA
 
+jwt 注销失效方案 https://www.cnblogs.com/haoxianrui/p/13740264.html
+
 ################## 业务逻辑相关 ##################
 
 1. 增加认证相关的记录到db

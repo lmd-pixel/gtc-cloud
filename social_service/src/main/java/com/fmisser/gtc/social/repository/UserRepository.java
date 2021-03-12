@@ -131,8 +131,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "(SELECT tu2.*, 10000000 AS sort1, tu2.follows AS sort2 FROM t_user tu2 " +
             "LEFT JOIN t_recommend tr2 ON tr2.type = 0 AND tr2.recommend = 1 AND tr2.user_id = tu2.id " +
             "AND (" +
-            "(?1 BETWEEN tr2.start_time AND tr2.end_time OR tr2.start_time IS NULL OR tr2.end_time IS NULL)" +
-            "OR (?1 BETWEEN tr2.start_time2 AND tr2.end_time2 OR tr2.start_time2 IS NULL OR tr2.end_time2 IS NULL ) " +
+            "(IF(tr2.end_time>tr2.start_time, " +
+            "(?1 BETWEEN tr2.start_time AND tr2.end_time), " +
+            "((?1 BETWEEN tr2.start_time AND '1970-01-01 23:59:59') OR (?1 BETWEEN '1970-01-01 00:00:00' AND tr2.end_time))) " +
+            "OR tr2.start_time IS NULL OR tr2.end_time IS NULL)" +
+            "OR " +
+            "(IF(tr2.end_time2>tr2.start_time2, " +
+            "(?1 BETWEEN tr2.start_time2 AND tr2.end_time2), " +
+            "((?1 BETWEEN tr2.start_time2 AND '1970-01-01 23:59:59') OR (?1 BETWEEN '1970-01-01 00:00:00' AND tr2.end_time2))) " +
+            "OR tr2.start_time2 IS NULL OR tr2.end_time2 IS NULL)" +
             ") " +
             "WHERE tu2.identity = 1 AND (tu2.gender LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND tr2.id IS NULL) " +
             "ORDER BY sort1 , sort2 DESC LIMIT ?3 OFFSET ?4",

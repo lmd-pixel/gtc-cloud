@@ -6,6 +6,7 @@ import com.fmisser.gtc.base.dto.im.ImSendMsgCbResp;
 import com.fmisser.gtc.base.dto.im.ImSendMsgDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.ImConfProp;
+import com.fmisser.gtc.base.prop.OssConfProp;
 import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.feign.ImFeign;
@@ -76,6 +77,12 @@ public class TencentImService implements ImService {
 
     @Autowired
     private SysConfigService sysConfigService;
+
+    @Autowired
+    private OssConfProp ossConfProp;
+
+//    @Autowired
+//    private UserService userService;
 
     @Override
     public String login(User user) throws ApiException {
@@ -168,6 +175,7 @@ public class TencentImService implements ImService {
 
         // 根据用户不同返回不同类型数据
         Call call = callRepository.findByRoomId(roomId);
+
         if (call.getIsFinished() == 0) {
             // 生成结束信息
             Date now = new Date();
@@ -177,7 +185,7 @@ public class TencentImService implements ImService {
             Date startTime = call.getStartTime();
             if (Objects.isNull(startTime)) {
                 // 还没开始
-                call.setFinishTime(now);
+//                call.setFinishTime(now);
 
                 // 首次挂断如果是主播并且不是主播主动呼叫，则发送主播未接信息到wx
 //                if (call.getCallMode() == 0) {
@@ -191,6 +199,22 @@ public class TencentImService implements ImService {
 //                        }
 //                    }
 //                }
+
+                // 发送推送消息,告知用户已取消
+                if (call.getCallMode() == 0) {
+                    if (user.getId().equals(call.getUserIdFrom())) {
+                        //
+                        Optional<User> toUser = userRepository.findById(call.getUserIdTo());
+                        String content = String.format("用户%s拨打已取消", user.getNick());
+                        toUser.ifPresent(value -> sendToUser(null, value, content));
+                    }
+                } else if (call.getCallMode() == 1) {
+                    if (user.getId().equals(call.getUserIdTo())) {
+                        Optional<User> toUser = userRepository.findById(call.getUserIdFrom());
+                        String content = String.format("用户%s拨打已取消", user.getNick());
+                        toUser.ifPresent(value -> sendToUser(null, value, content));
+                    }
+                }
 
             } else {
                 // 如果已经开始了 则计算总通话时长
@@ -454,8 +478,18 @@ public class TencentImService implements ImService {
 //        ImSendMsgDto msg2To = ImMsgFactory
 //                .buildGiftMsg(null, userFrom.getDigitId(), "赠送礼物成功!", 201, gift.getId(), count, true);
 
+
+        String headThumbnailUrl = null;
+        if (!StringUtils.isEmpty(userFrom.getHead())) {
+            headThumbnailUrl = String.format("%s/%s/thumbnail_%s",
+                    ossConfProp.getMinioVisitUrl(),
+                    ossConfProp.getUserProfileBucket(),
+                    userFrom.getHead());
+        }
         ImSendMsgDto msgCustom = ImMsgFactory.buildGiftMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                "您收到一个礼物，快去看看吧", 203, gift.getId(), count, gift.getName(),true);
+                "您收到一个礼物，快去看看吧", 203, gift.getId(), count, gift.getName(),
+                userTo.getNick(), headThumbnailUrl,
+                true);
 
         // 获取管理员的 usersig
         String admin = imConfProp.getAdmin();
