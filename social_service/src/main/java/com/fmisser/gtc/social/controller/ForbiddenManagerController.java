@@ -9,11 +9,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Api(description = "封号API")
 @RestController
@@ -37,8 +39,9 @@ public class ForbiddenManagerController {
             @RequestParam(value = "identity", required = false) Integer identity,
             @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
-        List<ForbiddenDto> forbiddenDtoList = forbiddenService.getForbiddenList(digitId, nick, identity, pageSize, pageIndex);
-        return ApiResp.succeed(forbiddenDtoList);
+        Pair<List<ForbiddenDto>, Map<String, Object>> forbiddenDtoList
+                = forbiddenService.getForbiddenList(digitId, nick, identity, pageSize, pageIndex);
+        return ApiResp.succeed(forbiddenDtoList.getFirst(), forbiddenDtoList.getSecond());
     }
 
     @ApiOperation(value = "封号")

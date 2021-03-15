@@ -37,4 +37,23 @@ public interface ForbiddenRepository extends JpaRepository<Forbidden, Long> {
                     "(days = 0 OR (start_time IS NOT NULL AND end_time IS NOT NULL AND NOW() BETWEEN start_time AND end_time))",
             nativeQuery = true)
     Page<ForbiddenDto> getForbiddenList(String digitId, String nick, Integer identity, Pageable pageable);
+
+    @Query(value = "SELECT tf.id AS id, tu.digit_id AS digitId, tu.nick AS nick, tu.identity AS identity, " +
+            "tf.days AS days, tf.message AS message, tf.start_time AS startTime, tf.end_time AS endTime " +
+            "FROM t_forbidden tf " +
+            "INNER JOIN t_user tu ON tu.id = tf.user_id AND " +
+            "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+            "(tu.identity LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL ) " +
+            "WHERE tf.disable = 0 AND " +
+            "(days = 0 OR (start_time IS NOT NULL AND end_time IS NOT NULL AND ?4 BETWEEN start_time AND end_time))",
+            countQuery = "SELECT COUNT(*) FROM t_forbidden tf " +
+                    "INNER JOIN t_user tu ON tu.id = tf.user_id AND " +
+                    "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+                    "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+                    "(tu.identity LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL ) " +
+                    "WHERE tf.disable = 0 AND " +
+                    "(days = 0 OR (start_time IS NOT NULL AND end_time IS NOT NULL AND ?4 BETWEEN start_time AND end_time))",
+            nativeQuery = true)
+    Page<ForbiddenDto> getForbiddenListV2(String digitId, String nick, Integer identity, Date time, Pageable pageable);
 }

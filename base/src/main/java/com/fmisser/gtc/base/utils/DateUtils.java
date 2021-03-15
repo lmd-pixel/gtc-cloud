@@ -1,10 +1,14 @@
 package com.fmisser.gtc.base.utils;
 
+import lombok.SneakyThrows;
+
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Objects;
 
 /**
  * 日期相关
@@ -83,5 +87,39 @@ public class DateUtils {
         gregorianCalendar.set(Calendar.SECOND, 59);
         gregorianCalendar.set(Calendar.MILLISECOND, 999);
         return gregorianCalendar.getTime();
+    }
+
+    // 判断时分秒是否在某个时分秒时间段内(跨天)
+    @SneakyThrows
+    public static boolean isTimeBetween(Date time, Date startTime, Date endTime) {
+
+        if (Objects.isNull(time) || Objects.isNull(startTime) || Objects.isNull(endTime)) {
+            throw new NullPointerException();
+        }
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+
+        time = dateFormat.parse(dateFormat.format(time));
+        startTime = dateFormat.parse(dateFormat.format(startTime));
+        endTime = dateFormat.parse(dateFormat.format(endTime));
+
+        Date dayEnd = dateFormat.parse("23:59:59");
+        Date dayStart = dateFormat.parse("00:00:00");
+
+        if (startTime.before(endTime)) {
+            // 不超过24点
+            if ((time.after(startTime) || time.equals(startTime)) &&
+                    (time.before(endTime) || time.equals(endTime))) {
+                return true;
+            }
+        } else {
+            // 超过24点
+            if ((time.after(startTime) || time.equals(startTime) && (time.before(dayEnd) || time.equals(dayEnd))) ||
+                    (time.after(dayStart) || time.equals(dayStart)) && (time.before(endTime) || time.equals(endTime))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

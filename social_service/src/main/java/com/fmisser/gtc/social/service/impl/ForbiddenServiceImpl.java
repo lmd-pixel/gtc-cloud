@@ -10,12 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -69,11 +67,18 @@ public class ForbiddenServiceImpl implements ForbiddenService {
     }
 
     @Override
-    public List<ForbiddenDto> getForbiddenList(String digitId, String nick, Integer identity,
-                                               Integer pageSize, Integer pageIndex) throws ApiException {
+    public Pair<List<ForbiddenDto>, Map<String, Object>> getForbiddenList(String digitId, String nick, Integer identity,
+                                                         Integer pageSize, Integer pageIndex) throws ApiException {
         Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
-        Page<ForbiddenDto> forbiddenDtoPage = forbiddenRepository.getForbiddenList(digitId, nick, identity, pageable);
-        return forbiddenDtoPage.getContent();
+        Page<ForbiddenDto> forbiddenDtoPage = forbiddenRepository
+                .getForbiddenListV2(digitId, nick, identity, new Date(), pageable);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", forbiddenDtoPage.getTotalPages() );
+        extra.put("totalEle", forbiddenDtoPage.getTotalElements());
+        extra.put("currPage", pageIndex);
+
+        return Pair.of(forbiddenDtoPage.getContent(), extra);
     }
 
     @Override

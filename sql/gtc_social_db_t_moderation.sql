@@ -1,0 +1,9 @@
+INSERT INTO `gtc-social-db`.t_moderation (id, disable, label, score, suggestion) VALUES (1, 0, 'Ad', 80, 'Block');
+INSERT INTO `gtc-social-db`.t_moderation (id, disable, label, score, suggestion) VALUES (2, 0, 'Porn', 98, 'Block');
+INSERT INTO `gtc-social-db`.t_moderation (id, disable, label, score, suggestion) VALUES (3, 0, 'Abuse', 95, 'Block');
+INSERT INTO `gtc-social-db`.t_moderation (id, disable, label, score, suggestion) VALUES (4, 0, 'Terror', 99, 'Block');
+INSERT INTO `gtc-social-db`.t_moderation (id, disable, label, score, suggestion) VALUES (5, 0, 'Polity', 80, 'Block');
+INSERT INTO `gtc-social-db`.t_moderation (id, disable, label, score, suggestion) VALUES (6, 0, 'Illegal', 90, 'Block');
+INSERT INTO `gtc-social-db`.t_moderation (id, disable, label, score, suggestion) VALUES (7, 0, 'Custom', 80, 'Block');
+INSERT INTO `gtc-social-db`.t_moderation (id, disable, label, score, suggestion) VALUES (8, 0, 'Normal', 95, 'Block');
+INSERT INTO `gtc-social-db`.t_moderation (id, disable, label, score, suggestion) VALUES (9, 0, 'Ad', 80, 'Review');

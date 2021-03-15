@@ -11,10 +11,7 @@ import com.fmisser.gtc.social.controller.BlockController;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.mq.GreetDelayedBinding;
 import com.fmisser.gtc.social.repository.*;
-import com.fmisser.gtc.social.service.CouponService;
-import com.fmisser.gtc.social.service.IdentityAuditService;
-import com.fmisser.gtc.social.service.ImService;
-import com.fmisser.gtc.social.service.UserService;
+import com.fmisser.gtc.social.service.*;
 import com.fmisser.gtc.social.utils.MinioUtils;
 import io.minio.ObjectWriteResponse;
 import lombok.SneakyThrows;
@@ -65,6 +62,8 @@ public class UserServiceImpl implements UserService {
 
     private final GreetDelayedBinding greetDelayedBinding;
 
+    private final SysConfigService sysConfigService;
+
     public UserServiceImpl(UserRepository userRepository,
                            MinioUtils minioUtils,
                            LabelRepository labelRepository,
@@ -77,7 +76,8 @@ public class UserServiceImpl implements UserService {
                            CouponService couponService,
                            ImService imService,
                            SystemTips systemTips,
-                           GreetDelayedBinding greetDelayedBinding) {
+                           GreetDelayedBinding greetDelayedBinding,
+                           SysConfigService sysConfigService) {
         this.userRepository = userRepository;
         this.minioUtils = minioUtils;
         this.labelRepository = labelRepository;
@@ -90,6 +90,7 @@ public class UserServiceImpl implements UserService {
         this.couponService = couponService;
         this.systemTips = systemTips;
         this.greetDelayedBinding = greetDelayedBinding;
+        this.sysConfigService = sysConfigService;
     }
 
     @Transactional
@@ -152,8 +153,12 @@ public class UserServiceImpl implements UserService {
         }
 
         // 注册送 视频卡 和 聊天券
-        couponService.addCommMsgFreeCoupon(user.getId(), 20, 10);
-        couponService.addCommVideoCoupon(user.getId(), 1, 10);
+        if (sysConfigService.isRegSendFreeVideo()) {
+            couponService.addCommVideoCoupon(user.getId(), 1, 10);
+        }
+        if (sysConfigService.isRegSendFreeMsg()) {
+            couponService.addCommMsgFreeCoupon(user.getId(), 20, 10);
+        }
 
         // 新用户注册欢迎消息
 //        imService.sendToUser(null, user, systemTips.assistNewUserMsg(user.getNick()));

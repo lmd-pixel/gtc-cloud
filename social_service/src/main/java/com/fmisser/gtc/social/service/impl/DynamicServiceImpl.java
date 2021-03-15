@@ -15,6 +15,7 @@ import com.fmisser.gtc.social.repository.DynamicCommentRepository;
 import com.fmisser.gtc.social.repository.DynamicHeartRepository;
 import com.fmisser.gtc.social.repository.DynamicRepository;
 import com.fmisser.gtc.social.service.DynamicService;
+import com.fmisser.gtc.social.service.ImCallbackService;
 import com.fmisser.gtc.social.utils.MinioUtils;
 import io.minio.ObjectWriteResponse;
 import lombok.SneakyThrows;
@@ -42,23 +43,31 @@ public class DynamicServiceImpl implements DynamicService {
     private final DynamicCommentRepository dynamicCommentRepository;
     private final OssConfProp ossConfProp;
     private final MinioUtils minioUtils;
+    private final ImCallbackService imCallbackService;
 
     public DynamicServiceImpl(DynamicRepository dynamicRepository,
                               DynamicCommentRepository dynamicCommentRepository,
                               DynamicHeartRepository dynamicHeartRepository,
                               OssConfProp ossConfProp,
-                              MinioUtils minioUtils) {
+                              MinioUtils minioUtils,
+                              ImCallbackService imCallbackService) {
         this.dynamicRepository = dynamicRepository;
         this.dynamicHeartRepository = dynamicHeartRepository;
         this.dynamicCommentRepository = dynamicCommentRepository;
         this.ossConfProp = ossConfProp;
         this.minioUtils = minioUtils;
+        this.imCallbackService = imCallbackService;
     }
 
     @Override
     @SneakyThrows
     public DynamicDto create(User user, int type, String content,
                           Map<String, MultipartFile> multipartFileMap) throws ApiException {
+
+        int ret = imCallbackService.textModeration(user.getDigitId(), content);
+        if (ret == 0) {
+            throw new ApiException(-1, "发现违规内容，发表失败");
+        }
 
         Dynamic dynamic = new Dynamic();
         dynamic.setUserId(user.getId());
@@ -209,6 +218,12 @@ public class DynamicServiceImpl implements DynamicService {
         if (!optionalDynamic.isPresent()) {
             throw new ApiException(-1, "动态数据不存在或已删除！");
         }
+
+        int ret = imCallbackService.textModeration(selfUser.getDigitId(), content);
+        if (ret == 0) {
+            throw new ApiException(-1, "发现违规内容，发表失败");
+        }
+
         Dynamic dynamic = optionalDynamic.get();
 
         DynamicComment dynamicComment = new DynamicComment();

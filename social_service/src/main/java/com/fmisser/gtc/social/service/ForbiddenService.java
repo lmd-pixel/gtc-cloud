@@ -4,9 +4,11 @@ import com.fmisser.gtc.base.dto.social.ForbiddenDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.Forbidden;
 import com.fmisser.gtc.social.domain.User;
+import org.springframework.data.util.Pair;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public interface ForbiddenService {
     /**
@@ -28,8 +30,8 @@ public interface ForbiddenService {
     /**
      * 获取当前封号列表
      */
-    List<ForbiddenDto> getForbiddenList(String digitId, String nick, Integer identity,
-                                        Integer pageSize, Integer pageIndex) throws ApiException;
+    Pair<List<ForbiddenDto>, Map<String, Object>> getForbiddenList(String digitId, String nick, Integer identity,
+                                                                   Integer pageSize, Integer pageIndex) throws ApiException;
 
     /**
      * 根据forbidden id 封号

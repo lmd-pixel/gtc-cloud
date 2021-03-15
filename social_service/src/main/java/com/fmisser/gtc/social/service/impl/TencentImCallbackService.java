@@ -115,8 +115,8 @@ public class TencentImCallbackService implements ImCallbackService {
                     int ret = textModeration(imBeforeSendMsgDto.getFrom_Account(), msgbody.getMsgContent().getText());
                     if (ret == 0) {
                         resp.setActionStatus("FAIL");
-                        resp.setErrorCode(-1);
-                        resp.setErrorInfo("违禁词!");
+                        resp.setErrorCode(121003);
+                        resp.setErrorInfo("发送失败");
                         return resp;
                     }
                 }
@@ -140,7 +140,7 @@ public class TencentImCallbackService implements ImCallbackService {
 
             // 用户数据错误
             resp.setActionStatus("FAIL");
-            resp.setErrorCode(-1);
+            resp.setErrorCode(121000);
             resp.setErrorInfo("用户信息不正确");
             return resp;
         }
@@ -151,7 +151,7 @@ public class TencentImCallbackService implements ImCallbackService {
         Forbidden forbidden = forbiddenService.getUserForbidden(userFrom);
         if (forbidden != null) {
             resp.setActionStatus("FAIL");
-            resp.setErrorCode(-1);
+            resp.setErrorCode(121002);
             resp.setErrorInfo("账号存在违规行为已被封禁，请联系客服处理!");
             return resp;
         }
@@ -218,7 +218,7 @@ public class TencentImCallbackService implements ImCallbackService {
                 !optionalUserFrom.isPresent()) {
             // 用户数据错误
             resp.setActionStatus("FAIL");
-            resp.setErrorCode(-1);
+            resp.setErrorCode(121000);
             resp.setErrorInfo("用户信息不正确");
             return resp;
         }
@@ -339,7 +339,7 @@ public class TencentImCallbackService implements ImCallbackService {
     @Override
     public int textModeration(String userId, String text) {
 
-        text = Base64Utils.encodeToUrlSafeString(text.getBytes());
+        text = Base64Utils.encodeToString(text.getBytes());
 
         Credential credential = new Credential(imConfProp.getSecretId(), imConfProp.getSecretKey());
 
@@ -353,10 +353,10 @@ public class TencentImCallbackService implements ImCallbackService {
 
         TextModerationRequest req = new TextModerationRequest();
         req.setContent(text);
-        com.tencentcloudapi.tms.v20201229.models.User user = new com.tencentcloudapi.tms.v20201229.models.User();
-        user.setUserId(userId);
-        req.setUser(user);
-        req.setDataId("chat text");
+//        com.tencentcloudapi.tms.v20201229.models.User user = new com.tencentcloudapi.tms.v20201229.models.User();
+//        user.setUserId(userId);
+//        req.setUser(user);
+//        req.setDataId("chat text");
 
         TextModerationResponse resp = client.TextModeration(req);
 
@@ -371,7 +371,6 @@ public class TencentImCallbackService implements ImCallbackService {
                         return result.getLabel().equals(moderation.getLabel()) &&
                                 result.getSuggestion().equals(moderation.getSuggestion()) &&
                                 result.getScore() >= moderation.getScore();
-
                     })
                     .findAny()
                     .ifPresent(moderation -> needBlock.set(true));

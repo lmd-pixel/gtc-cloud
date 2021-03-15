@@ -19,4 +19,18 @@ public interface SysConfigService {
     // 获取提现配置
     // 返回提现手续费和最低提现金额
     Pair<BigDecimal, BigDecimal> getWithdrawConfig() throws ApiException;
+
+    boolean isShowFreeVideoBanner() throws ApiException;
+
+    boolean isShowFreeMsgBanner() throws ApiException;
+
+    boolean isShowRechargeVideoBanner() throws ApiException;
+
+    boolean isRegSendFreeVideo() throws ApiException;
+
+    boolean isRegSendFreeMsg() throws ApiException;
+
+    boolean isFirstRechargeFreeVideo() throws ApiException;
+
+    boolean isFirstRechargeFreeMsg() throws ApiException;
 }
