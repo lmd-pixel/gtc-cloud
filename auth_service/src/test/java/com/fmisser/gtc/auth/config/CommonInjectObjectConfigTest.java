@@ -11,10 +11,12 @@ class CommonInjectObjectConfigTest {
     @Test
     void passwordEncoder() {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        String testSecret = passwordEncoder.encode("test-client-secret");
-        String prodSecret = passwordEncoder.encode("comm-client-secret");
+//        String testSecret = passwordEncoder.encode("test-client-secret");
+//        String prodSecret = passwordEncoder.encode("comm-client-secret");
+
+        String testPwd = passwordEncoder.encode("YUka78JDfa12s");
 
 //        System.out.println(testSecret);
-        System.out.println(prodSecret);
+        System.out.println(testPwd);
     }
 }

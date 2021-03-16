@@ -17,7 +17,7 @@ public class FallbackController {
         Map<String,Object> result = new HashMap<>();
         result.put("data", null);
         result.put("code", 500);
-        result.put("message", "服务暂不可用，稍后再试");
+        result.put("message", "访问过于频繁，请稍后再试");
         return result;
     }
 }
