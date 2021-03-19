@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface InviteRepository extends JpaRepository<Invite, Long> {
+    Invite findByInvitedUserId(Long userId);
 }
