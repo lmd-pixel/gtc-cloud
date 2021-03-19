@@ -190,17 +190,44 @@ public class TencentImService implements ImService {
             Date startTime = call.getStartTime();
             if (Objects.isNull(startTime)) {
                 // 还没开始
-                call.setFinishTime(now);
+//                call.setFinishTime(now);
+
+                // 发送推送消息,告知用户已取消
+                if (call.getCallMode() == 0) {
+                    if (user.getId().equals(call.getUserIdFrom())) {
+                        //
+                        Optional<User> toUser = userRepository.findById(call.getUserIdTo());
+                        String content = String.format("用户%s拨打已取消", user.getNick());
+                        toUser.ifPresent(value -> sendToUser(null, value, content));
+                    }
+                } else if (call.getCallMode() == 1) {
+                    if (user.getId().equals(call.getUserIdTo())) {
+                        Optional<User> toUser = userRepository.findById(call.getUserIdFrom());
+                        String content = String.format("用户%s拨打已取消", user.getNick());
+                        toUser.ifPresent(value -> sendToUser(null, value, content));
+                    }
+                }
 
                 // 首次挂断如果是主播并且不是主播主动呼叫，则发送主播未接信息到wx
 //                if (call.getCallMode() == 0) {
 //                    if (user.getIdentity() == 1) {
-////                        String message = String.format("【主播拒绝接听提示】用户:%s[%s]于%s发起的通话主播：%s[%s]拒绝接听",
-////                                call.getUserIdFrom())
+//                        Long time = (now.getTime() - call.getCreatedTime().getTime()) / 1000;
+//                        String message = String.format("1,%d,%d", call.getId(), time);
+//                        Message<String> tipMsg = MessageBuilder.withPayload(message).build();
+//                        boolean ret = wxWebHookBinding.wxWebHookOutputChannel().send(tipMsg);
+//                        if (!ret) {
+//                            // TODO: 2021/1/25 处理发送失败
+//                        }
 //                    } else {
-//                        // 判断用户从拨打到挂断的时间超过20秒，则认为主播未接听
-//                        if (now.getTime() - call.getCreatedTime().getTime() > 20 * 1000) {
-//
+//                        // 判断用户从拨打到挂断的时间超过5秒，则认为主播未接听
+//                        long time = (now.getTime() - call.getCreatedTime().getTime()) / 1000;
+//                        if (time > 5) {
+//                            String message = String.format("2,%d,%d", call.getId(), time);
+//                            Message<String> tipMsg = MessageBuilder.withPayload(message).build();
+//                            boolean ret = wxWebHookBinding.wxWebHookOutputChannel().send(tipMsg);
+//                            if (!ret) {
+//                                // TODO: 2021/1/25 处理发送失败
+//                            }
 //                        }
 //                    }
 //                }
@@ -467,8 +494,17 @@ public class TencentImService implements ImService {
 //        ImSendMsgDto msg2To = ImMsgFactory
 //                .buildGiftMsg(null, userFrom.getDigitId(), "赠送礼物成功!", 201, gift.getId(), count, true);
 
+        String headThumbnailUrl = null;
+        if (!StringUtils.isEmpty(userFrom.getHead())) {
+            headThumbnailUrl = String.format("%s/%s/thumbnail_%s",
+                    ossConfProp.getMinioVisitUrl(),
+                    ossConfProp.getUserProfileBucket(),
+                    userFrom.getHead());
+        }
         ImSendMsgDto msgCustom = ImMsgFactory.buildGiftMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                "您收到一个礼物，快去看看吧", 203, gift.getId(), count, gift.getName(),true);
+                "您收到一个礼物，快去看看吧", 203, gift.getId(), count, gift.getName(),
+                userTo.getNick(), headThumbnailUrl,
+                true);
 
         // 获取管理员的 usersig
         String admin = imConfProp.getAdmin();
