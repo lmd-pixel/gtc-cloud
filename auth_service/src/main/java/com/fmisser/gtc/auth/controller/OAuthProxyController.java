@@ -16,7 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.util.Map;
 
-@Api(description = "登录代理中心")
+@Deprecated
+//@Api(description = "登录代理中心")
 @RestController
 @RequestMapping("/proxy")
 public class OAuthProxyController {

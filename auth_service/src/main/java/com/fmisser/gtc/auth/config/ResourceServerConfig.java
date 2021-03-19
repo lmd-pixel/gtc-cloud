@@ -33,7 +33,7 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
                 .antMatchers("/user/**").permitAll()
                 .antMatchers("/cms/**").permitAll()
 //                .antMatchers("/cms/**").hasAnyRole("ADMIN")
-                .antMatchers("/proxy/**").permitAll()
+//                .antMatchers("/proxy/**").permitAll()
 //                swagger
                 .antMatchers("/swagger-ui.html").permitAll()
                 .antMatchers("/webjars/**").permitAll()
