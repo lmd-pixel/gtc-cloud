@@ -3,14 +3,12 @@ package com.fmisser.gtc.social.controller;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.Banner;
 import com.fmisser.gtc.social.service.BannerService;
+import com.fmisser.gtc.social.service.SysConfigService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,10 +21,22 @@ public class BannerController {
     @Autowired
     private BannerService bannerService;
 
+    @Autowired
+    private SysConfigService sysConfigService;
+
     @ApiOperation("广告列表")
     @GetMapping("/list")
-    ApiResp<List<Banner>> getBannerList(@RequestParam("lang") String lang) {
-        List<Banner> bannerList = bannerService.getBannerList(lang);
-        return ApiResp.succeed(bannerList);
+    ApiResp<List<Banner>> getBannerList(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam("lang") String lang) {
+
+        // 针对版本审核
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
+            List<Banner> bannerList = bannerService.getAuditBannerList(lang);
+            return ApiResp.succeed(bannerList);
+        } else {
+            List<Banner> bannerList = bannerService.getBannerList(lang);
+            return ApiResp.succeed(bannerList);
+        }
     }
 }

@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface BannerRepository extends JpaRepository<Banner, Long> {
     List<Banner> findAllByLangAndDisable(String lang, int disable);
+    List<Banner> findAllByLangAndName(String lang, String name);
 }

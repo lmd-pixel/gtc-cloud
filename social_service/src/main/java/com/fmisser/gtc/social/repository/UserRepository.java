@@ -73,6 +73,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
     nativeQuery = true)
     Page<User> getAnchorListByProfit(Integer gender, Pageable pageable);
 
+    // 获取主播列表，根据总收益排序
+    @Query(value = "SELECT tu.*, " +
+            "(SELECT IFNULL(SUM(tmb.profit_coin), 0) FROM t_message_bill tmb WHERE tmb.user_id_to = tu.id) + " +
+            "(SELECT IFNULL(SUM(tgb.profit_coin), 0) FROM t_gift_bill tgb WHERE tgb.user_id_to = tu.id) + " +
+            "(SELECT IFNULL(SUM(tcb.profit_coin), 0) FROM t_call_bill tcb WHERE tcb.user_id_to = tu.id)" +
+            " AS profit " +
+            "FROM t_user tu " +
+            "WHERE tu.identity = 1 AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
+            "GROUP BY tu.id ORDER BY profit DESC ",
+            countQuery = "SELECT COUNT(*) FROM t_user tu " +
+                    "WHERE tu.identity = 1 AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " ,
+            nativeQuery = true)
+    Page<User> getAnchorListByProfitEx(Integer gender, Pageable pageable);
+
     // 获取主播列表，根据系统推荐
     @Query(value = "SELECT tu.* " +
             "FROM t_user tu " +

@@ -558,7 +558,7 @@ public class UserServiceImpl implements UserService {
             // TODO: 2021/3/6 因为无需统计分页 这里可以不用pageable 减少一次sql查询
             Pageable pageable = PageRequest.of(pageIndex, pageSize);
             Page<User> userPage;
-            userPage = userRepository.getAnchorListByProfit(gender, pageable);
+            userPage = userRepository.getAnchorListByProfitEx(gender, pageable);
             return userPage.stream()
                     .map(this::_prepareResponse)
                     .collect(Collectors.toList());

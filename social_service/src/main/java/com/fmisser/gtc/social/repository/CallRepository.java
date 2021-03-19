@@ -53,15 +53,24 @@ public interface CallRepository extends JpaRepository<Call, Long> {
             "INNER JOIN t_user tu ON tc.user_id_from = tu.id " +
             "INNER JOIN t_user tu2 ON tc.user_id_to = tu2.id " +
             "LEFT JOIN t_call_bill tcb ON tcb.call_id = tc.id " +
+            "WHERE " +
+            "(IF(tc.call_mode=1,tu2.digit_id,tu.digit_id) LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+            "(IF(tc.call_mode=1,tu2.nick,tu.nick) LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+            "(IF(tc.call_mode=1,tu.digit_id,tu2.digit_id) LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
+            "(IF(tc.call_mode=1,tu.nick,tu2.nick) LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) AND " +
+            "(tc.type LIKE CONCAT('%', ?5, '%') OR ?5 IS NULL) AND " +
+            "(IF(tc.duration>0,1,0) LIKE CONCAT('%', ?6, '%') OR ?6 IS NULL) AND " +
+            "(tc.created_time BETWEEN ?7 AND ?8 OR ?7 IS NULL OR ?8 IS NULL) " +
             "GROUP BY tc.id" +
-            ") tcc WHERE " +
-            "(callDigitId LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
-            "(callNick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
-            "(acceptDigitId LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
-            "(acceptNick LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) AND " +
-            "(type LIKE CONCAT('%', ?5, '%') OR ?5 IS NULL) AND " +
-            "(connected LIKE CONCAT('%', ?6, '%') OR ?6 IS NULL) AND " +
-            "(startTime BETWEEN ?7 AND ?8 OR ?7 IS NULL OR ?8 IS NULL) ",
+            ") tcc ",
+//            "WHERE " +
+//            "(callDigitId LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+//            "(callNick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+//            "(acceptDigitId LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
+//            "(acceptNick LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) AND " +
+//            "(type LIKE CONCAT('%', ?5, '%') OR ?5 IS NULL) AND " +
+//            "(connected LIKE CONCAT('%', ?6, '%') OR ?6 IS NULL) AND " +
+//            "(startTime BETWEEN ?7 AND ?8 OR ?7 IS NULL OR ?8 IS NULL) ",
     nativeQuery = true)
     CalcTotalCallDto calcTotalCall(String callDigitId, String callNick,
                                    String acceptDigitId, String acceptNick,
@@ -82,17 +91,26 @@ public interface CallRepository extends JpaRepository<Call, Long> {
             "INNER JOIN t_user tu ON tc.user_id_from = tu.id " +
             "INNER JOIN t_user tu2 ON tc.user_id_to = tu2.id " +
             "LEFT JOIN t_call_bill tcb ON tcb.call_id = tc.id " +
-            "GROUP BY tc.id" +
-            ") tcc " +
             "WHERE " +
-            "(callDigitId LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
-            "(callNick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
-            "(acceptDigitId LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
-            "(acceptNick LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) AND " +
-            "(type LIKE CONCAT('%', ?5, '%') OR ?5 IS NULL) AND " +
-            "(connected LIKE CONCAT('%', ?6, '%') OR ?6 IS NULL) AND " +
-            "(startTime BETWEEN ?7 AND ?8 OR ?7 IS NULL OR ?8 IS NULL) " +
-            "ORDER BY callId DESC LIMIT ?9 OFFSET ?10",
+            "(IF(tc.call_mode=1,tu2.digit_id,tu.digit_id) LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+            "(IF(tc.call_mode=1,tu2.nick,tu.nick) LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+            "(IF(tc.call_mode=1,tu.digit_id,tu2.digit_id) LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
+            "(IF(tc.call_mode=1,tu.nick,tu2.nick) LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) AND " +
+            "(tc.type LIKE CONCAT('%', ?5, '%') OR ?5 IS NULL) AND " +
+            "(IF(tc.duration>0,1,0) LIKE CONCAT('%', ?6, '%') OR ?6 IS NULL) AND " +
+            "(tc.created_time BETWEEN ?7 AND ?8 OR ?7 IS NULL OR ?8 IS NULL) " +
+            "GROUP BY tc.id " +
+            "ORDER BY tc.id DESC LIMIT ?9 OFFSET ?10 " +
+            ") tcc ",
+//            "WHERE " +
+//            "(callDigitId LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+//            "(callNick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+//            "(acceptDigitId LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
+//            "(acceptNick LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) AND " +
+//            "(type LIKE CONCAT('%', ?5, '%') OR ?5 IS NULL) AND " +
+//            "(connected LIKE CONCAT('%', ?6, '%') OR ?6 IS NULL) AND " +
+//            "(startTime BETWEEN ?7 AND ?8 OR ?7 IS NULL OR ?8 IS NULL) " +
+//            "ORDER BY callId DESC LIMIT ?9 OFFSET ?10",
     nativeQuery = true)
     List<CallDto> getCallList(String callDigitId, String callNick,
                               String acceptDigitId, String acceptNick,

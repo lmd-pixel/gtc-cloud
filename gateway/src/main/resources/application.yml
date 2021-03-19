@@ -63,12 +63,21 @@ hystrix:
   command:
     fallbackcmd:
       execution:
-        timeout:
-          enable: true
+#        timeout:
+#          enable: true
         isolation:
-          strategy: SEMAPHORE
+#          strategy: SEMAPHORE
+          strategy: THREAD
+#          semaphore:
+#            maxConcurrentRequests: 200
           thread:
-            timeoutInMilliseconds: 30000
+            timeoutInMilliseconds: 10000
+  threadpool:
+    default:
+      coreSize: 200
+      maxQueueSize: 1000
+      queueSizeRejectionThreshold: 800
+
 
 # actuator 暴露 hystrix
 management:

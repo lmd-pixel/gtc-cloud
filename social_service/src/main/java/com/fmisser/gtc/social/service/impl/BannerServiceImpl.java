@@ -47,6 +47,12 @@ public class BannerServiceImpl implements BannerService {
         return _prepareBannerResponse(bannerList);
     }
 
+    @Override
+    public List<Banner> getAuditBannerList(String lang) throws ApiException {
+        List<Banner> bannerList = bannerRepository.findAllByLangAndName(lang, "net_clean");
+        return _prepareBannerResponse(bannerList);
+    }
+
     private List<Banner> _prepareBannerResponse(List<Banner> bannerList) {
         for (Banner banner: bannerList) {
             if (!StringUtils.isEmpty(banner.getImage())) {

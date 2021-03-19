@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface BannerService {
     List<Banner> getBannerList(String lang) throws ApiException;
+    List<Banner> getAuditBannerList(String lang) throws ApiException;
 }
