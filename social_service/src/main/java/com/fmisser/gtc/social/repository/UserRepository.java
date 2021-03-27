@@ -31,7 +31,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     int addUserFollow(Long userId);
 
     @Modifying(clearAutomatically = true)
-    @Query(value = "UPDATE t_user set follows = follows + 1 WHERE id = ?1", nativeQuery = true)
+    @Query(value = "UPDATE t_user set follows = follows - 1 WHERE id = ?1", nativeQuery = true)
     int subUserFollow(Long userId);
 
     // 获取主播列表,根据创建时间排序
@@ -128,7 +128,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // 根据推荐（排班）+关注排序
     @Query(value = "(SELECT tu.*, tr.level AS sort1, tu.follows AS sort2 FROM t_user tu " +
-            "INNER JOIN t_recommend tr ON tr.type = 0 AND tr.recommend = 1 AND tr.user_id = tu.id " +
+            "INNER JOIN t_recommend tr ON tr.type = ?5 AND tr.recommend = 1 AND tr.user_id = tu.id " +
             "AND (" +
             "(IF(tr.end_time>tr.start_time, " +
             "(?1 BETWEEN tr.start_time AND tr.end_time), " +
@@ -143,7 +143,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "WHERE tu.identity = 1 AND (tu.gender LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) " +
             "ORDER BY tr.level) UNION ALL " +
             "(SELECT tu2.*, 10000000 AS sort1, tu2.follows AS sort2 FROM t_user tu2 " +
-            "LEFT JOIN t_recommend tr2 ON tr2.type = 0 AND tr2.recommend = 1 AND tr2.user_id = tu2.id " +
+            "LEFT JOIN t_recommend tr2 ON tr2.type = ?5 AND tr2.recommend = 1 AND tr2.user_id = tu2.id " +
             "AND (" +
             "(IF(tr2.end_time>tr2.start_time, " +
             "(?1 BETWEEN tr2.start_time AND tr2.end_time), " +
@@ -161,7 +161,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 //                    "WHERE tu.identity = 1 " +
 //                    "AND (tu.gender LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL)",
             nativeQuery = true)
-    List<User> getAnchorListBySystemAndFollowEx(Date date, Integer gender, int limit, int offset);
+    List<User> getAnchorListBySystemAndFollowEx(Date date, Integer gender, int limit, int offset, int type);
 //    Page<User> getAnchorListBySystemAndFollowEx(Date date, Integer gender, Pageable pageable);
 
     // 查询主播总数

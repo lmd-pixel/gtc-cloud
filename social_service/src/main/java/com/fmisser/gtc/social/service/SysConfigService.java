@@ -33,4 +33,6 @@ public interface SysConfigService {
     boolean isFirstRechargeFreeVideo() throws ApiException;
 
     boolean isFirstRechargeFreeMsg() throws ApiException;
+
+    boolean isRandRecommend() throws ApiException;
 }

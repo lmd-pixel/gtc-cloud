@@ -31,6 +31,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -61,7 +62,8 @@ public class DynamicServiceImpl implements DynamicService {
 
     @Override
     @SneakyThrows
-    public DynamicDto create(User user, int type, String content,
+    public DynamicDto create(User user, int type, String content, String city,
+                             BigDecimal longitude, BigDecimal latitude,
                           Map<String, MultipartFile> multipartFileMap) throws ApiException {
 
         int ret = imCallbackService.textModeration(user.getDigitId(), content);
@@ -75,6 +77,18 @@ public class DynamicServiceImpl implements DynamicService {
         dynamic.setContent(content);
         // 默认先通过
         dynamic.setStatus(10);
+
+        if (Objects.nonNull(city)) {
+            dynamic.setCity(city);
+        } else {
+            // 如果没有传city，则使用信息所在城市
+            dynamic.setCity(user.getCity());
+        }
+
+        if (Objects.nonNull(longitude) && Objects.nonNull(latitude)) {
+            dynamic.setLongitude(longitude);
+            dynamic.setLatitude(latitude);
+        }
 
         List<String> photoList = new ArrayList<>();
 
@@ -361,6 +375,21 @@ public class DynamicServiceImpl implements DynamicService {
         return 1;
     }
 
+    @Override
+    public List<DynamicDto> compat(List<DynamicDto> dynamicDtoList, String version) throws ApiException {
+        final String compatVersion = "v212";
+        if (version.compareTo(compatVersion) < 0) {
+            // 兼容以前的动态
+            return dynamicDtoList.stream()
+                    .peek(dynamicDto -> {
+                        dynamicDto.setLatitude(null);
+                        dynamicDto.setLongitude(null);
+                    }).collect(Collectors.toList());
+        } else {
+            return dynamicDtoList;
+        }
+    }
+
     private List<DynamicCommentDto> _prepareDynamicCommentDtoResponse(List<DynamicCommentDto> dynamicCommentDtos, Long selfUserId) {
         for (DynamicCommentDto commentDto :
                 dynamicCommentDtos) {
@@ -444,7 +473,7 @@ public class DynamicServiceImpl implements DynamicService {
     private DynamicDto _prepareDynamicResponse(Dynamic dynamic, User user) {
         DynamicDto dynamicDto = new DynamicDto(
                 dynamic.getId(), dynamic.getUserId(), user.getDigitId(),
-                dynamic.getContent(), dynamic.getType(),
+                dynamic.getContent(), dynamic.getCity(), dynamic.getType(),
                 dynamic.getVideo(), dynamic.getPictures(),
                 dynamic.getCreateTime(), dynamic.getModifyTime(),
                 dynamic.getLongitude(), dynamic.getLatitude(),

@@ -63,6 +63,9 @@ public class Dynamic {
     @Column
     private BigDecimal latitude;
 
+    @Column
+    private String city;
+
     @Column(nullable = false, columnDefinition = "int default 0")
     private int isDelete = 0;
 

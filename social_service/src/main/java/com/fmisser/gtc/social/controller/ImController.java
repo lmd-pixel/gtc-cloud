@@ -114,6 +114,74 @@ public class ImController {
         return ApiResp.succeed(ret);
     }
 
+    @PostMapping("/call-gen")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    public ApiResp<Long> callGen(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam("toUserDigitId") String toUserDigitId,
+            @RequestParam("type") int type) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        User userTo = userService.getUserByDigitId(toUserDigitId);
+
+        Long roomId = imService.callGen(userDo, userTo, type);
+        return ApiResp.succeed(roomId);
+    }
+
+    @PostMapping("/accept-gen")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    public ApiResp<Integer> acceptGen(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam("roomId") Long roomId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        int ret = imService.acceptGen(userDo, roomId);
+        return ApiResp.succeed(ret);
+    }
+
+    @PostMapping("/invite-gen")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    public ApiResp<Integer> inviteGen(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam("roomId") Long roomId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        Integer ret = imService.inviteGen(userDo, roomId);
+        return ApiResp.succeed(ret);
+    }
+
+    @PostMapping("/reject-gen")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    public ApiResp<Integer> rejectGen(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam("roomId") Long roomId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        Integer ret = imService.rejectGen(userDo, roomId);
+        return ApiResp.succeed(ret);
+    }
+
+    @PostMapping("/hangup-gen")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    public ApiResp<Map<String, Object>> hangupGen(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam("roomId") Long roomId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        Map<String, Object> ret = imService.hangupGen(userDo, roomId, version);
+        return ApiResp.succeed(ret);
+    }
+
     @GetMapping("/user-sig")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     public ApiResp<String> getUserSig() {

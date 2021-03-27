@@ -11,6 +11,7 @@ import com.tencentcloudapi.ssa.v20180608.models.DataEvent;
 import org.springframework.data.util.Pair;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,9 @@ import java.util.Map;
 
 public interface DynamicService {
     // 新增动态
-    DynamicDto create(User user, int type, String content, Map<String, MultipartFile> multipartFileMap) throws ApiException;
+    DynamicDto create(User user, int type, String content, String city,
+                      BigDecimal longitude, BigDecimal latitude,
+                      Map<String, MultipartFile> multipartFileMap) throws ApiException;
     // 获取用户发布的动态列表
     List<DynamicDto> getUserDynamicList(User user, User selfUser, int pageIndex, int pageSize) throws ApiException;
     // 点赞或者取消点赞
@@ -44,4 +47,7 @@ public interface DynamicService {
                                                                    Date startTime, Date endTime,
                                                                    int pageIndex, int pageSize) throws ApiException;
     int deleteDynamic(Long dynamicId) throws ApiException;
+
+    // 兼容旧的
+    List<DynamicDto> compat(List<DynamicDto> dynamicDtoList, String version) throws ApiException;
 }

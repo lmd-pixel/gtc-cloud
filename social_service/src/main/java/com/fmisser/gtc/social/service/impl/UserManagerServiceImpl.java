@@ -244,7 +244,7 @@ public class UserManagerServiceImpl implements UserManagerService {
             recommendDo.setLevel(level);
 
             // 推荐和通话主播设定排班时间
-            if (type == 0 || type == 4) {
+            if (type == 0 || type == 6 || type == 7 || type == 4) {
                 // 通话主播需要设定排班时间段
                 recommendDo.setStartTime(startTime);
                 recommendDo.setEndTime(endTime);
@@ -259,7 +259,7 @@ public class UserManagerServiceImpl implements UserManagerService {
                 recommendDo.setLevel(level);
             }
 
-            if (recommend == 1 && (type == 0 || type == 4)) {
+            if (recommend == 1 && (type == 0 || type == 6 || type == 7 || type == 4)) {
                 // 推荐和通话主播设定排班时间
                 recommendDo.setStartTime(startTime);
                 recommendDo.setEndTime(endTime);

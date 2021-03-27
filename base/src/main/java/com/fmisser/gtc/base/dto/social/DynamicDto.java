@@ -20,7 +20,8 @@ public class DynamicDto {
 //
 //    }
 
-    public DynamicDto(Long id, Long userId, String digitId, String content, int type, String video, String pictures,
+    public DynamicDto(Long id, Long userId, String digitId, String content, String city,
+                      int type, String video, String pictures,
                       Date createTime, Date modifyTime, BigDecimal longitude, BigDecimal latitude,
                       Long heartCount, Long commentCount,
                       String nick, Date birth, int gender, String head) {
@@ -29,6 +30,7 @@ public class DynamicDto {
         this.userId = userId;
         this.digitId = digitId;
         this.content = content;
+        this.city = city;
         this.type = type;
         this.video = video;
         this.pictures = pictures;
@@ -46,7 +48,8 @@ public class DynamicDto {
         this.head = head;
     }
 
-    public DynamicDto(Long id, Long userId, String digitId, String content, int type, String video, String pictures,
+    public DynamicDto(Long id, Long userId, String digitId, String content, String city,
+                      int type, String video, String pictures,
                       Date createTime, Date modifyTime, BigDecimal longitude, BigDecimal latitude,
                       Long heartCount, Long selfHeart, Long commentCount,
                       String nick, Date birth, int gender, String head) {
@@ -54,6 +57,7 @@ public class DynamicDto {
         this.userId = userId;
         this.digitId = digitId;
         this.content = content;
+        this.city = city;
         this.type = type;
         this.video = video;
         this.pictures = pictures;
@@ -71,7 +75,8 @@ public class DynamicDto {
         this.head = head;
     }
 
-    public DynamicDto(Long id, Long userId, String digitId, String content, int type, String video, String pictures,
+    public DynamicDto(Long id, Long userId, String digitId, String content, String city,
+                      int type, String video, String pictures,
                       Date createTime, Date modifyTime, BigDecimal longitude, BigDecimal latitude,
                       Long heartCount, Long selfHeart, Long commentCount, Long follow,
                       String nick, Date birth, int gender, String head) {
@@ -79,6 +84,7 @@ public class DynamicDto {
         this.userId = userId;
         this.digitId = digitId;
         this.content = content;
+        this.city = city;
         this.type = type;
         this.video = video;
         this.pictures = pictures;
@@ -100,6 +106,7 @@ public class DynamicDto {
     private Long userId;
     private String digitId;
     private String content;
+    private String city;
     private int type;
     @JsonIgnore
     private String video;

@@ -19,6 +19,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -41,14 +44,23 @@ public class DynamicController {
     @PostMapping(value = "/create")
     @PreAuthorize("hasAnyRole('USER')")
     ApiResp<DynamicDto> createDynamic(MultipartHttpServletRequest request,
-                                   @RequestParam("type") int type,
-                                   @RequestParam("content") String content) {
+                                      @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+                                      @RequestParam("type") int type,
+                                      @RequestParam("content") String content,
+                                      @RequestParam(value = "city", required = false) String city,
+                                      @RequestParam(value = "longitude", required = false) BigDecimal longitude,
+                                      @RequestParam(value = "latitude", required = false) BigDecimal latitude) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
 
-        DynamicDto dynamicDto = dynamicService.create(userDo, type, content, request.getFileMap());
-        return ApiResp.succeed(dynamicDto);
+        DynamicDto dynamicDto = dynamicService
+                .create(userDo, type, content, city, longitude, latitude, request.getFileMap());
+
+        // 兼容以前的版本
+        DynamicDto compatDynamicDto = dynamicService.compat(Collections.singletonList(dynamicDto), version).get(0);
+
+        return ApiResp.succeed(compatDynamicDto);
     }
 
     @ApiOperation(value = "删除动态")
@@ -137,9 +149,11 @@ public class DynamicController {
     @ApiOperation(value = "获取某个用户的动态列表")
     @ApiImplicitParam(name = "Authorization", required = false, dataType = "String", paramType = "header")
     @PostMapping(value = "/list-by-user")
-    ApiResp<List<DynamicDto>> getDynamicList(@RequestParam("digitId") String digitId,
-                                             @RequestParam("pageIndex") int pageIndex,
-                                             @RequestParam("pageSize") int pageSize) {
+    ApiResp<List<DynamicDto>> getDynamicList(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam("digitId") String digitId,
+            @RequestParam("pageIndex") int pageIndex,
+            @RequestParam("pageSize") int pageSize) {
         User user = userService.getUserByDigitId(digitId);
         User selfUser = null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -152,29 +166,41 @@ public class DynamicController {
         }
 
         List<DynamicDto> dynamicList = dynamicService.getUserDynamicList(user, selfUser, pageIndex, pageSize);
-        return ApiResp.succeed(dynamicList);
+
+        // 兼容以前代码
+        List<DynamicDto> compatDynamicList = dynamicService.compat(dynamicList, version);
+
+        return ApiResp.succeed(compatDynamicList);
     }
 
     @ApiOperation(value = "关注的人的动态列表")
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/list-by-follow")
     @PreAuthorize("hasAnyRole('USER')")
-    ApiResp<List<DynamicDto>> getFollowDynamicList(@RequestParam("pageIndex") int pageIndex,
-                                                   @RequestParam("pageSize") int pageSize) {
+    ApiResp<List<DynamicDto>> getFollowDynamicList(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam("pageIndex") int pageIndex,
+            @RequestParam("pageSize") int pageSize) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
 
         List<DynamicDto> dynamicList = dynamicService.getFollowLatestDynamicList(userDo, pageIndex, pageSize);
-        return ApiResp.succeed(dynamicList);
+
+        // 兼容以前代码
+        List<DynamicDto> compatDynamicList = dynamicService.compat(dynamicList, version);
+
+        return ApiResp.succeed(compatDynamicList);
     }
 
     @ApiOperation(value = "获取最新的动态列表")
     @ApiImplicitParam(name = "Authorization", required = false, dataType = "String", paramType = "header")
     @PostMapping(value = "/list-latest")
-    ApiResp<List<DynamicDto>> getLatestDynamicList(@RequestParam("pageIndex") int pageIndex,
-                                                   @RequestParam("pageSize") int pageSize) {
+    ApiResp<List<DynamicDto>> getLatestDynamicList(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam("pageIndex") int pageIndex,
+            @RequestParam("pageSize") int pageSize) {
         User selfUser = null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.isAuthenticated()) {
@@ -186,7 +212,11 @@ public class DynamicController {
         }
 
         List<DynamicDto> dynamicList = dynamicService.getLatestDynamicList(selfUser, pageIndex, pageSize);
-        return ApiResp.succeed(dynamicList);
+
+        // 兼容以前代码
+        List<DynamicDto> compatDynamicList = dynamicService.compat(dynamicList, version);
+
+        return ApiResp.succeed(compatDynamicList);
     }
 
 }

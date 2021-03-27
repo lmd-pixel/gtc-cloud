@@ -29,7 +29,7 @@ public class InviteManagerController {
     ApiResp<Integer> inviteBind(@RequestParam(value = "inviteCode") String inviteCode,
                                 @RequestParam(value = "digitId") String digitId) {
         User user = userService.getUserByDigitId(digitId);
-        int ret = inviteService.inviteFromDigitId(user, digitId);
+        int ret = inviteService.inviteFromDigitId(user, inviteCode);
         return ApiResp.succeed(ret);
     }
 

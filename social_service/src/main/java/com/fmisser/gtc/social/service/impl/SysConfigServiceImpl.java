@@ -103,6 +103,16 @@ public class SysConfigServiceImpl implements SysConfigService {
         return _commonCheck(sysConfig);
     }
 
+    @Override
+    public boolean isRandRecommend() throws ApiException {
+        SysConfig sysConfig = sysConfigRepository.findByName("rand_recommend");
+        if (Objects.isNull(sysConfig)) {
+            return false;
+        }
+
+        return sysConfig.getValue1().equals("1");
+    }
+
     @SneakyThrows
     private boolean _commonCheck(SysConfig sysConfig) {
         String value2 = sysConfig.getValue2();

@@ -29,6 +29,28 @@ public interface ImService {
     // 更新通话并计费
     Map<String, Object> updateCall(User user, Long roomId, String version) throws ApiException;
 
+    /////// 新版本通话功能
+
+    // 发起通话
+    Long callGen(User userFrom, User userTo, int type) throws ApiException;
+
+    // 接受通话
+    int acceptGen(User user, Long roomId) throws ApiException;
+
+    // 邀请通话
+    int inviteGen(User user, Long roomId) throws ApiException;
+
+    // 拒绝通话
+    int rejectGen(User user, Long roomId) throws ApiException;
+
+    // 通话超时
+    int timeoutGen(User user, Long roomId) throws ApiException;
+
+    // 挂断通话
+    Map<String, Object> hangupGen(User user, Long roomId, String version) throws ApiException;
+
+    /////// 新版本通话功能
+
     // 生成 user sig
     String genUserSign(User user) throws ApiException;
 

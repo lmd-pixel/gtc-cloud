@@ -550,10 +550,26 @@ public class UserServiceImpl implements UserService {
 //            userPage = userRepository.getAnchorListBySystemAndFollow(gender, pageable);
             SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
             Date finalNow = dateFormat.parse(dateFormat.format(new Date()));
-            List<User> userList = userRepository.getAnchorListBySystemAndFollowEx(finalNow, gender, pageSize, pageSize * pageIndex);
-            return userList.stream()
-                    .map(this::_prepareResponse)
-                    .collect(Collectors.toList());
+
+            if (sysConfigService.isRandRecommend()) {
+                // 从 0 6 7 随机选择一个
+                List<Integer> randTypeList = Arrays.asList(0, 6, 7);
+                Random random = new Random();
+                int n = random.nextInt(randTypeList.size());
+
+                List<User> userList = userRepository.
+                        getAnchorListBySystemAndFollowEx(finalNow, gender, pageSize, pageSize * pageIndex, randTypeList.get(n));
+                return userList.stream()
+                        .map(this::_prepareResponse)
+                        .collect(Collectors.toList());
+            } else {
+                List<User> userList = userRepository.
+                        getAnchorListBySystemAndFollowEx(finalNow, gender, pageSize, pageSize * pageIndex, 0);
+                return userList.stream()
+                        .map(this::_prepareResponse)
+                        .collect(Collectors.toList());
+            }
+
         } else if (type == 1) {
             // TODO: 2021/3/6 因为无需统计分页 这里可以不用pageable 减少一次sql查询
             Pageable pageable = PageRequest.of(pageIndex, pageSize);

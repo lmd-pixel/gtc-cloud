@@ -455,6 +455,36 @@ public class TencentImService implements ImService {
         return resultMap;
     }
 
+    @Override
+    public Long callGen(User userFrom, User userTo, int type) throws ApiException {
+        return null;
+    }
+
+    @Override
+    public int acceptGen(User user, Long roomId) throws ApiException {
+        return 0;
+    }
+
+    @Override
+    public int inviteGen(User user, Long roomId) throws ApiException {
+        return 0;
+    }
+
+    @Override
+    public int rejectGen(User user, Long roomId) throws ApiException {
+        return 0;
+    }
+
+    @Override
+    public int timeoutGen(User user, Long roomId) throws ApiException {
+        return 0;
+    }
+
+    @Override
+    public Map<String, Object> hangupGen(User user, Long roomId, String version) throws ApiException {
+        return null;
+    }
+
     /**
      *【功能说明】用于签发 TRTC 和 IM 服务中必须要使用的 UserSig 鉴权票据
      */
