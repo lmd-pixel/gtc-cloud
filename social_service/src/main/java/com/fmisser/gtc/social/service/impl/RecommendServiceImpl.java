@@ -4,7 +4,9 @@ import com.fmisser.gtc.base.dto.social.RecommendAnchorDto;
 import com.fmisser.gtc.base.dto.social.RecommendDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.OssConfProp;
+import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.repository.RecommendRepository;
+import com.fmisser.gtc.social.repository.UserRepository;
 import com.fmisser.gtc.social.service.RecommendService;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,26 +22,56 @@ import java.util.stream.Collectors;
 public class RecommendServiceImpl implements RecommendService {
 
     private final RecommendRepository recommendRepository;
+    private final UserRepository userRepository;
     private final OssConfProp ossConfProp;
 
     public RecommendServiceImpl(RecommendRepository recommendRepository,
+                                UserRepository userRepository,
                                 OssConfProp ossConfProp) {
         this.recommendRepository = recommendRepository;
+        this.userRepository = userRepository;
         this.ossConfProp = ossConfProp;
     }
 
+    @SneakyThrows
     @Override
     public List<RecommendAnchorDto> getRandRecommendAnchorList(Integer count, int gender) throws ApiException {
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        Date finalNow = dateFormat.parse(dateFormat.format(new Date()));
+        List<User> userList = userRepository.getAnchorListBySystem(finalNow, 0);
+        List<String> digitIdList = userList.stream()
+                .map(User::getDigitId)
+                .collect(Collectors.toList());
+
         List<RecommendAnchorDto> recommendAnchorDtoList =
                 recommendRepository.getRandRecommendAnchorWithGender(3, gender);
-        List<RecommendAnchorDto> randList = new ArrayList<>();
 
-        count = Math.min(count, recommendAnchorDtoList.size());
-        for (int i = 0; i < count; i++) {
-            randList.add(recommendAnchorDtoList.remove(new Random().nextInt(recommendAnchorDtoList.size())));
+        // 先拿排班里面的数据
+        List<RecommendAnchorDto> systemList = recommendAnchorDtoList
+                .stream()
+                .filter(recommendAnchorDto -> digitIdList.contains(recommendAnchorDto.getDigitId()))
+                .collect(Collectors.toList());
+
+        // 排班里的数据不够 再从私信池里拿
+        if (systemList.size() < count) {
+            int remainCount = count - systemList.size();
+
+            List<RecommendAnchorDto> randList = new ArrayList<>();
+
+            recommendAnchorDtoList.removeAll(systemList);
+            remainCount = Math.min(remainCount, recommendAnchorDtoList.size());
+            for (int i = 0; i < remainCount; i++) {
+                randList.add(recommendAnchorDtoList.remove(new Random().nextInt(recommendAnchorDtoList.size())));
+            }
+
+            systemList.addAll(randList);
+        } else {
+            // 超过部分，只要前面的
+            systemList = systemList.subList(0, count);
         }
 
-        return _prepareRecommendDtoResponse(randList);
+        return _prepareRecommendDtoResponse(systemList);
     }
 
     @SneakyThrows

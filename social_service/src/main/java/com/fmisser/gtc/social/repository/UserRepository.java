@@ -77,8 +77,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "SELECT tu.*, " +
             "(SELECT IFNULL(SUM(tmb.profit_coin), 0) FROM t_message_bill tmb WHERE tmb.user_id_to = tu.id) + " +
             "(SELECT IFNULL(SUM(tgb.profit_coin), 0) FROM t_gift_bill tgb WHERE tgb.user_id_to = tu.id) + " +
-            "(SELECT IFNULL(SUM(tcb.profit_coin), 0) FROM t_call_bill tcb WHERE tcb.user_id_to = tu.id)" +
-            " AS profit " +
+            "(SELECT IFNULL(SUM(tcb.profit_coin), 0) FROM t_call_bill tcb WHERE tcb.user_id_to = tu.id) " +
+            "AS profit " +
             "FROM t_user tu " +
             "WHERE tu.identity = 1 AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
             "GROUP BY tu.id ORDER BY profit DESC ",
@@ -86,6 +86,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
                     "WHERE tu.identity = 1 AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " ,
             nativeQuery = true)
     Page<User> getAnchorListByProfitEx(Integer gender, Pageable pageable);
+
+    // 获取主播列表，根据活跃排序
+    @Query(value = "SELECT tu.* FROM t_user tu " +
+            "INNER JOIN " +
+            "(SELECT MAX(tu.id) AS id, MAX(ta.active_time) AS activeTime " +
+            "FROM t_user tu " +
+            "INNER JOIN t_active ta ON ta.user_id = tu.id AND ta.status = 41 AND active_time > ?2 " +
+            "WHERE tu.identity = 1 AND (tu.gender LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) " +
+            "GROUP BY tu.id) t_sub ON t_sub.id = tu.id " +
+            "ORDER BY t_sub.activeTime DESC ",
+            nativeQuery = true)
+    List<User> getAnchorListByActive(Integer gender, Date startTime);
 
     // 获取主播列表，根据系统推荐
     @Query(value = "SELECT tu.* " +
@@ -163,6 +175,60 @@ public interface UserRepository extends JpaRepository<User, Long> {
             nativeQuery = true)
     List<User> getAnchorListBySystemAndFollowEx(Date date, Integer gender, int limit, int offset, int type);
 //    Page<User> getAnchorListBySystemAndFollowEx(Date date, Integer gender, Pageable pageable);
+
+    // 根据推荐（排班）+ 活跃排序
+    @Query(value = "(SELECT tu.*, tr.level AS sort1, '1970-01-01 00:00:00' AS sort2 FROM t_user tu " +
+            "INNER JOIN t_recommend tr ON tr.type = ?5 AND tr.recommend = 1 AND tr.user_id = tu.id " +
+            "AND (" +
+            "(IF(tr.end_time>tr.start_time, " +
+            "(?1 BETWEEN tr.start_time AND tr.end_time), " +
+            "((?1 BETWEEN tr.start_time AND '1970-01-01 23:59:59') OR (?1 BETWEEN '1970-01-01 00:00:00' AND tr.end_time))) " +
+            "OR tr.start_time IS NULL OR tr.end_time IS NULL)" +
+            "OR " +
+            "(IF(tr.end_time2>tr.start_time2, " +
+            "(?1 BETWEEN tr.start_time2 AND tr.end_time2), " +
+            "((?1 BETWEEN tr.start_time2 AND '1970-01-01 23:59:59') OR (?1 BETWEEN '1970-01-01 00:00:00' AND tr.end_time2))) " +
+            "OR tr.start_time2 IS NULL OR tr.end_time2 IS NULL)" +
+            ") " +
+            "WHERE tu.identity = 1 AND (tu.gender LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) " +
+            "ORDER BY tr.level) UNION ALL " +
+            "(SELECT tu2.*, 10000000 AS sort1, " +
+            "(SELECT ta.active_time FROM t_active ta WHERE ta.user_id = tu2.id ORDER BY ta.active_time DESC LIMIT 1 OFFSET 0) AS sort2 FROM t_user tu2 " +
+            "LEFT JOIN t_recommend tr2 ON tr2.type = ?5 AND tr2.recommend = 1 AND tr2.user_id = tu2.id " +
+            "AND (" +
+            "(IF(tr2.end_time>tr2.start_time, " +
+            "(?1 BETWEEN tr2.start_time AND tr2.end_time), " +
+            "((?1 BETWEEN tr2.start_time AND '1970-01-01 23:59:59') OR (?1 BETWEEN '1970-01-01 00:00:00' AND tr2.end_time))) " +
+            "OR tr2.start_time IS NULL OR tr2.end_time IS NULL)" +
+            "OR " +
+            "(IF(tr2.end_time2>tr2.start_time2, " +
+            "(?1 BETWEEN tr2.start_time2 AND tr2.end_time2), " +
+            "((?1 BETWEEN tr2.start_time2 AND '1970-01-01 23:59:59') OR (?1 BETWEEN '1970-01-01 00:00:00' AND tr2.end_time2))) " +
+            "OR tr2.start_time2 IS NULL OR tr2.end_time2 IS NULL)" +
+            ") " +
+            "WHERE tu2.identity = 1 AND (tu2.gender LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND tr2.id IS NULL) " +
+            "ORDER BY sort1 , sort2 DESC LIMIT ?3 OFFSET ?4",
+            nativeQuery = true)
+    List<User> getAnchorListBySystemAndActive(Date date, Integer gender, int limit, int offset, int type);
+
+
+    @Query(value = "(SELECT tu.* FROM t_user tu " +
+            "INNER JOIN t_recommend tr ON tr.type = ?2 AND tr.recommend = 1 AND tr.user_id = tu.id " +
+            "AND (" +
+            "(IF(tr.end_time>tr.start_time, " +
+            "(?1 BETWEEN tr.start_time AND tr.end_time), " +
+            "((?1 BETWEEN tr.start_time AND '1970-01-01 23:59:59') OR (?1 BETWEEN '1970-01-01 00:00:00' AND tr.end_time))) " +
+            "OR tr.start_time IS NULL OR tr.end_time IS NULL)" +
+            "OR " +
+            "(IF(tr.end_time2>tr.start_time2, " +
+            "(?1 BETWEEN tr.start_time2 AND tr.end_time2), " +
+            "((?1 BETWEEN tr.start_time2 AND '1970-01-01 23:59:59') OR (?1 BETWEEN '1970-01-01 00:00:00' AND tr.end_time2))) " +
+            "OR tr.start_time2 IS NULL OR tr.end_time2 IS NULL)" +
+            ") " +
+            "WHERE tu.identity = 1 " +
+            "ORDER BY tr.level)",
+            nativeQuery = true)
+    List<User> getAnchorListBySystem(Date date, int type);
 
     // 查询主播总数
     @Query(value = "SELECT COUNT(*) FROM t_user tu " +

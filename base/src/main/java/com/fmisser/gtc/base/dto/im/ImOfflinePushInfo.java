@@ -5,6 +5,7 @@ import lombok.Data;
 
 @Data
 public class ImOfflinePushInfo {
+    // 0表示推送，1表示不离线推送
     @JsonProperty("PushFlag")
     private int PushFlag;
 

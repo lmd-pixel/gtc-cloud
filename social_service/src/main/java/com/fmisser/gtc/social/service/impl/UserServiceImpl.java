@@ -1,7 +1,10 @@
 package com.fmisser.gtc.social.service.impl;
 
+import com.fmisser.gtc.base.dto.im.ImQueryStateDto;
+import com.fmisser.gtc.base.dto.im.ImQueryStateResp;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.i18n.SystemTips;
+import com.fmisser.gtc.base.prop.ImConfProp;
 import com.fmisser.gtc.base.prop.OssConfProp;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.base.response.ApiRespHelper;
@@ -9,6 +12,7 @@ import com.fmisser.gtc.base.utils.CryptoUtils;
 import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.controller.BlockController;
 import com.fmisser.gtc.social.domain.*;
+import com.fmisser.gtc.social.feign.ImFeign;
 import com.fmisser.gtc.social.mq.GreetDelayedBinding;
 import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.*;
@@ -34,6 +38,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -64,6 +69,12 @@ public class UserServiceImpl implements UserService {
 
     private final SysConfigService sysConfigService;
 
+//    private final ImFeign imFeign;
+//
+//    private final ImConfProp imConfProp;
+
+    private final ImService imService;
+
     public UserServiceImpl(UserRepository userRepository,
                            MinioUtils minioUtils,
                            LabelRepository labelRepository,
@@ -74,10 +85,13 @@ public class UserServiceImpl implements UserService {
                            FollowRepository followRepository,
                            InviteRepository inviteRepository,
                            CouponService couponService,
-                           ImService imService,
                            SystemTips systemTips,
                            GreetDelayedBinding greetDelayedBinding,
-                           SysConfigService sysConfigService) {
+                           SysConfigService sysConfigService,
+//                           ImFeign imFeign,
+//                           ImConfProp imConfProp
+                           ImService imService
+                           ) {
         this.userRepository = userRepository;
         this.minioUtils = minioUtils;
         this.labelRepository = labelRepository;
@@ -91,6 +105,9 @@ public class UserServiceImpl implements UserService {
         this.systemTips = systemTips;
         this.greetDelayedBinding = greetDelayedBinding;
         this.sysConfigService = sysConfigService;
+//        this.imFeign = imFeign;
+//        this.imConfProp = imConfProp;
+        this.imService = imService;
     }
 
     @Transactional
@@ -572,10 +589,87 @@ public class UserServiceImpl implements UserService {
 
         } else if (type == 1) {
             // TODO: 2021/3/6 因为无需统计分页 这里可以不用pageable 减少一次sql查询
-            Pageable pageable = PageRequest.of(pageIndex, pageSize);
-            Page<User> userPage;
-            userPage = userRepository.getAnchorListByProfitEx(gender, pageable);
-            return userPage.stream()
+//            Pageable pageable = PageRequest.of(pageIndex, pageSize);
+//            Page<User> userPage;
+//            userPage = userRepository.getAnchorListByProfitEx(gender, pageable);
+//            return userPage.stream()
+//                    .map(this::_prepareResponse)
+//                    .collect(Collectors.toList());
+
+            // 修改成根据活跃排序
+            Date now = new Date();
+            Date tenDaysAgo = new Date(now.getTime() - 10 * 24 * 3600 * 1000);
+            List<User> userList = userRepository.getAnchorListByActive(gender, tenDaysAgo);
+
+            if (userList.isEmpty()) {
+                // 空直接返回
+                return userList;
+            }
+
+            List<String> userDigitList =
+                    userList.stream()
+                    .map(User::getDigitId)
+                    .collect(Collectors.toList());
+
+            // 从腾讯接口获取状态
+            ImQueryStateResp imQueryStateResp = imService.queryState(userDigitList);
+            List<ImQueryStateResp.QueryResult> queryResultList = imQueryStateResp.getQueryResult();
+            List<String> onlineUserList = queryResultList
+                    .stream()
+                    .filter(queryResult -> queryResult.getStatus().equals("Online"))
+                    .map(ImQueryStateResp.QueryResult::getTo_Account)
+                    .collect(Collectors.toList());
+
+            // 请求腾讯接口后返回的数据不是按照请求的顺序返回，回来的数据顺序混乱，需重新排序
+            List<String> sortedOnlineUserList = userDigitList
+                    .stream()
+                    .filter(onlineUserList::contains)
+                    .collect(Collectors.toList());
+
+            List<String> pushOnlineUserList = queryResultList
+                    .stream()
+                    .filter(queryResult -> queryResult.getStatus().equals("PushOnline"))
+                    .map(ImQueryStateResp.QueryResult::getTo_Account)
+                    .collect(Collectors.toList());
+
+            List<String> sortedPushOnlineUserList = userDigitList
+                    .stream()
+                    .filter(pushOnlineUserList::contains)
+                    .collect(Collectors.toList());
+
+            List<String> offlineUserList = queryResultList
+                    .stream()
+                    .filter(queryResult -> queryResult.getStatus().equals("Offline"))
+                    .map(ImQueryStateResp.QueryResult::getTo_Account)
+                    .collect(Collectors.toList());
+
+            List<String> sortedOfflineUserList = userDigitList
+                    .stream()
+                    .filter(offlineUserList::contains)
+                    .collect(Collectors.toList());
+
+//            if (imQueryStateResp.getErrorList() != null) {
+//                List<String> errorUserList = imQueryStateResp.getErrorList()
+//                        .stream()
+//                        .map(ImQueryStateResp.QueryResult::getTo_Account)
+//                        .collect(Collectors.toList());
+//            }
+
+            // 按照 在线，推送在线，离线，出错列表的顺序构造
+            List<String> sortedUserList = Stream.of(sortedOnlineUserList, sortedPushOnlineUserList, sortedOfflineUserList)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+
+            // 分页
+            int totalCount = sortedUserList.size();
+            int offset = pageIndex * pageSize;
+            if (offset >= totalCount) {
+                // 返回空
+                return new ArrayList<>();
+            }
+            List<String> pageUserList = sortedUserList.subList(offset, Math.min(offset + pageSize, totalCount));
+            return pageUserList.stream()
+                    .map(s -> userList.get(userDigitList.indexOf(s)))
                     .map(this::_prepareResponse)
                     .collect(Collectors.toList());
         } else {

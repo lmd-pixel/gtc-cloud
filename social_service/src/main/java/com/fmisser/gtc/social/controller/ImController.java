@@ -171,14 +171,14 @@ public class ImController {
 
     @PostMapping("/hangup-gen")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
-    public ApiResp<Map<String, Object>> hangupGen(
+    public ApiResp<Integer> hangupGen(
             @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
             @RequestParam("roomId") Long roomId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
 
-        Map<String, Object> ret = imService.hangupGen(userDo, roomId, version);
+        Integer ret = imService.hangupGen(userDo, roomId);
         return ApiResp.succeed(ret);
     }
 

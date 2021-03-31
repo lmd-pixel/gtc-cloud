@@ -1,9 +1,6 @@
 package com.fmisser.gtc.social.service.impl;
 
-import com.fmisser.gtc.base.dto.im.ImMsgBody;
-import com.fmisser.gtc.base.dto.im.ImMsgFactory;
-import com.fmisser.gtc.base.dto.im.ImSendMsgCbResp;
-import com.fmisser.gtc.base.dto.im.ImSendMsgDto;
+import com.fmisser.gtc.base.dto.im.*;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.ImConfProp;
 import com.fmisser.gtc.base.prop.OssConfProp;
@@ -12,10 +9,7 @@ import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.feign.ImFeign;
 import com.fmisser.gtc.social.mq.WxWebHookBinding;
 import com.fmisser.gtc.social.repository.*;
-import com.fmisser.gtc.social.service.CouponService;
-import com.fmisser.gtc.social.service.ImService;
-import com.fmisser.gtc.social.service.SysConfigService;
-import com.fmisser.gtc.social.service.UserService;
+import com.fmisser.gtc.social.service.*;
 import com.tencentcloudapi.common.Credential;
 import com.tencentcloudapi.common.profile.ClientProfile;
 import com.tencentcloudapi.common.profile.HttpProfile;
@@ -89,6 +83,9 @@ public class TencentImService implements ImService {
 
     @Autowired
     private WxWebHookBinding wxWebHookBinding;
+
+    @Autowired
+    private ActiveService activeService;
 
     @Override
     public String login(User user) throws ApiException {
@@ -457,31 +454,343 @@ public class TencentImService implements ImService {
 
     @Override
     public Long callGen(User userFrom, User userTo, int type) throws ApiException {
-        return null;
+        if (userFrom.getIdentity() == 0 && userTo.getIdentity() == 0) {
+            throw new ApiException(-1, "不支持该通话模式");
+        }
+
+        if (userFrom.getIdentity() == 1 && userTo.getIdentity() == 1) {
+            throw new ApiException(-1, "不支持该通话模式");
+        }
+
+        if (activeService.isCallBusy(userFrom)) {
+            throw new ApiException(-1, "您当前正忙，无法呼出");
+        }
+
+        if (activeService.isCallBusy(userTo)) {
+            throw new ApiException(-1, "对方正在通话中，请稍后再试");
+        }
+
+
+        // 创建通话房间
+        Call call = new Call();
+        call.setType(type);
+
+        if (userFrom.getIdentity() == 1 && userTo.getIdentity() == 0) {
+            // 主播打给用户
+            call.setUserIdFrom(userTo.getId());
+            call.setUserIdTo(userFrom.getId());
+            call.setCallMode(1);
+        } else if (userFrom.getIdentity() == 0 && userTo.getIdentity() == 1) {
+            // 用户打给用户
+            call.setUserIdFrom(userFrom.getId());
+            call.setUserIdTo(userTo.getId());
+            call.setCallMode(0);
+        }
+
+        call.setRoomId(Long.valueOf(genRoomId()));
+        call.setCommId(UUID.randomUUID().toString());
+
+        call = callRepository.save(call);
+        return call.getRoomId();
     }
 
     @Override
     public int acceptGen(User user, Long roomId) throws ApiException {
-        return 0;
+        Call call = callRepository.findByRoomId(roomId);
+        if (call.getIsFinished() == 1) {
+            throw new ApiException(-1, "通话已结束");
+        }
+
+        if (Objects.nonNull(call.getStartTime())) {
+            throw new ApiException(-1, "通话已经开始");
+        }
+
+        if (activeService.isCallBusy(user)) {
+            throw new ApiException(-1, "您当前正忙，无法接听");
+        }
+
+        // 记录用户通话状态
+        activeService.acceptCall(user, roomId);
+
+        // TODO: 2021/3/27 stop timeout queue
+
+        // 设定开始时间
+        call.setStartTime(new Date());
+        callRepository.save(call);
+
+        return 1;
     }
 
     @Override
     public int inviteGen(User user, Long roomId) throws ApiException {
-        return 0;
+        Call call = callRepository.findByRoomId(roomId);
+        if (call.getIsFinished() == 1) {
+            throw new ApiException(-1, "通话已结束");
+        }
+
+        if (activeService.isCallBusy(user)) {
+            throw new ApiException(-1, "您当前正忙，无法呼出");
+        }
+
+        // 记录用户通话状态
+        activeService.inviteCall(user, roomId);
+
+        // TODO: 2021/3/27 start timeout queue
+
+        Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
+        if (!optionalUserFrom.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userFrom = optionalUserFrom.get();
+
+        Optional<User> optionalUserTo = userRepository.findById(call.getUserIdTo());
+        if (!optionalUserTo.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userTo = optionalUserTo.get();
+
+        if (call.getCallMode() == 0) {
+            // 由用户发起通话
+
+            // 判断当前用户是否在通话中
+
+            // 发送自定义消息
+            return sendCallMsg(userFrom, userTo, 0);
+
+        } else if (call.getCallMode() == 1) {
+            // 由主播发起通话
+
+            // 判断当前用户是否在通话中
+
+            // 发送自定义消息
+            return sendCallMsg(userTo, userFrom, 0);
+        }
+
+        return 1;
+    }
+
+    @Override
+    public int cancelGen(User user, Long roomId) throws ApiException {
+        Call call = callRepository.findByRoomId(roomId);
+        if (call.getIsFinished() == 1) {
+            throw new ApiException(-1, "通话已结束");
+        }
+
+        // 通话设置成结束
+        call.setIsFinished(1);
+        call.setFinishTime(new Date());
+        callRepository.save(call);
+
+        // 记录用户通话状态
+        activeService.cancelCall(user, roomId);
+
+        // TODO: 2021/3/27 stop timeout queue
+
+        Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
+        if (!optionalUserFrom.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userFrom = optionalUserFrom.get();
+
+        Optional<User> optionalUserTo = userRepository.findById(call.getUserIdTo());
+        if (!optionalUserTo.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userTo = optionalUserTo.get();
+
+        if (call.getCallMode() == 0) {
+            // 由用户发起通话
+
+            // 发送自定义消息
+            return sendCallMsg(userFrom, userTo, 1);
+
+        } else if (call.getCallMode() == 1) {
+            // 由主播发起通话
+
+            // 发送自定义消息
+            return sendCallMsg(userTo, userFrom, 1);
+        }
+
+        return 1;
     }
 
     @Override
     public int rejectGen(User user, Long roomId) throws ApiException {
-        return 0;
+        Call call = callRepository.findByRoomId(roomId);
+        if (call.getIsFinished() == 1) {
+            throw new ApiException(-1, "通话已结束");
+        }
+
+        // 通话设置成结束
+        call.setIsFinished(1);
+        call.setFinishTime(new Date());
+        callRepository.save(call);
+
+        // 记录用户通话状态
+        activeService.rejectCall(user, roomId);
+
+        // TODO: 2021/3/27 stop timeout queue
+
+        Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
+        if (!optionalUserFrom.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userFrom = optionalUserFrom.get();
+
+        Optional<User> optionalUserTo = userRepository.findById(call.getUserIdTo());
+        if (!optionalUserTo.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userTo = optionalUserTo.get();
+
+        if (call.getCallMode() == 0) {
+            // 由用户发起通话
+
+            // 发送自定义消息
+            return sendCallMsg(userTo, userFrom, 2);
+
+        } else if (call.getCallMode() == 1) {
+            // 由主播发起通话
+
+            // 发送自定义消息
+            return sendCallMsg(userFrom, userTo, 2);
+        }
+
+        return 1;
     }
 
     @Override
     public int timeoutGen(User user, Long roomId) throws ApiException {
+        Call call = callRepository.findByRoomId(roomId);
+        if (call.getIsFinished() == 1) {
+            throw new ApiException(-1, "通话已结束");
+        }
+
+        // 通话设置成结束
+        call.setIsFinished(1);
+        call.setFinishTime(new Date());
+        callRepository.save(call);
+
+        // 记录用户通话状态
+        activeService.timeoutCall(user, roomId);
+
+        Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
+        if (!optionalUserFrom.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userFrom = optionalUserFrom.get();
+
+        Optional<User> optionalUserTo = userRepository.findById(call.getUserIdTo());
+        if (!optionalUserTo.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userTo = optionalUserTo.get();
+
+        if (call.getCallMode() == 0) {
+            // 由用户发起通话
+
+            // 发送自定义消息
+            return sendCallMsg(userTo, userFrom, 3);
+
+        } else if (call.getCallMode() == 1) {
+            // 由主播发起通话
+
+            // 发送自定义消息
+            return sendCallMsg(userFrom, userTo, 3);
+        }
+
+        return 1;
+    }
+
+    @Override
+    public int endGen(User user, Long roomId) throws ApiException {
+        Call call = callRepository.findByRoomId(roomId);
+        if (call.getIsFinished() == 1) {
+            throw new ApiException(-1, "通话已结束");
+        }
+
+        // 通话设置成结束
+        Date now = new Date();
+        call.setIsFinished(1);
+        call.setFinishTime(new Date());
+
+        // 计算时长
+        int deltaTime = (int) Math.ceil( (double) (now.getTime() - call.getStartTime().getTime()) / 1000L);
+        call.setDuration(deltaTime);
+
+        callRepository.save(call);
+
+        // 记录用户通话状态
+        activeService.endCall(user, roomId);
+
+        Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
+        if (!optionalUserFrom.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userFrom = optionalUserFrom.get();
+
+        Optional<User> optionalUserTo = userRepository.findById(call.getUserIdTo());
+        if (!optionalUserTo.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userTo = optionalUserTo.get();
+
+        if (call.getCallMode() == 0) {
+            // 由用户发起通话
+
+            // 发送自定义消息
+            return sendCallMsg(userFrom, userTo, 4);
+
+        } else if (call.getCallMode() == 1) {
+            // 由主播发起通话
+
+            // 发送自定义消息
+            return sendCallMsg(userTo, userFrom, 4);
+        }
+
+        return 1;
+    }
+
+    @Transactional
+    @Override
+    public int hangupGen(User user, Long roomId) throws ApiException {
+        Call call = callRepository.findByRoomId(roomId);
+
+        // 判断是否已结束
+        if (call.getIsFinished() == 1) {
+            throw new ApiException(-1, "通话已结束");
+        }
+
+        // 判断是否已经开始
+        if (Objects.isNull(call.getStartTime())) {
+            // 未开始，判断是邀请人还是接听人
+            if (call.getCallMode() == 0) {
+                if (user.getId().equals(call.getUserIdFrom())) {
+                    // 用户主动挂断电话
+                    return cancelGen(user, roomId);
+                } else if (user.getId().equals(call.getUserIdTo())) {
+                    // 主播拒绝通话
+                    return rejectGen(user, roomId);
+                }
+            } else if (call.getCallMode() == 1) {
+                if (user.getId().equals(call.getUserIdTo())) {
+                    // 主播主动挂断电话
+                    return cancelGen(user, roomId);
+                } else if (user.getId().equals(call.getUserIdFrom())) {
+                    // 用户拒绝通话
+                    return rejectGen(user, roomId);
+                }
+            }
+        } else {
+            // 已开始
+            return endGen(user, roomId);
+        }
+
         return 0;
     }
 
     @Override
-    public Map<String, Object> hangupGen(User user, Long roomId, String version) throws ApiException {
+    public Object resultGen(User user, Long roomId) throws ApiException {
         return null;
     }
 
@@ -571,6 +880,46 @@ public class TencentImService implements ImService {
     }
 
     @Override
+    public int sendCallMsg(User userFrom, User userTo, int mode) throws ApiException {
+        ImSendMsgDto msgCustom = null;
+        if (mode == 0) {
+            msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
+                    "发起通话", "invite call", true);
+        } else if (mode == 1) {
+            msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
+                    "取消通话", "cancel call", true);
+        } else if (mode == 2) {
+            msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
+                    "拒绝通话", "reject call", true);
+        } else if (mode == 3) {
+            msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
+                    "通话超时", "timeout call", true);
+        } else if (mode == 4) {
+            msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
+                    "通话结束", "end call", true);
+        }
+
+        if (msgCustom != null) {
+
+            // 获取管理员的 usersig
+            String admin = imConfProp.getAdmin();
+            String adminSig = genAdminSig(admin);
+
+            // 发送给发送方,接收方也能监听到消息
+            ImSendMsgCbResp imSendMsgCbResp = imFeign
+                    .sendMsg(imConfProp.getSdkAppId(), admin, adminSig, new Random().nextInt(), "json", msgCustom);
+
+            if (!imSendMsgCbResp.getActionStatus().equals("OK")) {
+                throw new ApiException(-1, imSendMsgCbResp.getErrorInfo());
+            }
+
+            return 1;
+        }
+
+        return 0;
+    }
+
+    @Override
     public int sendAfterSendMsg(User userFrom, User userTo, int tag, int coin, int card) throws ApiException {
         ImSendMsgDto msgCustom = ImMsgFactory.buildChargingMsg(userFrom.getDigitId(), userTo.getDigitId(),
                 "一条扣费信息", tag, coin, card, true);
@@ -587,6 +936,25 @@ public class TencentImService implements ImService {
         }
 
         return 1;
+    }
+
+    @Override
+    public ImQueryStateResp queryState(List<String> accountList) throws ApiException {
+        ImQueryStateDto imQueryStateDto = new ImQueryStateDto();
+        imQueryStateDto.setTo_Account(accountList);
+
+        // 获取管理员的 usersig
+        String admin = imConfProp.getAdmin();
+        String adminSig = genAdminSig(admin);
+
+        ImQueryStateResp queryStateResp = imFeign.queryState(imConfProp.getSdkAppId(), admin, adminSig,
+                new Random().nextInt(), "json", imQueryStateDto);
+
+        if (!queryStateResp.getActionStatus().equals("OK")) {
+            throw new ApiException(-1, queryStateResp.getErrorInfo());
+        }
+
+        return queryStateResp;
     }
 
     @SneakyThrows

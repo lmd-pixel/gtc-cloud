@@ -1,9 +1,11 @@
 package com.fmisser.gtc.social.service;
 
+import com.fmisser.gtc.base.dto.im.ImQueryStateResp;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.Gift;
 import com.fmisser.gtc.social.domain.User;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,14 +42,23 @@ public interface ImService {
     // 邀请通话
     int inviteGen(User user, Long roomId) throws ApiException;
 
+    // 取消通话
+    int cancelGen(User user, Long roomId) throws ApiException;
+
     // 拒绝通话
     int rejectGen(User user, Long roomId) throws ApiException;
 
     // 通话超时
     int timeoutGen(User user, Long roomId) throws ApiException;
 
+    // 通话结束（已接通）
+    int endGen(User user, Long roomId) throws ApiException;
+
     // 挂断通话
-    Map<String, Object> hangupGen(User user, Long roomId, String version) throws ApiException;
+    int hangupGen(User user, Long roomId) throws ApiException;
+
+    // 结算
+    Object resultGen(User user, Long roomId) throws ApiException;
 
     /////// 新版本通话功能
 
@@ -59,7 +70,12 @@ public interface ImService {
 
     int sendGiftMsg(User userFrom, User userTo, Gift gift, int count) throws ApiException;
 
+    // mode 0 发起通话 1：取消通话 2：拒绝通话 3: 超时 4: 结束通话（已接通）
+    int sendCallMsg(User userFrom, User userTo, int mode) throws ApiException;
+
     int sendAfterSendMsg(User userFrom, User userTo, int tag, int coin, int card) throws ApiException;
+
+    ImQueryStateResp queryState(List<String> accountList) throws ApiException;
 
     // 腾讯api 结束房间
     int trtcDismissRoom(Long roomId) throws ApiException;

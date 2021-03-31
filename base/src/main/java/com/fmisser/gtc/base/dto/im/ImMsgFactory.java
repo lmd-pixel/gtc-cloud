@@ -170,4 +170,57 @@ public class ImMsgFactory {
 
         return imSendMsgDto;
     }
+
+    static public ImSendMsgDto buildCallMsg(String fromAccount, String toAccount, String content, String msgData, boolean syncMsg) {
+        ImSendMsgDto imSendMsgDto = new ImSendMsgDto();
+        imSendMsgDto.setSyncOtherMachine(syncMsg ? 1 : 2);
+        imSendMsgDto.setTo_Account(toAccount);
+        imSendMsgDto.setFrom_Account(fromAccount);
+        // 缓存7天
+        imSendMsgDto.setMsgLifeTime(604800);
+        // 不生成回调信息
+        imSendMsgDto.setForbidCallbackControl(Arrays
+                .asList("ForbidBeforeSendMsgCallback", "ForbidAfterSendMsgCallback"));
+        imSendMsgDto.setMsgRandom(Math.abs(new Random().nextInt()));
+
+//        ImMsgBody imMsgBody = new ImMsgBody();
+//        imMsgBody.setMsgType("TIMTextElem");
+//        ImMsgBody.ImMsgContent imMsgContent = new ImMsgBody.ImMsgContent();
+//        imMsgContent.setText(content);
+//        imMsgBody.setMsgContent(imMsgContent);
+
+        // 自定义消息
+        ImMsgBody customMsgBody = new ImMsgBody();
+        customMsgBody.setMsgType("TIMCustomElem");
+        ImMsgBody.ImMsgContent customMsgContent = new ImMsgBody.ImMsgContent();
+
+        customMsgContent.setData(msgData);
+        customMsgContent.setDesc(content);
+        customMsgBody.setMsgContent(customMsgContent);
+
+        imSendMsgDto.setMsgBody(Collections.singletonList(customMsgBody));
+
+        // apns
+        ImOfflinePushInfo imOfflinePushInfo = new ImOfflinePushInfo();
+        imOfflinePushInfo.setPushFlag(0);
+        imOfflinePushInfo.setTitle("");
+        imOfflinePushInfo.setDesc(content);
+        imOfflinePushInfo.setExt("");
+
+        ImOfflinePushInfo.ImApnsInfo imApnsInfo = new ImOfflinePushInfo.ImApnsInfo();
+        imApnsInfo.setSound("https://oss.55peiliao.com/system-config/media/audio/call_alarm.mp3");
+        imApnsInfo.setImage("");
+        imApnsInfo.setBadgeMode(1);
+        imApnsInfo.setTitle("来了老弟");
+        imApnsInfo.setSubTitle("来聊个五毛钱的天");
+        imOfflinePushInfo.setApnsInfo(imApnsInfo);
+
+        ImOfflinePushInfo.ImAndroidInfo imAndroidInfo = new ImOfflinePushInfo.ImAndroidInfo();
+        imAndroidInfo.setSound("");
+        imOfflinePushInfo.setAndroidInfo(imAndroidInfo);
+
+        imSendMsgDto.setOfflinePushInfo(imOfflinePushInfo);
+
+        return imSendMsgDto;
+    }
 }
