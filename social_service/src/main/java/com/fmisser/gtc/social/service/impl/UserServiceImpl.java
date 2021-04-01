@@ -575,13 +575,13 @@ public class UserServiceImpl implements UserService {
                 int n = random.nextInt(randTypeList.size());
 
                 List<User> userList = userRepository.
-                        getAnchorListBySystemAndFollowEx(finalNow, gender, pageSize, pageSize * pageIndex, randTypeList.get(n));
+                        getAnchorListBySystemAndActive(finalNow, gender, pageSize, pageSize * pageIndex, randTypeList.get(n));
                 return userList.stream()
                         .map(this::_prepareResponse)
                         .collect(Collectors.toList());
             } else {
                 List<User> userList = userRepository.
-                        getAnchorListBySystemAndFollowEx(finalNow, gender, pageSize, pageSize * pageIndex, 0);
+                        getAnchorListBySystemAndActive(finalNow, gender, pageSize, pageSize * pageIndex, 0);
                 return userList.stream()
                         .map(this::_prepareResponse)
                         .collect(Collectors.toList());

@@ -48,6 +48,8 @@ public class TencentImCallbackService implements ImCallbackService {
 
     private final ModerationService moderationService;
 
+    private final UserMessageRepository userMessageRepository;
+
     public TencentImCallbackService(AssetRepository assetRepository,
                                     UserRepository userRepository,
                                     MessageBillRepository messageBillRepository,
@@ -59,7 +61,8 @@ public class TencentImCallbackService implements ImCallbackService {
                                     SysConfigService sysConfigService,
                                     ForbiddenService forbiddenService,
                                     ImConfProp imConfProp,
-                                    ModerationService moderationService) {
+                                    ModerationService moderationService,
+                                    UserMessageRepository userMessageRepository) {
         this.assetRepository = assetRepository;
         this.userRepository = userRepository;
         this.messageBillRepository = messageBillRepository;
@@ -72,6 +75,7 @@ public class TencentImCallbackService implements ImCallbackService {
         this.forbiddenService = forbiddenService;
         this.imConfProp = imConfProp;
         this.moderationService = moderationService;
+        this.userMessageRepository = userMessageRepository;
     }
 
     @Override
@@ -106,6 +110,24 @@ public class TencentImCallbackService implements ImCallbackService {
         ImCbResp resp = new ImCbResp();
         resp.setActionStatus("OK");
         resp.setErrorCode(0);
+
+        // save to db
+        List<UserMessage> userMessageList = new ArrayList<>();
+        imBeforeSendMsgDto.getMsgBody().forEach(imMsgBody -> {
+            UserMessage userMessage = new UserMessage();
+            userMessage.setDigitIdFrom(imBeforeSendMsgDto.getFrom_Account());
+            userMessage.setDigitIdTo(imBeforeSendMsgDto.getTo_Account());
+            userMessage.setMsgSeq(imBeforeSendMsgDto.getMsgSeq());
+            userMessage.setMsgKey(imBeforeSendMsgDto.getMsgKey());
+            userMessage.setMsgRandom(imBeforeSendMsgDto.getMsgRandom());
+            userMessage.setMsgTime(imBeforeSendMsgDto.getMsgTime());
+            userMessage.setMsgType(imMsgBody.getMsgType());
+            userMessage.setMsgText(imMsgBody.getMsgContent().getText());
+            userMessage.setMsgDesc(imMsgBody.getMsgContent().getDesc());
+            userMessage.setMsgData(imMsgBody.getMsgContent().getData());
+            userMessageList.add(userMessage);
+        });
+        userMessageRepository.saveAll(userMessageList);
 
         // 安全打击
         if (imBeforeSendMsgDto.getMsgBody().size() > 0) {
