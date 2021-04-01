@@ -1,0 +1,33 @@
+# 修改账户
+
+# 获取配置文件
+docker cp cassandra_cassandra-seed_1:/etc/cassandra/cassandra.yaml /root/docker/cassandra/
+
+# 停止容器
+docker-compose stop
+
+# 修改配置文件后替换回去
+# 修改成：authenticator: PasswordAuthenticator
+docker cp /root/docker/cassandra/cassandra.yaml cassandra_cassandra-seed_1:/etc/cassandra/
+或者
+docker cp /root/docker/cassandra/cassandra.yaml cassandra_cassandra-seed_1:/opt/cassandra/conf/
+
+# 启动并进入容器
+docker-compose start
+docker exec -it cassandra_cassandra-seed_1 /bin/bash
+
+# 进入cqlsh
+cqlsh -u cassandra -p cassandra
+
+# 创建心的超级账号
+CREATE ROLE root WITH SUPERUSER = true AND LOGIN = true AND PASSWORD = 'gtc_cloud@123456';
+
+# 退出
+exit
+
+# 用新账号登录
+cqlsh -u root -p gtc_cloud@123456
+
+# 禁用默认的 cassandra 账号
+ALTER ROLE cassandra WITH SUPERUSER = false AND LOGIN = false;
+
