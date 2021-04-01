@@ -66,4 +66,7 @@ public class UserMessage {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column
     private Date createTime;
+
+    @Column
+    private int pass;
 }

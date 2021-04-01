@@ -111,36 +111,42 @@ public class TencentImCallbackService implements ImCallbackService {
         resp.setActionStatus("OK");
         resp.setErrorCode(0);
 
-        // save to db
-        List<UserMessage> userMessageList = new ArrayList<>();
-        imBeforeSendMsgDto.getMsgBody().forEach(imMsgBody -> {
-            UserMessage userMessage = new UserMessage();
-            userMessage.setDigitIdFrom(imBeforeSendMsgDto.getFrom_Account());
-            userMessage.setDigitIdTo(imBeforeSendMsgDto.getTo_Account());
-            userMessage.setMsgSeq(imBeforeSendMsgDto.getMsgSeq());
-            userMessage.setMsgKey(imBeforeSendMsgDto.getMsgKey());
-            userMessage.setMsgRandom(imBeforeSendMsgDto.getMsgRandom());
-            userMessage.setMsgTime(imBeforeSendMsgDto.getMsgTime());
-            userMessage.setMsgType(imMsgBody.getMsgType());
-            userMessage.setMsgText(imMsgBody.getMsgContent().getText());
-            userMessage.setMsgDesc(imMsgBody.getMsgContent().getDesc());
-            userMessage.setMsgData(imMsgBody.getMsgContent().getData());
-            userMessageList.add(userMessage);
-        });
-        userMessageRepository.saveAll(userMessageList);
-
         // 安全打击
         if (imBeforeSendMsgDto.getMsgBody().size() > 0) {
             for (ImMsgBody msgbody :
                     imBeforeSendMsgDto.getMsgBody()) {
+
+                UserMessage userMessage = new UserMessage();
+                userMessage.setDigitIdFrom(imBeforeSendMsgDto.getFrom_Account());
+                userMessage.setDigitIdTo(imBeforeSendMsgDto.getTo_Account());
+                userMessage.setMsgSeq(imBeforeSendMsgDto.getMsgSeq());
+                userMessage.setMsgKey(imBeforeSendMsgDto.getMsgKey());
+                userMessage.setMsgRandom(imBeforeSendMsgDto.getMsgRandom());
+                userMessage.setMsgTime(imBeforeSendMsgDto.getMsgTime());
+
                 if (msgbody.getMsgType().equals("TIMTextElem")) {
                     int ret = textModeration(imBeforeSendMsgDto.getFrom_Account(), msgbody.getMsgContent().getText());
+
+                    userMessage.setMsgType(msgbody.getMsgType());
+                    userMessage.setMsgText(msgbody.getMsgContent().getText());
+                    userMessage.setMsgDesc(msgbody.getMsgContent().getDesc());
+                    userMessage.setMsgData(msgbody.getMsgContent().getData());
+                    userMessage.setPass(ret);
+                    userMessageRepository.save(userMessage);
+
                     if (ret == 0) {
                         resp.setActionStatus("FAIL");
                         resp.setErrorCode(121003);
                         resp.setErrorInfo("发送失败");
                         return resp;
                     }
+                } else {
+                    userMessage.setMsgType(msgbody.getMsgType());
+                    userMessage.setMsgText(msgbody.getMsgContent().getText());
+                    userMessage.setMsgDesc(msgbody.getMsgContent().getDesc());
+                    userMessage.setMsgData(msgbody.getMsgContent().getData());
+                    userMessage.setPass(1);
+                    userMessageRepository.save(userMessage);
                 }
             }
         }
