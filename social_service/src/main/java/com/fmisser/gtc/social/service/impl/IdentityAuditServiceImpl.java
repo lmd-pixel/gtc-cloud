@@ -13,12 +13,10 @@ import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @Service
 public class IdentityAuditServiceImpl implements IdentityAuditService {
@@ -52,16 +50,18 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
     }
 
     @Override
-    public int requestIdentityAudit(User user) throws ApiException {
-        if (!_checkProfileCompleted(user) ||
-                !_checkPhotosCompleted(user) ||
-                !_checkVideoCompleted(user)) {
-            throw new ApiException(-1, "资料尚未完善，请先完善资料再提交审核");
+    public int requestIdentityAudit(User user, int type) throws ApiException {
+        if (type == 1) {
+            if (!_checkProfileCompleted(user) ||
+                    !_checkPhotosCompleted(user) ||
+                    !_checkVideoCompleted(user)) {
+                throw new ApiException(-1, "资料尚未完善，请先完善资料再提交审核");
+            }
         }
 
-        if (user.getIdentity() == 1) {
-            throw new ApiException(-1, "已完成了所有认证，无需再次认证");
-        }
+//        if (user.getIdentity() == 1) {
+//            throw new ApiException(-1, "已完成了所有认证，无需再次认证");
+//        }
 
         // 资料审核
         Optional<IdentityAudit> optionalIdentityAudit = getLastProfileAudit(user);
@@ -72,7 +72,10 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
 //            IdentityAudit identityAudit = _createIdentityAudit(user, 1);
 //            identityAuditRepository.save(identityAudit);
 
-            _createProfileAuditFromPrepare(user, 1);
+            IdentityAudit identityAudit = _createProfileAuditFromPrepare(user, 1);
+            if (Objects.nonNull(identityAudit)) {
+                identityAuditRepository.save(identityAudit);
+            }
         }
 
         // 照片审核
@@ -84,7 +87,10 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
 //            IdentityAudit identityAudit = _createIdentityAudit(user, 2);
 //            identityAuditRepository.save(identityAudit);
 
-            _createPhotosAuditFromPrepare(user, 2);
+            IdentityAudit identityAudit = _createPhotosAuditFromPrepare(user, 2);
+            if (Objects.nonNull(identityAudit)) {
+                identityAuditRepository.save(identityAudit);
+            }
         }
 
         // 视频审核
@@ -96,7 +102,10 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
 //            IdentityAudit identityAudit = _createIdentityAudit(user, 3);
 //            identityAuditRepository.save(identityAudit);
 
-            _createVideoAuditFromPrepare(user, 3);
+            IdentityAudit identityAudit = _createVideoAuditFromPrepare(user, 3);
+            if (Objects.nonNull(identityAudit)) {
+                identityAuditRepository.save(identityAudit);
+            }
         }
 
         return 1;
@@ -200,7 +209,25 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
     }
 
     @Override
+    public Optional<IdentityAudit> getLastAuditPrepare(Long userId, int type) throws ApiException {
+        return identityAuditRepository
+                .findTopByUserIdAndTypeOrderByCreateTimeDesc(userId, type);
+    }
+
+    @Override
     public IdentityAudit createAuditPrepare(User user, int type) throws ApiException {
+
+        // 如果还存在，并且状态是待审核 则一直使用这份待审核数据
+        Optional<IdentityAudit> identityAuditOptional = identityAuditRepository
+                .findTopByUserIdAndTypeOrderByCreateTimeDesc(user.getId(), type);
+
+        if (identityAuditOptional.isPresent()) {
+            if (identityAuditOptional.get().getStatus() == 10) {
+                return identityAuditOptional.get();
+            }
+        }
+
+        // 创建一份新的
         IdentityAudit audit = new IdentityAudit();
         audit.setSerialNumber(createAuditSerialNumber(user.getId(), type));
         audit.setUserId(user.getId());
@@ -299,10 +326,16 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
             return null;
         }
         IdentityAudit identityAuditPrepare = identityAuditOptional.get();
+        if (identityAuditPrepare.getStatus() != 10) {
+            // 状态不是待审核的则无效
+            return null;
+        }
 
         // 直接修改type
-        identityAuditPrepare.setType(type);
-        return identityAuditRepository.save(identityAuditPrepare);
+//        identityAuditPrepare.setType(type);
+//        return identityAuditRepository.save(identityAuditPrepare);
+        // 创建一个对应的审核
+        return __innerCreateFromAuditPrepare(identityAuditPrepare, user, type);
     }
 
     private IdentityAudit _createPhotosAuditFromPrepare(User user, int type) {
@@ -312,10 +345,16 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
             return null;
         }
         IdentityAudit identityAuditPrepare = identityAuditOptional.get();
+        if (identityAuditPrepare.getStatus() != 10) {
+            // 状态不是待审核的则无效
+            return null;
+        }
 
         // 直接修改type
-        identityAuditPrepare.setType(type);
-        return identityAuditRepository.save(identityAuditPrepare);
+//        identityAuditPrepare.setType(type);
+//        return identityAuditRepository.save(identityAuditPrepare);
+        // 创建一个对应的审核
+        return __innerCreateFromAuditPrepare(identityAuditPrepare, user, type);
     }
 
     private IdentityAudit _createVideoAuditFromPrepare(User user, int type) {
@@ -325,9 +364,45 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
             return null;
         }
         IdentityAudit identityAuditPrepare = identityAuditOptional.get();
+        if (identityAuditPrepare.getStatus() != 10) {
+            // 状态不是待审核的则无效
+            return null;
+        }
 
         // 直接修改type
-        identityAuditPrepare.setType(type);
-        return identityAuditRepository.save(identityAuditPrepare);
+//        identityAuditPrepare.setType(type);
+//        return identityAuditRepository.save(identityAuditPrepare);
+        // 创建一个对应的审核
+        return __innerCreateFromAuditPrepare(identityAuditPrepare, user, type);
+    }
+
+    private IdentityAudit __innerCreateFromAuditPrepare(IdentityAudit identityAuditPrepare, User user, int type) {
+        IdentityAudit audit = new IdentityAudit();
+        audit.setSerialNumber(createAuditSerialNumber(user.getId(), type));
+        audit.setUserId(user.getId());
+        audit.setDigitId(user.getDigitId());
+        audit.setGender(user.getGender());
+        audit.setPhone(user.getPhone());
+
+        audit.setNick(identityAuditPrepare.getNick());
+        audit.setBirth(identityAuditPrepare.getBirth());
+        if (Objects.nonNull(identityAuditPrepare.getBirth())) {
+            audit.setAge(DateUtils.getAgeFromBirth(identityAuditPrepare.getBirth()));
+        }
+        audit.setCity((identityAuditPrepare.getCity()));
+        audit.setProfession(identityAuditPrepare.getProfession());
+        audit.setIntro(identityAuditPrepare.getIntro());
+        audit.setLabels(identityAuditPrepare.getLabels());
+        audit.setCallPrice(identityAuditPrepare.getCallPrice());
+        audit.setVideoPrice(identityAuditPrepare.getVideoPrice());
+        audit.setMessagePrice(identityAuditPrepare.getMessagePrice());
+        audit.setVoice(identityAuditPrepare.getVoice());
+        audit.setHead(identityAuditPrepare.getHead());
+        audit.setPhotos(identityAuditPrepare.getPhotos());
+        audit.setVideo(identityAuditPrepare.getVideo());
+
+        audit.setType(type);
+        audit.setStatus(10);
+        return audit;
     }
 }

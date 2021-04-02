@@ -241,7 +241,8 @@ public class UserController {
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/request-identity")
     ApiResp<Integer> requestIdentity(
-            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version) {
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam(value = "type", required = false, defaultValue = "1") Integer type) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
@@ -259,7 +260,7 @@ public class UserController {
                 userDo.setVideoPrice(BigDecimal.valueOf(450).setScale(2, BigDecimal.ROUND_HALF_UP));
             }
         }
-        int ret = identityAuditService.requestIdentityAudit(userDo);
+        int ret = identityAuditService.requestIdentityAudit(userDo, type);
         return ApiResp.succeed(ret);
     }
 

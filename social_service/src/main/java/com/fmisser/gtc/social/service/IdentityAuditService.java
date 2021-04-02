@@ -21,8 +21,8 @@ public interface IdentityAuditService {
     // 获取最近的视频资料的审核，可能为空，表示未进行过审核
     Optional<IdentityAudit> getLastVideoAudit(User user) throws ApiException;
 
-    // 请求身份认证审核
-    int requestIdentityAudit(User user) throws ApiException;
+    // 请求身份认证审核 type = 0 不需要资料都完善 type = 1需要资料都完善
+    int requestIdentityAudit(User user, int type) throws ApiException;
 
     // 一次性获得最近的一次审核数据
     List<IdentityAudit> getLatestAuditAllType(User user) throws ApiException;
@@ -37,5 +37,9 @@ public interface IdentityAuditService {
 
     Optional<IdentityAudit> getLastVideoPrepare(User user) throws ApiException;
 
+    Optional<IdentityAudit> getLastAuditPrepare(Long userId, int type) throws ApiException;
+
     IdentityAudit createAuditPrepare(User user, int type) throws ApiException;
+
+
 }

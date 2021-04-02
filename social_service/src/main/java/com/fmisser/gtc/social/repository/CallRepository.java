@@ -156,7 +156,7 @@ public interface CallRepository extends JpaRepository<Call, Long> {
             "tc.createdTime, tc.startTime, tc.finishTime, tu.head) FROM Call tc " +
             "INNER JOIN User tu ON (tc.userIdFrom = :userId AND tc.userIdTo = tu.id) OR " +
             "(tc.userIdTo = :userId AND tc.userIdFrom = tu.id) " +
-            "WHERE tc.userIdTo = :userId OR tc.userIdFrom = :userId " +
+            "WHERE tc.createdTime > :createTime AND (tc.userIdTo = :userId OR tc.userIdFrom = :userId) " +
             "ORDER BY tc.id DESC")
-    Page<UserCallDto> getUserCallList(Long userId, Pageable pageable);
+    Page<UserCallDto> getUserCallList(Long userId, Date createTime, Pageable pageable);
 }

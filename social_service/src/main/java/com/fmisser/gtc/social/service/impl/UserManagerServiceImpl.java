@@ -409,6 +409,17 @@ public class UserManagerServiceImpl implements UserManagerService {
         if (operate == 1) {
             // 审核通过
             identityAudit.setStatus(30);
+
+            // 清空审核准备资料
+            int type = identityAudit.getType();
+            Optional<IdentityAudit> identityAuditOptional = identityAuditService
+                    .getLastAuditPrepare(identityAudit.getUserId(), type + 10);
+            if (identityAuditOptional.isPresent()) {
+                IdentityAudit identityAuditPrepare = identityAuditOptional.get();
+                identityAuditPrepare.setStatus(30);
+                identityAuditRepository.save(identityAuditPrepare);
+            }
+
         } else {
             // 审核不通过
             identityAudit.setStatus(20);
@@ -425,6 +436,10 @@ public class UserManagerServiceImpl implements UserManagerService {
 
             if (user.getIdentity() == 1) {
                 // TODO: 2020/11/30  已完成身份认证, 更新此次认证的数据
+                if (Objects.nonNull(identityAudit.getHead())) {
+                    user.setHead(identityAudit.getHead());
+                }
+
                 if (Objects.nonNull(identityAudit.getNick())) {
                     user.setNick(identityAudit.getNick());
                 }

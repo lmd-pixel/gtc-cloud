@@ -240,11 +240,29 @@ public class UserServiceImpl implements UserService {
         // 判断是否在审核中
         // 如果在审核中，则用审核中的数据覆盖当前的
         Optional<IdentityAudit> userProfileAudit = identityAuditService.getLastProfileAudit(user);
+        if (!userProfileAudit.isPresent() ||
+                (userProfileAudit.isPresent() && userProfileAudit.get().getStatus() != 10)) {
+            userProfileAudit = identityAuditService.getLastProfilePrepare(user);
+        }
+
         Optional<IdentityAudit> userPhotosAudit = identityAuditService.getLastPhotosAudit(user);
+        if (!userPhotosAudit.isPresent() ||
+                (userPhotosAudit.isPresent() && userPhotosAudit.get().getStatus() != 10)) {
+            userPhotosAudit = identityAuditService.getLastPhotosPrepare(user);
+        }
+
         Optional<IdentityAudit> userVideoAudit = identityAuditService.getLastVideoAudit(user);
+        if (!userVideoAudit.isPresent() ||
+                (userVideoAudit.isPresent() && userVideoAudit.get().getStatus() != 10)) {
+            userVideoAudit = identityAuditService.getLastVideoPrepare(user);
+        }
+
         userProfileAudit.ifPresent(identityAudit -> {
             if (identityAudit.getStatus() == 10) {
                 // TODO: 2021/4/2 写个mapper 转换
+                if (Objects.nonNull(identityAudit.getHead())) {
+                    user.setHead(identityAudit.getHead());
+                }
                 if (Objects.nonNull(identityAudit.getNick())) {
                     user.setNick(identityAudit.getNick());
                 }
@@ -326,7 +344,7 @@ public class UserServiceImpl implements UserService {
 
             // 不管主播用户都直接触发审核
             optionType = 3;
-            audit = identityAuditService.createAuditPrepare(user, 1);
+            audit = identityAuditService.createAuditPrepare(user, 11);
 
         } else {
             optionType = 1;
@@ -475,7 +493,8 @@ public class UserServiceImpl implements UserService {
             identityAuditRepository.save(audit);
 
             // 直接返回更新后的数据，但不入库
-            return _prepareResponse(user);
+//            return _prepareResponse(user);
+            return getSelfProfile(user);
         }
     }
 
@@ -512,7 +531,7 @@ public class UserServiceImpl implements UserService {
 
             // 不管主播用户都直接触发审核
             optionType = 3;
-            audit = identityAuditService.createAuditPrepare(user, 2);
+            audit = identityAuditService.createAuditPrepare(user, 12);
         } else {
             optionType = 1;
         }
@@ -590,7 +609,8 @@ public class UserServiceImpl implements UserService {
             return _prepareResponse(user);
         } else {
             identityAuditRepository.save(audit);
-            return _prepareResponse(user);
+//            return _prepareResponse(user);
+            return getSelfProfile(user);
         }
     }
 
@@ -681,7 +701,7 @@ public class UserServiceImpl implements UserService {
 
             // 不管主播用户都直接触发审核
             optionType = 3;
-            audit = identityAuditService.createAuditPrepare(user, 3);
+            audit = identityAuditService.createAuditPrepare(user, 13);
         } else {
             optionType = 1;
         }
@@ -730,7 +750,8 @@ public class UserServiceImpl implements UserService {
             return _prepareResponse(user);
         } else {
             identityAuditRepository.save(audit);
-            return _prepareResponse(user);
+//            return _prepareResponse(user);
+            return getSelfProfile(user);
         }
     }
 

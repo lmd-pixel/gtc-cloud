@@ -145,7 +145,7 @@ public class UserManagerController {
     @GetMapping(value = "/profile-audit")
     @PreAuthorize("hasAnyRole('MANAGER')")
     ApiResp<User> getProfileWithAudit(@RequestParam(value = "digitId") String digitId) {
-        User user = userManagerService.getUserProfile(digitId);
+        User user = userManagerService.getUserProfileAudit(digitId);
         return ApiResp.succeed(user);
     }
 

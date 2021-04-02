@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -30,7 +31,9 @@ public class CallServiceImpl implements CallService {
     @Override
     public List<UserCallDto> getCallList(User user, int pageIndex, int pageSize) throws ApiException {
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        Page<UserCallDto> userCallDtoPage = callRepository.getUserCallList(user.getId(), pageable);
+        Date now = new Date();
+        Date threeDaysBefore = new Date(now.getTime() - 3 * 24 * 3600 * 1000);
+        Page<UserCallDto> userCallDtoPage = callRepository.getUserCallList(user.getId(), threeDaysBefore, pageable);
         List<UserCallDto> userCallDtoList = userCallDtoPage.getContent();
         userCallDtoList
                 .forEach(userCallDto -> {

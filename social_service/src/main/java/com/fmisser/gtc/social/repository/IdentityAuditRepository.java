@@ -28,14 +28,14 @@ public interface IdentityAuditRepository extends JpaRepository<IdentityAudit, Lo
 
     // 获取身份审核列表
     @Query(value = "SELECT * FROM t_identity_audit " +
-            "WHERE (create_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL ) AND " +
+            "WHERE type < 10 AND (create_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL ) AND " +
             "(digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
             "(nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
             "(gender LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
             "(status IN (?4) ) " +
             "ORDER BY create_time DESC",
             countQuery = "SELECT COUNT(*) FROM t_identity_audit " +
-                    "WHERE (create_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL ) AND " +
+                    "WHERE type < 10 AND (create_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL ) AND " +
                     "(digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
                     "(nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
                     "(gender LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
