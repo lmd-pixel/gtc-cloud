@@ -291,6 +291,9 @@ public class UserServiceImpl implements UserService {
                 if (Objects.nonNull(identityAudit.getMessagePrice())) {
                     user.setMessagePrice(identityAudit.getMessagePrice());
                 }
+                if (Objects.nonNull(identityAudit.getVoice())) {
+                    user.setVoice(identityAudit.getVoice());
+                }
             }
         });
 
