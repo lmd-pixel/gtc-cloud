@@ -30,4 +30,12 @@ public interface IdentityAuditService {
     // 响应身份认证审核结果
     // 由满足权限的审核角色操作
     int responseAudit(Long auditId, int pass, String message) throws ApiException;
+
+    Optional<IdentityAudit> getLastProfilePrepare(User user) throws ApiException;
+
+    Optional<IdentityAudit> getLastPhotosPrepare(User user) throws ApiException;
+
+    Optional<IdentityAudit> getLastVideoPrepare(User user) throws ApiException;
+
+    IdentityAudit createAuditPrepare(User user, int type) throws ApiException;
 }

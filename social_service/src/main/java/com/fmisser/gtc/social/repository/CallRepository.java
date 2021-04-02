@@ -2,6 +2,7 @@ package com.fmisser.gtc.social.repository;
 
 import com.fmisser.gtc.base.dto.social.CallDetailDto;
 import com.fmisser.gtc.base.dto.social.CallDto;
+import com.fmisser.gtc.base.dto.social.UserCallDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcAnchorProfitDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcTotalCallDto;
 import com.fmisser.gtc.social.domain.Call;
@@ -148,4 +149,12 @@ public interface CallRepository extends JpaRepository<Call, Long> {
             "GROUP BY tc.id",
     nativeQuery = true)
     CallDetailDto getCallDetail(Long callId);
+
+
+    @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.UserCallDto" +
+            "(tc.id, tu.digitId, tu.nick, tc.type, tc.duration," +
+            "tc.createdTime, tc.startTime, tc.finishTime, tu.head) FROM Call tc " +
+            "INNER JOIN User tu ON tu.id = :userId " +
+            "WHERE tc.callMode = 0 AND tc.userIdTo = :userId ORDER BY tc.id DESC")
+    Page<UserCallDto> getUserCallList(Long userId, Pageable pageable);
 }

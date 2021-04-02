@@ -5,18 +5,13 @@ import com.fmisser.gtc.base.dto.social.calc.CalcConsumeDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcTotalProfitDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcUserDto;
 import com.fmisser.gtc.base.exception.ApiException;
-import com.fmisser.gtc.social.domain.Asset;
-import com.fmisser.gtc.social.domain.IdentityAudit;
-import com.fmisser.gtc.social.domain.Recommend;
-import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.UserManagerService;
 import com.fmisser.gtc.social.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,17 +27,20 @@ public class UserManagerServiceImpl implements UserManagerService {
     private final RecommendRepository recommendRepository;
     private final IdentityAuditRepository identityAuditRepository;
     private final AssetRepository assetRepository;
+    private final LabelRepository labelRepository;
 
     public UserManagerServiceImpl(UserService userService,
                                   UserRepository userRepository,
                                   RecommendRepository recommendRepository,
                                   IdentityAuditRepository identityAuditRepository,
-                                  AssetRepository assetRepository) {
+                                  AssetRepository assetRepository,
+                                  LabelRepository labelRepository) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.recommendRepository = recommendRepository;
         this.identityAuditRepository = identityAuditRepository;
         this.assetRepository = assetRepository;
+        this.labelRepository = labelRepository;
     }
 
     @Override
@@ -354,6 +352,50 @@ public class UserManagerServiceImpl implements UserManagerService {
 
             if (user.getIdentity() == 1) {
                 // TODO: 2020/11/30  已完成身份认证, 更新此次认证的数据
+                if (Objects.nonNull(identityAudit.getNick())) {
+                    user.setNick(identityAudit.getNick());
+                }
+
+                if (Objects.nonNull(identityAudit.getBirth())) {
+                    user.setBirth(identityAudit.getBirth());
+                }
+
+                if (Objects.nonNull(identityAudit.getCity())) {
+                    user.setCity(identityAudit.getCity());
+                }
+
+                if (Objects.nonNull(identityAudit.getProfession())) {
+                    user.setProfession(identityAudit.getProfession());
+                }
+
+                if (Objects.nonNull(identityAudit.getIntro())) {
+                    user.setIntro(identityAudit.getIntro());
+                }
+
+                if (Objects.nonNull(identityAudit.getLabels())) {
+                    String[] labelList = identityAudit.getLabels().split(",");
+                    user.setLabels(_innerCreateLabels(labelList));
+                }
+
+                if (Objects.nonNull(identityAudit.getCallPrice())) {
+                    user.setCallPrice(identityAudit.getCallPrice());
+                }
+
+                if (Objects.nonNull(identityAudit.getVideoPrice())) {
+                    user.setVideoPrice(identityAudit.getVideoPrice());
+                }
+
+                if (Objects.nonNull(identityAudit.getMessagePrice())) {
+                    user.setMessagePrice(identityAudit.getMessagePrice());
+                }
+
+                if (Objects.nonNull(identityAudit.getPhotos())) {
+                    user.setPhotos(identityAudit.getPhotos());
+                }
+
+                if (Objects.nonNull(identityAudit.getVideo())) {
+                    user.setVideo(identityAudit.getVideo());
+                }
             } else {
                 // 判断是否不同的审核都已满足,如果都通过，则完成了认证
                 boolean allPass = true;
@@ -395,5 +437,17 @@ public class UserManagerServiceImpl implements UserManagerService {
     @Override
     public Pair<List<CalcTotalProfitDto>, Map<String, Object>> getCalcTotalProfit(Date startTime, Date endTime, int pageIndex, int pageSize) throws ApiException {
         return null;
+    }
+
+    // 创建标签
+    private List<Label> _innerCreateLabels(String[] labels) {
+        List<Label> labelList = new ArrayList<>();
+        for (String name: labels) {
+            Label label = labelRepository.findByName(name);
+            if (label != null) {
+                labelList.add(label);
+            }
+        }
+        return labelList;
     }
 }

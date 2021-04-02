@@ -14,6 +14,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -48,16 +49,52 @@ public class IdentityAudit {
     private String phone;
 
     @Column
-    private String nick;
-
-    @Column
     private Integer gender;
 
     @Column
     private Integer age;
 
+    @Column
+    private String nick;
+
+    @Column
+    private Date birth;
+
+    @Column
+    private String city;
+
+    @Column
+    private String profession;
+
+    @Column
+    private String intro;
+
+    @Column
+    private String labels;
+
+    @Column
+    private BigDecimal callPrice;
+
+    @Column
+    private BigDecimal videoPrice;
+
+    @Column
+    private BigDecimal messagePrice;
+
+    @Column
+    private String voice;
+
+    @Column
+    private String head;
+
+    @Column(length = 4096)
+    private String photos;
+
+    @Column
+    private String video;
+
     /**
-     * 审核类型 1： 资料审核  2： 相册审核  3：视频审核
+     * 审核类型 1： 资料审核  2： 相册审核  3：视频审核 11：待审资料 12：待审相册 13：待审视频
      */
     @Column(nullable = false)
     private Integer type;

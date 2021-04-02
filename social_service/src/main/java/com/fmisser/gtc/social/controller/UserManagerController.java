@@ -286,7 +286,7 @@ public class UserManagerController {
 
         User userDo = userService.getUserByDigitId(digitId);
 
-        User user = userService.updateProfile(userDo, nick, birth, city, profession,
+        User user = userService.updateProfile(userDo, 0, nick, birth, city, profession,
                 intro, labels, callPrice, videoPrice, messagePrice,
                 null, null, null, null,
                 request.getFileMap());
@@ -319,7 +319,7 @@ public class UserManagerController {
         User userDo = userService.getUserByDigitId(digitId);
 
         Map<String, MultipartFile> multipartFileMap = new HashMap<>();
-        User user = userService.updateProfile(userDo, nick, birth, city, profession,
+        User user = userService.updateProfile(userDo, 0, nick, birth, city, profession,
                 intro, labels, callPrice, videoPrice, messagePrice,
                 null, null, null, null,
                 multipartFileMap);

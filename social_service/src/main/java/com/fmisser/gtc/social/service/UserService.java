@@ -22,24 +22,27 @@ public interface UserService {
 
     User getUserById(Long id) throws ApiException;
 
-    // 获取用户的完整信息
+    // 获取自己的完整信息
     User profile(User user) throws ApiException;
 
+    User getSelfProfile(User user) throws ApiException;
+
     // 更新用户信息
-    User updateProfile(User user,
+    User updateProfile(User user, Integer updateType,
                        String nick, String birth, String city,
                        String profession, String intro, String labels, String callPrice, String videoPrice, String messagePrice,
                        Integer mode, Integer rest, String restStartDate, String restEndDate,
                        Map<String, MultipartFile> multipartFileMap) throws ApiException;
 
     // 更新用户照片
-    User updatePhotos(User user, String existsPhotos, Map<String, MultipartFile> multipartFileMap) throws ApiException;
+    User updatePhotos(User user, Integer updateType,
+                      String existsPhotos, Map<String, MultipartFile> multipartFileMap) throws ApiException;
 
     // 更新用户认证照片
     User updateVerifyImage(User user, Map<String, MultipartFile> multipartFileMap) throws ApiException;
 
     // 更新用户视频
-    User updateVideo(User user, Map<String, MultipartFile> multipartFileMap) throws ApiException;
+    User updateVideo(User user, Integer updateType, Map<String, MultipartFile> multipartFileMap) throws ApiException;
 
     // 用户登出
     int logout(User user) throws ApiException;

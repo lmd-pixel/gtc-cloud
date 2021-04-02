@@ -69,6 +69,8 @@ public class UserServiceImpl implements UserService {
 
     private final SysConfigService sysConfigService;
 
+    private final IdentityAuditRepository identityAuditRepository;
+
 //    private final ImFeign imFeign;
 //
 //    private final ImConfProp imConfProp;
@@ -90,7 +92,8 @@ public class UserServiceImpl implements UserService {
                            SysConfigService sysConfigService,
 //                           ImFeign imFeign,
 //                           ImConfProp imConfProp
-                           ImService imService
+                           ImService imService,
+                           IdentityAuditRepository identityAuditRepository
                            ) {
         this.userRepository = userRepository;
         this.minioUtils = minioUtils;
@@ -108,6 +111,7 @@ public class UserServiceImpl implements UserService {
 //        this.imFeign = imFeign;
 //        this.imConfProp = imConfProp;
         this.imService = imService;
+        this.identityAuditRepository = identityAuditRepository;
     }
 
     @Transactional
@@ -231,56 +235,161 @@ public class UserServiceImpl implements UserService {
         return _prepareResponse(user);
     }
 
+    @Override
+    public User getSelfProfile(User user) throws ApiException {
+        // 判断是否在审核中
+        // 如果在审核中，则用审核中的数据覆盖当前的
+        Optional<IdentityAudit> userProfileAudit = identityAuditService.getLastProfileAudit(user);
+        Optional<IdentityAudit> userPhotosAudit = identityAuditService.getLastPhotosAudit(user);
+        Optional<IdentityAudit> userVideoAudit = identityAuditService.getLastVideoAudit(user);
+        userProfileAudit.ifPresent(identityAudit -> {
+            if (identityAudit.getStatus() == 10) {
+                // TODO: 2021/4/2 写个mapper 转换
+                if (Objects.nonNull(identityAudit.getNick())) {
+                    user.setNick(identityAudit.getNick());
+                }
+                if (Objects.nonNull(identityAudit.getBirth())) {
+                    user.setBirth(identityAudit.getBirth());
+                }
+                if (Objects.nonNull(identityAudit.getCity())) {
+                    user.setCity(identityAudit.getCity());
+                }
+                if (Objects.nonNull(identityAudit.getProfession())) {
+                    user.setProfession(identityAudit.getProfession());
+                }
+                if (Objects.nonNull(identityAudit.getIntro())) {
+                    user.setIntro(identityAudit.getIntro());
+                }
+                if (Objects.nonNull(identityAudit.getLabels())) {
+                    String[] labelList = identityAudit.getLabels().split(",");
+                    user.setLabels(_innerCreateLabels(labelList));
+                }
+                if (Objects.nonNull(identityAudit.getCallPrice())) {
+                    user.setCallPrice(identityAudit.getCallPrice());
+                }
+                if (Objects.nonNull(identityAudit.getVideoPrice())) {
+                    user.setVideoPrice(identityAudit.getVideoPrice());
+                }
+                if (Objects.nonNull(identityAudit.getMessagePrice())) {
+                    user.setMessagePrice(identityAudit.getMessagePrice());
+                }
+            }
+        });
+
+        userPhotosAudit.ifPresent(identityAudit -> {
+            if (Objects.nonNull(identityAudit.getPhotos())) {
+                user.setPhotos(identityAudit.getPhotos());
+            }
+        });
+
+        userVideoAudit.ifPresent(identityAudit -> {
+            if (Objects.nonNull(identityAudit.getVideo())) {
+                user.setVideo(identityAudit.getVideo());
+            }
+        });
+
+        return _prepareResponse(user);
+    }
+
     @SneakyThrows
     @Override
-    public User updateProfile(User user,
+    public User updateProfile(User user, Integer updateType,
                               String nick, String birth, String city, String profession,
                               String intro, String labels, String callPrice, String videoPrice, String messagePrice,
                               Integer mode, Integer rest, String restStartDate, String restEndDate,
                               Map<String, MultipartFile> multipartFileMap) throws ApiException {
 
-        if (user.getIdentity() == 1) {
-            // TODO: 2020/11/30 如果是主播身份，不能随意更改资料，需要审核
-        }
-        
-        Optional<IdentityAudit> identityAudit = identityAuditService.getLastProfileAudit(user);
-        if (identityAudit.isPresent() &&
-                identityAudit.get().getStatus() == 10) {
-            // 资料审核中不能修改
-            throw new ApiException(-1, "资料在认证审核中，暂时无法修改");
+        // 操作模式， 1: 普通资料更新,后台更新，不走审核 2: 待审核资料更新 3: 提交审核
+        int optionType;
+        IdentityAudit audit = null;
+
+        if (updateType == 1) {
+            // 认证资料的修改
+
+            // 如果已经有资料在审核
+            Optional<IdentityAudit> identityAudit = identityAuditService.getLastProfileAudit(user);
+            if (identityAudit.isPresent() &&
+                    identityAudit.get().getStatus() == 10) {
+                // 资料审核中不能修改
+                throw new ApiException(-1, "资料在认证审核中，暂时无法修改");
+            }
+
+//            if (user.getIdentity() == 1) {
+//                // 主播直接提交审核
+//                optionType = 3;
+//                audit = identityAuditService.createAuditPrepare(user, 1);
+//            } else {
+//                // 非主播，直接提交待审资料
+//                optionType = 2;
+//                audit = identityAuditService.createAuditPrepare(user, 11);
+//            }
+
+            // 不管主播用户都直接触发审核
+            optionType = 3;
+            audit = identityAuditService.createAuditPrepare(user, 1);
+
+        } else {
+            optionType = 1;
         }
 
         // 处理文本结构
         if (nick != null && !nick.isEmpty()) {
             user.setNick(nick);
+            if (optionType == 2 || optionType == 3) {
+                audit.setNick(nick);
+            }
         }
         if (birth != null && !birth.isEmpty()) {
             user.setBirth(new Date(Long.parseLong(birth)));
+            if (optionType == 2 || optionType == 3) {
+                audit.setBirth(new Date(Long.parseLong(birth)));
+            }
         }
         if (city != null && !city.isEmpty()) {
             user.setCity(city);
+            if (optionType == 2 || optionType == 3) {
+                audit.setCity(city);
+            }
         }
         if (profession != null && !profession.isEmpty()) {
             user.setProfession(profession);
+            if (optionType == 2 || optionType == 3) {
+                audit.setProfession(profession);
+            }
         }
         if (intro != null && !intro.isEmpty()) {
             user.setIntro(intro);
+            if (optionType == 2 || optionType == 3) {
+                audit.setIntro(intro);
+            }
         }
         if (labels != null && !labels.isEmpty()) {
             String[] labelList = labels.split(",");
             user.setLabels(_innerCreateLabels(labelList));
+            if (optionType == 2 || optionType == 3) {
+                audit.setLabels(labels);
+            }
         }
         if (callPrice != null && !callPrice.isEmpty()) {
             BigDecimal price = BigDecimal.valueOf(Long.parseLong(callPrice));
             user.setCallPrice(price);
+            if (optionType == 2 || optionType == 3) {
+                audit.setCallPrice(price);
+            }
         }
         if (videoPrice != null && !videoPrice.isEmpty()) {
             BigDecimal price = BigDecimal.valueOf(Long.parseLong(videoPrice));
             user.setVideoPrice(price);
+            if (optionType == 2 || optionType == 3) {
+                audit.setVideoPrice(price);
+            }
         }
         if (messagePrice != null && !messagePrice.isEmpty()) {
             BigDecimal price = BigDecimal.valueOf(Long.parseLong(messagePrice));
             user.setMessagePrice(price);
+            if (optionType == 2 || optionType == 3) {
+                audit.setMessagePrice(price);
+            }
         }
         if (Objects.nonNull(mode)) {
             user.setMode(mode);
@@ -329,6 +438,9 @@ public class UserServiceImpl implements UserService {
                 }
 
                 user.setVoice(response.object());
+                if (optionType == 2 || optionType == 3) {
+                    audit.setVoice(response.object());
+                }
 
             } else if (name.equals("head")) {
                 InputStream inputStream = file.getInputStream();
@@ -350,28 +462,59 @@ public class UserServiceImpl implements UserService {
                                 objectName, inputStream, file.getSize(), "image/png", minioUtils);
 
                 user.setHead(response.object());
+                if (optionType == 2 || optionType == 3) {
+                    audit.setHead(response.object());
+                }
             }
         }
 
-        user = userRepository.save(user);
+        if (optionType == 1) {
+            user = userRepository.save(user);
+            return _prepareResponse(user);
+        } else {
+            identityAuditRepository.save(audit);
 
-        return _prepareResponse(user);
+            // 直接返回更新后的数据，但不入库
+            return _prepareResponse(user);
+        }
     }
 
     @Override
     @SneakyThrows
-    public User updatePhotos(User user, String existsPhotos,
-                             Map<String, MultipartFile> multipartFileMap) throws ApiException {
-        if (user.getIdentity() == 1) {
-            // TODO: 2020/11/30 如果是主播身份，不能随意更改资料，需要审核
-        }
+    public User updatePhotos(User user, Integer updateType,
+                             String existsPhotos, Map<String, MultipartFile> multipartFileMap) throws ApiException {
 
-        Optional<IdentityAudit> identityAudit = identityAuditService.getLastPhotosAudit(user);
+        // 操作模式， 1: 普通资料更新，2: 待审核资料更新 3: 提交审核
+        int optionType;
+        IdentityAudit audit = null;
 
-        if (identityAudit.isPresent() &&
-                identityAudit.get().getStatus() == 10) {
-            // 资料审核中不能修改
-            throw new ApiException(-1, "资料在认证审核中，暂时无法修改");
+        if (updateType == 1) {
+            // 认证资料的修改
+
+            // 如果已经有资料在审核
+            Optional<IdentityAudit> identityAudit = identityAuditService.getLastPhotosAudit(user);
+
+            if (identityAudit.isPresent() &&
+                    identityAudit.get().getStatus() == 10) {
+                // 资料审核中不能修改
+                throw new ApiException(-1, "资料在认证审核中，暂时无法修改");
+            }
+
+//            if (user.getIdentity() == 1) {
+//                // 主播直接提交审核
+//                optionType = 3;
+//                audit = identityAuditService.createAuditPrepare(user, 2);
+//            } else {
+//                // 非主播，直接提交待审资料
+//                optionType = 2;
+//                audit = identityAuditService.createAuditPrepare(user, 12);
+//            }
+
+            // 不管主播用户都直接触发审核
+            optionType = 3;
+            audit = identityAuditService.createAuditPrepare(user, 2);
+        } else {
+            optionType = 1;
         }
 
         List<String> photoList = new ArrayList<>();
@@ -429,19 +572,31 @@ public class UserServiceImpl implements UserService {
             }
 
             user.setPhotos(filterPhotos.toString());
+            if (optionType == 2 || optionType == 3) {
+                audit.setPhotos(filterPhotos.toString());
+            }
         } else {
             if (photoList.size() > 0) {
+
                 user.setPhotos(photoList.toString());
+                if (optionType == 2 || optionType == 3) {
+                    audit.setPhotos(photoList.toString());
+                }
             }
         }
 
-        user = userRepository.save(user);
-
-        return _prepareResponse(user);
+        if (optionType == 1) {
+            user = userRepository.save(user);
+            return _prepareResponse(user);
+        } else {
+            identityAuditRepository.save(audit);
+            return _prepareResponse(user);
+        }
     }
 
     @Override
     @SneakyThrows
+    @Deprecated
     public User updateVerifyImage(User user,
                                   Map<String, MultipartFile> multipartFileMap) throws ApiException {
 
@@ -495,10 +650,40 @@ public class UserServiceImpl implements UserService {
 
     @SneakyThrows
     @Override
-    public User updateVideo(User user, Map<String, MultipartFile> multipartFileMap) throws ApiException {
+    public User updateVideo(User user, Integer updateType,
+                            Map<String, MultipartFile> multipartFileMap) throws ApiException {
 
-        if (user.getIdentity() == 1) {
-            // TODO: 2020/11/30 如果是主播身份，不能随意更改资料，需要审核
+        // 操作模式， 1: 普通资料更新，2: 待审核资料更新 3: 提交审核
+        int optionType;
+        IdentityAudit audit = null;
+
+        if (updateType == 1) {
+            // 认证资料的修改
+
+            // 如果已经有资料在审核
+            Optional<IdentityAudit> identityAudit = identityAuditService.getLastVideoAudit(user);
+
+            if (identityAudit.isPresent() &&
+                    identityAudit.get().getStatus() == 10) {
+                // 资料审核中不能修改
+                throw new ApiException(-1, "资料在认证审核中，暂时无法修改");
+            }
+
+//            if (user.getIdentity() == 1) {
+//                // 主播直接提交审核
+//                optionType = 3;
+//                audit = identityAuditService.createAuditPrepare(user, 3);
+//            } else {
+//                // 非主播，直接提交待审资料
+//                optionType = 2;
+//                audit = identityAuditService.createAuditPrepare(user, 13);
+//            }
+
+            // 不管主播用户都直接触发审核
+            optionType = 3;
+            audit = identityAuditService.createAuditPrepare(user, 3);
+        } else {
+            optionType = 1;
         }
 
         for (MultipartFile file: multipartFileMap.values()) {
@@ -528,6 +713,9 @@ public class UserServiceImpl implements UserService {
                     inputStream, file.getSize(), "video/mp4");
 
             user.setVideo(response.object());
+            if (optionType == 2 || optionType == 3) {
+                audit.setVideo(response.object());
+            }
 
             // 只处理第一个能处理的视频
             break;
@@ -537,9 +725,13 @@ public class UserServiceImpl implements UserService {
             throw new ApiException(-1, "上传信息不正确");
         }
 
-        user = userRepository.save(user);
-
-        return _prepareResponse(user);
+        if (optionType == 1) {
+            user = userRepository.save(user);
+            return _prepareResponse(user);
+        } else {
+            identityAuditRepository.save(audit);
+            return _prepareResponse(user);
+        }
     }
 
     @Override
@@ -968,6 +1160,7 @@ public class UserServiceImpl implements UserService {
     }
 
     // 创建标签
+    // TODO: 2021/4/2 放到lable service 实现
     private List<Label> _innerCreateLabels(String[] labels) {
         List<Label> labelList = new ArrayList<>();
         for (String name: labels) {

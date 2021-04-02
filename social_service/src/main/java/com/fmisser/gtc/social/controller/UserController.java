@@ -77,6 +77,7 @@ public class UserController {
     @PostMapping(value = "/update-profile")
     ApiResp<User> uploadProfile(MultipartHttpServletRequest request,
                                 @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+                                @RequestParam(value = "update_type", required = false, defaultValue = "0") Integer updateType,
                                 @RequestParam(value = "nick", required = false) String nick,
                                 @RequestParam(value = "birth", required = false) String birth,
                                 @RequestParam(value = "city", required = false) String city,
@@ -95,7 +96,8 @@ public class UserController {
         User userDo = userService.getUserByUsername(username);
         //
         // TODO: 2020/11/10 check params
-        User user = userService.updateProfile(userDo, nick, birth, city, profession,
+        User user = userService.updateProfile(userDo, updateType,
+                nick, birth, city, profession,
                 intro, labels, callPrice, videoPrice, messagePrice,
                 mode, rest, restStartDate, restEndDate,
                 request.getFileMap());
@@ -115,13 +117,14 @@ public class UserController {
     @PostMapping(value = "/update-photos")
     ApiResp<User> uploadPhotos(MultipartHttpServletRequest request,
                                @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+                               @RequestParam(value = "update_type", required = false, defaultValue = "0") Integer updateType,
                                @RequestParam(value = "existPhotos", required = false) String existPhotos) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
         //
         // TODO: 2020/11/10 check params
-        User user = userService.updatePhotos(userDo, existPhotos, request.getFileMap());
+        User user = userService.updatePhotos(userDo, updateType, existPhotos, request.getFileMap());
 
         // 针对版本审核
         if (sysConfigService.getAppAuditVersion().equals(version)) {
@@ -137,13 +140,14 @@ public class UserController {
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/update-video")
     ApiResp<User> uploadVideo(MultipartHttpServletRequest request,
-                              @RequestHeader(value = "version", required = false, defaultValue = "v1") String version) {
+                              @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+                              @RequestParam(value = "update_type", required = false, defaultValue = "0") Integer updateType) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
         //
         // TODO: 2020/11/10 check params
-        User user = userService.updateVideo(userDo, request.getFileMap());
+        User user = userService.updateVideo(userDo, updateType, request.getFileMap());
 
         // 针对版本审核
         if (sysConfigService.getAppAuditVersion().equals(version)) {
@@ -169,7 +173,8 @@ public class UserController {
             greetService.createGreet(userDo);
         }
 
-        User user = userService.profile(userDo);
+//        User user = userService.profile(userDo);
+        User user = userService.getSelfProfile(userDo);
 
         // 针对版本审核
         if (sysConfigService.getAppAuditVersion().equals(version)) {
