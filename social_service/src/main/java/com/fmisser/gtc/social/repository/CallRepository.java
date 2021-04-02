@@ -154,7 +154,10 @@ public interface CallRepository extends JpaRepository<Call, Long> {
     @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.UserCallDto" +
             "(tc.id, tu.digitId, tu.nick, tc.type, tc.duration," +
             "tc.createdTime, tc.startTime, tc.finishTime, tu.head) FROM Call tc " +
-            "INNER JOIN User tu ON tu.id = :userId " +
-            "WHERE tc.callMode = 0 AND tc.userIdTo = :userId ORDER BY tc.id DESC")
+            "INNER JOIN User tu ON (tu.id = tc.userIdFrom AND tc.callMode = 0) OR " +
+            "(tu.id = tc.userIdTo AND tc.callMode = 1)" +
+            "WHERE (tc.callMode = 0 AND tc.userIdTo = :userId) OR " +
+            "(tc.callMode = 1 AND tc.userIdFrom = :userId)" +
+            "ORDER BY tc.id DESC")
     Page<UserCallDto> getUserCallList(Long userId, Pageable pageable);
 }
