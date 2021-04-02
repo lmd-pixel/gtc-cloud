@@ -7,6 +7,7 @@ import com.fmisser.gtc.base.dto.social.calc.CalcUserDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.repository.*;
+import com.fmisser.gtc.social.service.IdentityAuditService;
 import com.fmisser.gtc.social.service.UserManagerService;
 import com.fmisser.gtc.social.service.UserService;
 import org.springframework.data.domain.Page;
@@ -28,19 +29,22 @@ public class UserManagerServiceImpl implements UserManagerService {
     private final IdentityAuditRepository identityAuditRepository;
     private final AssetRepository assetRepository;
     private final LabelRepository labelRepository;
+    private final IdentityAuditService identityAuditService;
 
     public UserManagerServiceImpl(UserService userService,
                                   UserRepository userRepository,
                                   RecommendRepository recommendRepository,
                                   IdentityAuditRepository identityAuditRepository,
                                   AssetRepository assetRepository,
-                                  LabelRepository labelRepository) {
+                                  LabelRepository labelRepository,
+                                  IdentityAuditService identityAuditService) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.recommendRepository = recommendRepository;
         this.identityAuditRepository = identityAuditRepository;
         this.assetRepository = assetRepository;
         this.labelRepository = labelRepository;
+        this.identityAuditService = identityAuditService;
     }
 
     @Override
@@ -187,6 +191,75 @@ public class UserManagerServiceImpl implements UserManagerService {
     @Override
     public User getUserProfile(String digitId) throws ApiException {
         User user = userService.getUserByDigitId(digitId);
+        // 附带用户金币数据
+        Asset asset = assetRepository.findByUserId(user.getId());
+        user.setCoin(asset.getCoin());
+        // 附带收益比例
+        user.setVideoProfitRatio(asset.getVideoProfitRatio());
+        user.setVoiceProfitRatio(asset.getVoiceProfitRatio());
+        user.setMsgProfitRatio(asset.getMsgProfitRatio());
+        user.setGiftProfitRatio(asset.getGiftProfitRatio());
+
+        user.setBirthDay(user.getBirth());
+
+        return userService.profile(user);
+    }
+
+    @Override
+    public User getUserProfileAudit(String digitId) throws ApiException {
+        User user = userService.getUserByDigitId(digitId);
+
+        // 判断是否在审核中
+        // 如果在审核中，则用审核中的数据覆盖当前的
+        Optional<IdentityAudit> userProfileAudit = identityAuditService.getLastProfileAudit(user);
+        Optional<IdentityAudit> userPhotosAudit = identityAuditService.getLastPhotosAudit(user);
+        Optional<IdentityAudit> userVideoAudit = identityAuditService.getLastVideoAudit(user);
+        userProfileAudit.ifPresent(identityAudit -> {
+            if (identityAudit.getStatus() == 10) {
+                // TODO: 2021/4/2 写个mapper 转换
+                if (Objects.nonNull(identityAudit.getNick())) {
+                    user.setNick(identityAudit.getNick());
+                }
+                if (Objects.nonNull(identityAudit.getBirth())) {
+                    user.setBirth(identityAudit.getBirth());
+                }
+                if (Objects.nonNull(identityAudit.getCity())) {
+                    user.setCity(identityAudit.getCity());
+                }
+                if (Objects.nonNull(identityAudit.getProfession())) {
+                    user.setProfession(identityAudit.getProfession());
+                }
+                if (Objects.nonNull(identityAudit.getIntro())) {
+                    user.setIntro(identityAudit.getIntro());
+                }
+                if (Objects.nonNull(identityAudit.getLabels())) {
+                    String[] labelList = identityAudit.getLabels().split(",");
+                    user.setLabels(_innerCreateLabels(labelList));
+                }
+                if (Objects.nonNull(identityAudit.getCallPrice())) {
+                    user.setCallPrice(identityAudit.getCallPrice());
+                }
+                if (Objects.nonNull(identityAudit.getVideoPrice())) {
+                    user.setVideoPrice(identityAudit.getVideoPrice());
+                }
+                if (Objects.nonNull(identityAudit.getMessagePrice())) {
+                    user.setMessagePrice(identityAudit.getMessagePrice());
+                }
+            }
+        });
+
+        userPhotosAudit.ifPresent(identityAudit -> {
+            if (Objects.nonNull(identityAudit.getPhotos())) {
+                user.setPhotos(identityAudit.getPhotos());
+            }
+        });
+
+        userVideoAudit.ifPresent(identityAudit -> {
+            if (Objects.nonNull(identityAudit.getVideo())) {
+                user.setVideo(identityAudit.getVideo());
+            }
+        });
+
         // 附带用户金币数据
         Asset asset = assetRepository.findByUserId(user.getId());
         user.setCoin(asset.getCoin());

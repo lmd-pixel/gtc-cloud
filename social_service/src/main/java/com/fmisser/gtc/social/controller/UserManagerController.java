@@ -137,6 +137,18 @@ public class UserManagerController {
         return ApiResp.succeed(user);
     }
 
+    @ApiOperation(value = "获取用户信息(包含照片信息)-包括审核的最新数据")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
+            @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query")
+    })
+    @GetMapping(value = "/profile-audit")
+    @PreAuthorize("hasAnyRole('MANAGER')")
+    ApiResp<User> getProfileWithAudit(@RequestParam(value = "digitId") String digitId) {
+        User user = userManagerService.getUserProfile(digitId);
+        return ApiResp.succeed(user);
+    }
+
     @ApiOperation(value = "获取推荐主播列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),

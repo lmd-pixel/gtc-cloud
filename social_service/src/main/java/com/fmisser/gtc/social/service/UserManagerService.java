@@ -33,6 +33,9 @@ public interface UserManagerService {
     // 获取用户详情
     User getUserProfile(String digitId) throws ApiException;
 
+    // 获取用户详情(审核用)
+    User getUserProfileAudit(String digitId) throws ApiException;
+
     // 获取推荐主播列表
     Pair<List<RecommendDto>, Map<String, Object>> getRecommendList(String digitId, String nick, Integer gender, Integer type,
                                         int pageIndex, int pageSize) throws ApiException;
