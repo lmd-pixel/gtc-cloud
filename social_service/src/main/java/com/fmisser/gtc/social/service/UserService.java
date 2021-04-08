@@ -10,7 +10,7 @@ import java.util.Map;
 public interface UserService {
 
     // 创建用户
-    User create(String phone, int gender, String inviteCode) throws ApiException;
+    User create(String phone, int gender, String inviteCode, String version) throws ApiException;
 
     // 通过用户名查找用户实体
     User getUserByUsername(String username) throws ApiException;

@@ -165,7 +165,7 @@ public class DynamicController {
             }
         }
 
-        List<DynamicDto> dynamicList = dynamicService.getUserDynamicList(user, selfUser, pageIndex, pageSize);
+        List<DynamicDto> dynamicList = dynamicService.getUserDynamicList(user, selfUser, pageIndex, pageSize, version);
 
         // 兼容以前代码
         List<DynamicDto> compatDynamicList = dynamicService.compat(dynamicList, version);
@@ -186,7 +186,7 @@ public class DynamicController {
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
 
-        List<DynamicDto> dynamicList = dynamicService.getFollowLatestDynamicList(userDo, pageIndex, pageSize);
+        List<DynamicDto> dynamicList = dynamicService.getFollowLatestDynamicList(userDo, pageIndex, pageSize, version);
 
         // 兼容以前代码
         List<DynamicDto> compatDynamicList = dynamicService.compat(dynamicList, version);
@@ -211,7 +211,7 @@ public class DynamicController {
             }
         }
 
-        List<DynamicDto> dynamicList = dynamicService.getLatestDynamicList(selfUser, pageIndex, pageSize);
+        List<DynamicDto> dynamicList = dynamicService.getLatestDynamicList(selfUser, pageIndex, pageSize, version);
 
         // 兼容以前代码
         List<DynamicDto> compatDynamicList = dynamicService.compat(dynamicList, version);

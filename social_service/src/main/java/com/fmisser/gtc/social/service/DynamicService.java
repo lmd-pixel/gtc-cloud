@@ -26,7 +26,7 @@ public interface DynamicService {
                       BigDecimal longitude, BigDecimal latitude,
                       Map<String, MultipartFile> multipartFileMap) throws ApiException;
     // 获取用户发布的动态列表
-    List<DynamicDto> getUserDynamicList(User user, User selfUser, int pageIndex, int pageSize) throws ApiException;
+    List<DynamicDto> getUserDynamicList(User user, User selfUser, int pageIndex, int pageSize, String version) throws ApiException;
     // 点赞或者取消点赞
     int dynamicHeart(Long dynamicId, User selfUser, int isCancel) throws ApiException;
     // 添加评论
@@ -36,9 +36,9 @@ public interface DynamicService {
     // 获取评论数据
     List<DynamicCommentDto> getDynamicCommentList(Long dynamicId, User selfUser, int pageIndex, int pageSize) throws ApiException;
     // 获取最新动态
-    List<DynamicDto> getLatestDynamicList(User selfUser, int pageIndex, int pageSize) throws ApiException;
+    List<DynamicDto> getLatestDynamicList(User selfUser, int pageIndex, int pageSize, String version) throws ApiException;
     // 获取关注的人的最新动态
-    List<DynamicDto> getFollowLatestDynamicList(User selfUser, int pageIndex, int pageSize) throws ApiException;
+    List<DynamicDto> getFollowLatestDynamicList(User selfUser, int pageIndex, int pageSize, String version) throws ApiException;
     // 删除动态
     int delete(User user, Long dynamicId) throws ApiException;
 
@@ -47,6 +47,8 @@ public interface DynamicService {
                                                                    Date startTime, Date endTime,
                                                                    int pageIndex, int pageSize) throws ApiException;
     int deleteDynamic(Long dynamicId) throws ApiException;
+
+    int auditDynamic(Long dynamicId, int pass, String message) throws ApiException;
 
     // 兼容旧的
     List<DynamicDto> compat(List<DynamicDto> dynamicDtoList, String version) throws ApiException;

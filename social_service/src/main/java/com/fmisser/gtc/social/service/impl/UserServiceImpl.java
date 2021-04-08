@@ -116,7 +116,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public User create(String phone, int gender, String inviteCode) throws ApiException {
+    public User create(String phone, int gender, String inviteCode, String version) throws ApiException {
         // check exist
         if (userRepository.existsByUsername(phone)) {
             // 已经存在
@@ -174,12 +174,19 @@ public class UserServiceImpl implements UserService {
         }
 
         // 注册送 视频卡 和 聊天券
-        if (sysConfigService.isRegSendFreeVideo()) {
-            couponService.addCommVideoCoupon(user.getId(), 1, 10);
+        if (sysConfigService.isAppAudit() && sysConfigService.getAppAuditVersion().equals(version)) {
+            // 如果是审核版本
+
+        } else {
+            // 非审核版本
+            if (sysConfigService.isRegSendFreeVideo()) {
+                couponService.addCommVideoCoupon(user.getId(), 1, 10);
+            }
+            if (sysConfigService.isRegSendFreeMsg()) {
+                couponService.addCommMsgFreeCoupon(user.getId(), 20, 10);
+            }
         }
-        if (sysConfigService.isRegSendFreeMsg()) {
-            couponService.addCommMsgFreeCoupon(user.getId(), 20, 10);
-        }
+
 
         // 新用户注册欢迎消息
 //        imService.sendToUser(null, user, systemTips.assistNewUserMsg(user.getNick()));

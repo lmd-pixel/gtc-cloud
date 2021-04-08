@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
@@ -41,6 +42,39 @@ public class SysConfigServiceImpl implements SysConfigService {
             return "";
         } else {
             return sysConfig.getValue2();
+        }
+    }
+
+    @Override
+    public Date getAppAuditDynamicDateLimit(String version) throws ApiException {
+        SysConfig sysConfig = sysConfigRepository.findByName("ios_audit");
+        if (Objects.isNull(sysConfig)) {
+            return null;
+        }
+
+        // 没有审核返回空
+        if (!sysConfig.getValue1().equals("1")) {
+            return null;
+        }
+
+        // 没有审核版本号返回空
+        if (StringUtils.isEmpty(sysConfig.getValue2())) {
+            return null;
+        }
+
+        if (!sysConfig.getValue2().equals(version)) {
+            return null;
+        }
+
+        if (StringUtils.isEmpty(sysConfig.getValue3())) {
+            return null;
+        } else {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            try {
+                return dateFormat.parse(sysConfig.getValue3());
+            } catch (ParseException e) {
+                return null;
+            }
         }
     }
 

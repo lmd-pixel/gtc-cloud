@@ -16,17 +16,16 @@ import com.fmisser.gtc.social.repository.DynamicHeartRepository;
 import com.fmisser.gtc.social.repository.DynamicRepository;
 import com.fmisser.gtc.social.service.DynamicService;
 import com.fmisser.gtc.social.service.ImCallbackService;
+import com.fmisser.gtc.social.service.SysConfigService;
 import com.fmisser.gtc.social.utils.MinioUtils;
 import io.minio.ObjectWriteResponse;
 import lombok.SneakyThrows;
-import org.hibernate.PessimisticLockException;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,19 +44,22 @@ public class DynamicServiceImpl implements DynamicService {
     private final OssConfProp ossConfProp;
     private final MinioUtils minioUtils;
     private final ImCallbackService imCallbackService;
+    private final SysConfigService sysConfigService;
 
     public DynamicServiceImpl(DynamicRepository dynamicRepository,
                               DynamicCommentRepository dynamicCommentRepository,
                               DynamicHeartRepository dynamicHeartRepository,
                               OssConfProp ossConfProp,
                               MinioUtils minioUtils,
-                              ImCallbackService imCallbackService) {
+                              ImCallbackService imCallbackService,
+                              SysConfigService sysConfigService) {
         this.dynamicRepository = dynamicRepository;
         this.dynamicHeartRepository = dynamicHeartRepository;
         this.dynamicCommentRepository = dynamicCommentRepository;
         this.ossConfProp = ossConfProp;
         this.minioUtils = minioUtils;
         this.imCallbackService = imCallbackService;
+        this.sysConfigService = sysConfigService;
     }
 
     @Override
@@ -75,8 +77,18 @@ public class DynamicServiceImpl implements DynamicService {
         dynamic.setUserId(user.getId());
         dynamic.setType(type);
         dynamic.setContent(content);
-        // 默认先通过
+        // 直接设置通过
         dynamic.setStatus(10);
+
+//        int ret = imCallbackService.textModeration(user.getDigitId(), content);
+//        if (ret == 0) {
+//            // 机审失败
+//            dynamic.setStatus(1);
+//            dynamic.setMessage("机审不通过");
+//        } else {
+//            // 通过
+//            dynamic.setStatus(10);
+//        }
 
         if (Objects.nonNull(city)) {
             dynamic.setCity(city);
@@ -169,16 +181,27 @@ public class DynamicServiceImpl implements DynamicService {
     }
 
     @Override
-    public List<DynamicDto> getUserDynamicList(User user, User selfUser, int pageIndex, int pageSize) throws ApiException {
+    public List<DynamicDto> getUserDynamicList(User user, User selfUser, int pageIndex, int pageSize, String version) throws ApiException {
         // 如果不提供自己的 user id 则默认设置为0
         Long selfUserId = 0L;
         if (selfUser != null) {
             selfUserId = selfUser.getId();
         }
 
+        // 审核控制
+        Date dateLimit = sysConfigService.getAppAuditDynamicDateLimit(version);
+
+        List<Integer> status;
+        if (selfUserId.equals(user.getId())) {
+            // 自己可以看见审核中的动态
+            status = Arrays.asList(1, 10);
+        } else {
+            status = Collections.singletonList(10);
+        }
+
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
         Page<DynamicDto> dynamicDtos = dynamicRepository
-                .getUserDynamicList(user.getId(), selfUserId, pageable);
+                .getUserDynamicList(user.getId(), selfUserId, status, dateLimit, pageable);
 
 //        long totalEle = dynamicDtos.getTotalElements();
 //        System.out.println(totalEle);
@@ -296,24 +319,31 @@ public class DynamicServiceImpl implements DynamicService {
     }
 
     @Override
-    public List<DynamicDto> getLatestDynamicList(User selfUser, int pageIndex, int pageSize) throws ApiException {
+    public List<DynamicDto> getLatestDynamicList(User selfUser, int pageIndex, int pageSize, String version) throws ApiException {
         // 如果不提供自己的 user id 则默认设置为0
         Long selfUserId = 0L;
         if (selfUser != null) {
             selfUserId = selfUser.getId();
         }
 
+        // 审核控制
+        Date dateLimit = sysConfigService.getAppAuditDynamicDateLimit(version);
+
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
         List<DynamicDto> dynamicDtos = dynamicRepository
-                .getLatestDynamicList(selfUserId, pageable).getContent();
+                .getLatestDynamicList(selfUserId, dateLimit, pageable).getContent();
         return _prepareDynamicDtoResponse(dynamicDtos);
     }
 
     @Override
-    public List<DynamicDto> getFollowLatestDynamicList(User selfUser, int pageIndex, int pageSize) throws ApiException {
+    public List<DynamicDto> getFollowLatestDynamicList(User selfUser, int pageIndex, int pageSize, String version) throws ApiException {
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
+
+        // 审核控制
+        Date dateLimit = sysConfigService.getAppAuditDynamicDateLimit(version);
+
         List<DynamicDto> dynamicDtos = dynamicRepository
-                .getDynamicListByFollow(selfUser.getId(), pageable).getContent();
+                .getDynamicListByFollow(selfUser.getId(), dateLimit, pageable).getContent();
         return _prepareDynamicDtoResponse(dynamicDtos);
     }
 
@@ -353,7 +383,6 @@ public class DynamicServiceImpl implements DynamicService {
         extra.put("currPage", pageIndex);
 
         return Pair.of(dynamicDtoPage.getContent(), extra);
-
     }
 
     @Override
@@ -370,6 +399,28 @@ public class DynamicServiceImpl implements DynamicService {
         }
 
         dynamic.setIsDelete(1);
+        dynamicRepository.save(dynamic);
+
+        return 1;
+    }
+
+    @Override
+    public int auditDynamic(Long dynamicId, int pass, String message) throws ApiException {
+        Optional<Dynamic> dynamicOptional = dynamicRepository.findById(dynamicId);
+        if (!dynamicOptional.isPresent()) {
+            throw new ApiException(-1, "动态不存在，无法操作!");
+        }
+
+        Dynamic dynamic = dynamicOptional.get();
+        if (!StringUtils.isEmpty(message)) {
+            dynamic.setMessage(message);
+        }
+
+        if (pass == 1) {
+            dynamic.setStatus(10);
+        } else {
+            dynamic.setStatus(20);
+        }
         dynamicRepository.save(dynamic);
 
         return 1;

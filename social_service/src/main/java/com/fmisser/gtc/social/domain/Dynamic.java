@@ -75,7 +75,7 @@ public class Dynamic {
     // 状态：
     // 1： 审核中
     // 10： 审核通过
-    // column 创建的时候默认10，兼容以前的数据，新创建的默认审核中
+    // 20：审核不通过
     @Column(nullable = false, columnDefinition = "int default 10")
     private int status = 1;
 

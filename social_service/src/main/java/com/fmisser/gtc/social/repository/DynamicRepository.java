@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
+import java.util.List;
 
 @Repository
 public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
@@ -33,9 +34,15 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
             "LEFT JOIN DynamicHeart tdh2 ON tdh2.dynamicId = td.id AND tdh2.isCancel = 0 AND tdh2.userId = :selfUserId " +
             "LEFT JOIN DynamicComment tdc ON tdc.dynamicId = td.id AND tdc.isDelete = 0 " +
             "LEFT JOIN Follow tf ON tf.userIdFrom = :selfUserId AND tf.userIdTo = td.userId AND tf.status = 1 " +
-            "WHERE td.isDelete = 0 AND td.status = 10 AND td.userId = :userId AND tb.id IS NULL AND tb2.id IS NULL GROUP BY td.id " +
+            "WHERE td.isDelete = 0 AND td.status IN :status AND td.userId = :userId AND " +
+            "(:createTime IS NULL OR td.createTime < :createTime) AND " +
+            "tb.id IS NULL AND tb2.id IS NULL GROUP BY td.id " +
             "ORDER BY td.id DESC")
-    Page<DynamicDto> getUserDynamicList(@Param("userId") Long userId, @Param("selfUserId") Long selfUserId, Pageable pageable);
+    Page<DynamicDto> getUserDynamicList(@Param("userId") Long userId,
+                                        @Param("selfUserId") Long selfUserId,
+                                        @Param("status") List<Integer> status,
+                                        @Param("createTime") Date createTime,
+                                        Pageable pageable);
 
     // 获取最新的动态列表
     @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.DynamicDto" +
@@ -50,9 +57,13 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
             "LEFT JOIN DynamicHeart tdh2 ON tdh2.dynamicId = td.id AND tdh2.isCancel = 0 AND tdh2.userId = :selfUserId " +
             "LEFT JOIN DynamicComment tdc ON tdc.dynamicId = td.id AND tdc.isDelete = 0 " +
             "LEFT JOIN Follow tf ON tf.userIdFrom = :selfUserId AND tf.userIdTo = td.userId AND tf.status = 1 " +
-            "WHERE td.isDelete = 0 AND td.status = 10 AND tb.id IS NULL AND tb2.id IS NULL GROUP BY td.id " +
+            "WHERE td.isDelete = 0 AND td.status = 10 AND " +
+            "(:createTime IS NULL OR td.createTime < :createTime) AND " +
+            "tb.id IS NULL AND tb2.id IS NULL GROUP BY td.id " +
             "ORDER BY td.id DESC")
-    Page<DynamicDto> getLatestDynamicList(@Param("selfUserId") Long selfUserId, Pageable pageable);
+    Page<DynamicDto> getLatestDynamicList(@Param("selfUserId") Long selfUserId,
+                                          @Param("createTime") Date createTime,
+                                          Pageable pageable);
 
     // 获取关注的人的动态列表
     @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.DynamicDto" +
@@ -67,9 +78,11 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
             "LEFT JOIN DynamicHeart tdh ON tdh.dynamicId = td.id AND tdh.isCancel = 0 " +
             "LEFT JOIN DynamicHeart tdh2 ON tdh2.dynamicId = td.id AND tdh2.isCancel = 0 AND tdh2.userId = tf.userIdFrom " +
             "LEFT JOIN DynamicComment tdc ON tdc.dynamicId = td.id AND tdc.isDelete = 0 " +
-            "WHERE tf.status = 1 AND tf.userIdFrom = :selfUserId AND tb.id IS NULL AND tb2.id IS NULL GROUP BY td.id " +
+            "WHERE tf.status = 1 AND tf.userIdFrom = :selfUserId AND " +
+            "(:createTime IS NULL OR td.createTime < :createTime) AND " +
+            "tb.id IS NULL AND tb2.id IS NULL GROUP BY td.id " +
             "ORDER BY td.id DESC")
-    Page<DynamicDto> getDynamicListByFollow(@Param("selfUserId") Long selfUserId, Pageable pageable);
+    Page<DynamicDto> getDynamicListByFollow(@Param("selfUserId") Long selfUserId, @Param("createTime") Date createTime, Pageable pageable);
 
 
     // 查询动态列表（管理接口）
@@ -83,7 +96,7 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
             "(tu.nick LIKE CONCAT('%', :nick, '%') OR :nick IS NULL ) " +
             "LEFT JOIN DynamicHeart tdh ON tdh.dynamicId = td.id AND tdh.isCancel = 0 " +
             "LEFT JOIN DynamicComment tdc ON tdc.dynamicId = td.id AND tdc.isDelete = 0 " +
-            "WHERE td.isDelete = 0 AND td.status = 10 AND " +
+            "WHERE td.isDelete = 0 AND td.status IN (1,10) AND " +
             "td.content LIKE CONCAT('%', :content, '%') OR :content IS NULL AND " +
             "(td.createTime BETWEEN :startTime AND :endTime OR :startTime IS NULL OR :endTime IS NULL)" +
             "GROUP BY td.id " +

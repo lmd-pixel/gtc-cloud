@@ -49,4 +49,14 @@ public class DynamicManagerController {
     ApiResp<Integer> delDynamic(@RequestParam("dynamicId") Long dynamicId) {
         return ApiResp.succeed(dynamicService.deleteDynamic(dynamicId));
     }
+
+    @ApiOperation(value = "动态审核")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @GetMapping("/audit")
+    @PreAuthorize("hasAnyRole('MANAGER')")
+    ApiResp<Integer> auditDynamic(@RequestParam("dynamicId") Long dynamicId,
+                                  @RequestParam("pass") Integer pass,
+                                  @RequestParam(value = "message", required = false, defaultValue = "") String message) {
+        return ApiResp.succeed(dynamicService.auditDynamic(dynamicId, pass, message));
+    }
 }

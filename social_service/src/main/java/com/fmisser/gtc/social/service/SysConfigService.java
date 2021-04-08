@@ -4,6 +4,7 @@ import com.fmisser.gtc.base.exception.ApiException;
 import org.springframework.data.util.Pair;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 public interface SysConfigService {
 
@@ -12,6 +13,9 @@ public interface SysConfigService {
 
     // 获取 app 审核的版本号
     String getAppAuditVersion() throws ApiException;
+
+    // 只有在审核并且版本号等于审核版本号才返回日期
+    Date getAppAuditDynamicDateLimit(String version) throws ApiException;
 
     // 消息骚扰是否打开
     boolean isMsgGreetEnable() throws ApiException;

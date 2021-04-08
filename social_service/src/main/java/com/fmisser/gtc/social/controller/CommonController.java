@@ -122,6 +122,17 @@ public class CommonController {
         }
     }
 
+    @ApiOperation(value = "判断当前版本是否是审核版本")
+    @GetMapping(value = "/audit-version")
+    ApiResp<Integer> getAuditVersion(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version) {
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
+            return ApiResp.succeed(1);
+        } else {
+            return ApiResp.succeed(0);
+        }
+    }
+
     @ApiOperation(value = "获取城市数据")
     @GetMapping(value = "/district")
     public ApiResp<List<District>> getDistrictList() {

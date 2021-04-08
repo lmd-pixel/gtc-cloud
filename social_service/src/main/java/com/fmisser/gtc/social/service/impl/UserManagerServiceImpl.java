@@ -222,6 +222,9 @@ public class UserManagerServiceImpl implements UserManagerService {
         userProfileAudit.ifPresent(identityAudit -> {
             if (identityAudit.getStatus() == 10) {
                 // TODO: 2021/4/2 写个mapper 转换
+                if (Objects.nonNull(identityAudit.getHead())) {
+                    user.setHead(identityAudit.getHead());
+                }
                 if (Objects.nonNull(identityAudit.getNick())) {
                     user.setNick(identityAudit.getNick());
                 }
@@ -249,6 +252,9 @@ public class UserManagerServiceImpl implements UserManagerService {
                 }
                 if (Objects.nonNull(identityAudit.getMessagePrice())) {
                     user.setMessagePrice(identityAudit.getMessagePrice());
+                }
+                if (Objects.nonNull(identityAudit.getVoice())) {
+                    user.setVoice(identityAudit.getVoice());
                 }
             }
         });
