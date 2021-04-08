@@ -19,7 +19,7 @@ docker exec -it cassandra_cassandra-seed_1 /bin/bash
 # 进入cqlsh
 cqlsh -u cassandra -p cassandra
 
-# 创建心的超级账号
+# 创建新的超级账号
 CREATE ROLE root WITH SUPERUSER = true AND LOGIN = true AND PASSWORD = 'gtc_cloud@123456';
 
 # 退出

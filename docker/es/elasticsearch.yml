@@ -1,0 +1,9 @@
+cluster.name: "docker-cluster"
+network.host: 0.0.0.0
+
+# security
+xpack.security.enabled: true
+xpack.security.transport.ssl.enabled: true
+
+# cluster master
+cluster.initial_master_nodes: es01

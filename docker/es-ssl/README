@@ -1,0 +1,17 @@
+## ssl version
+
+# Generate the certificates (only needed once):
+# docker-compose -f create-certs.yml run --rm create_certs
+
+# Start Three Elasticsearch nodes configured for SSL/TLS:
+docker-compose up -d
+
+# Access the Elasticsearch API over SSL/TLS using the bootstrapped password:
+docker run --rm -v es_certs:/certs --network=es_default docker.elastic.co/elasticsearch/elasticsearch:7.12.0 curl --cacert /certs/ca/ca.crt -u elastic:gtc_cloud@123456 https://es01:9200
+
+# The elasticsearch-setup-passwords tool can also be used to generate random passwords for all users:
+docker exec -it es01 /bin/bash
+"bin/elasticsearch-setup-passwords interactive --url https://localhost:9200"
+
+# To remove all the Docker resources created by the example, issue:
+docker-compose down -v

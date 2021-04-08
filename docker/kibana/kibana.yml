@@ -1,0 +1,20 @@
+#
+# ** THIS IS AN AUTO-GENERATED FILE **
+#
+
+# Default Kibana configuration for docker target
+server.name: kibana
+server.host: "0"
+elasticsearch.hosts: [ "https://es01:9200" ]
+monitoring.ui.container.elasticsearch.enabled: true
+
+elasticsearch.username: "kibana_system"
+elasticsearch.password: "gtc_cloud@123456"
+
+server.ssl.enabled: true
+server.ssl.certificate: /usr/share/kibana/config/certs/kibana/kibana.crt
+server.ssl.key: /usr/share/kibana/config/certs/kibana/kibana.key
+
+elasticsearch.ssl.certificateAuthorities: ["/usr/share/kibana/config/certs/ca/ca.crt"]
+
+i18n.locale: "zh-CN"

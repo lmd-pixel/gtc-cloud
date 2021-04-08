@@ -1,0 +1,4 @@
+# max heap
+-Xms512m
+-Xmx512m
+

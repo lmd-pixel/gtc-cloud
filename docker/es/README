@@ -1,0 +1,30 @@
+############# 如果遇到挂在的目录权限问题
+chmod 777 -R /data/es-cluster/
+或者
+chmod g+rwx -R /data/es-cluster/
+
+############ 调整vm.max_map_count的大小
+
+# 查看当前值
+sysctl -a|grep vm.max_map_count
+
+# 临时修改
+sysctl -w vm.max_map_count=262144
+
+# 永久修改
+vim /etc/sysctl.conf
+vm.max_map_count=262144
+
+sysctl -p
+
+
+############ 修改jvm heap
+1. docker-compose.yml 里直接通过 ES_JAVA_OPTS 设置（官方不建议生产环境这样操作）
+2. 在jvm.options.d里新增修改项，具体参考 docker-compose.yml 里的配置
+
+
+############ 密码设置
+
+
+
+
