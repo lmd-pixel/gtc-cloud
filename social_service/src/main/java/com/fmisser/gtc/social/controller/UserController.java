@@ -117,7 +117,7 @@ public class UserController {
     @PostMapping(value = "/update-photos")
     ApiResp<User> uploadPhotos(MultipartHttpServletRequest request,
                                @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
-                               @RequestParam(value = "update_type", required = false, defaultValue = "0") Integer updateType,
+                               @RequestParam(value = "update_type", required = false, defaultValue = "1") Integer updateType,
                                @RequestParam(value = "existPhotos", required = false) String existPhotos) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
@@ -141,7 +141,7 @@ public class UserController {
     @PostMapping(value = "/update-video")
     ApiResp<User> uploadVideo(MultipartHttpServletRequest request,
                               @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
-                              @RequestParam(value = "update_type", required = false, defaultValue = "0") Integer updateType) {
+                              @RequestParam(value = "update_type", required = false, defaultValue = "1") Integer updateType) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
@@ -242,7 +242,8 @@ public class UserController {
     @PostMapping(value = "/request-identity")
     ApiResp<Integer> requestIdentity(
             @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
-            @RequestParam(value = "type", required = false, defaultValue = "1") Integer type) {
+            @RequestParam(value = "type", required = false, defaultValue = "1") Integer type,
+            @RequestParam(value = "mode", required = false, defaultValue = "0") Integer mode) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
@@ -260,7 +261,7 @@ public class UserController {
                 userDo.setVideoPrice(BigDecimal.valueOf(450).setScale(2, BigDecimal.ROUND_HALF_UP));
             }
         }
-        int ret = identityAuditService.requestIdentityAudit(userDo, type);
+        int ret = identityAuditService.requestIdentityAudit(userDo, type, mode);
         return ApiResp.succeed(ret);
     }
 

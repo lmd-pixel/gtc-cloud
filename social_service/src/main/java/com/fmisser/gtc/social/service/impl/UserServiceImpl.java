@@ -579,7 +579,12 @@ public class UserServiceImpl implements UserService {
 //            throw new ApiException(-1, "上传信息出错,请稍后重试");
 //        }
 
-        String originPhotosString = user.getPhotos();
+        String originPhotosString;
+        if (Objects.nonNull(audit.getPhotos())) {
+            originPhotosString = audit.getPhotos();
+        } else {
+            originPhotosString = user.getPhotos();
+        }
         if (Objects.nonNull(originPhotosString) && !StringUtils.isEmpty(existsPhotos)) {
             // 过滤掉已经不需要的
             List<String> originPhotos = changePhotosToList(originPhotosString);

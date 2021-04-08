@@ -50,7 +50,7 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
     }
 
     @Override
-    public int requestIdentityAudit(User user, int type) throws ApiException {
+    public int requestIdentityAudit(User user, int type, int mode) throws ApiException {
         if (type == 1) {
             if (!_checkProfileCompleted(user) ||
                     !_checkPhotosCompleted(user) ||
@@ -64,47 +64,54 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
 //        }
 
         // 资料审核
-        Optional<IdentityAudit> optionalIdentityAudit = getLastProfileAudit(user);
-        if (optionalIdentityAudit.isPresent() &&
-                optionalIdentityAudit.get().getStatus() == 10) {
-            throw new ApiException(-1, "用户资料仍在审核中，无法再次提交");
-        } else {
+        if (mode == 0 || mode == 1) {
+            Optional<IdentityAudit> optionalIdentityAudit = getLastProfileAudit(user);
+            if (optionalIdentityAudit.isPresent() &&
+                    optionalIdentityAudit.get().getStatus() == 10) {
+                throw new ApiException(-1, "用户资料仍在审核中，无法再次提交");
+            } else {
 //            IdentityAudit identityAudit = _createIdentityAudit(user, 1);
 //            identityAuditRepository.save(identityAudit);
 
-            IdentityAudit identityAudit = _createProfileAuditFromPrepare(user, 1);
-            if (Objects.nonNull(identityAudit)) {
-                identityAuditRepository.save(identityAudit);
+                IdentityAudit identityAudit = _createProfileAuditFromPrepare(user, 1);
+                if (Objects.nonNull(identityAudit)) {
+                    identityAuditRepository.save(identityAudit);
+                }
             }
         }
 
-        // 照片审核
-        optionalIdentityAudit = getLastPhotosAudit(user);
-        if (optionalIdentityAudit.isPresent() &&
-                optionalIdentityAudit.get().getStatus() == 10) {
-            throw new ApiException(-1, "用户照片仍在审核中，无法再次提交");
-        } else {
+
+        if (mode == 0 || mode == 2) {
+            // 照片审核
+            Optional<IdentityAudit> optionalIdentityAudit = getLastPhotosAudit(user);
+            if (optionalIdentityAudit.isPresent() &&
+                    optionalIdentityAudit.get().getStatus() == 10) {
+                throw new ApiException(-1, "用户照片仍在审核中，无法再次提交");
+            } else {
 //            IdentityAudit identityAudit = _createIdentityAudit(user, 2);
 //            identityAuditRepository.save(identityAudit);
 
-            IdentityAudit identityAudit = _createPhotosAuditFromPrepare(user, 2);
-            if (Objects.nonNull(identityAudit)) {
-                identityAuditRepository.save(identityAudit);
+                IdentityAudit identityAudit = _createPhotosAuditFromPrepare(user, 2);
+                if (Objects.nonNull(identityAudit)) {
+                    identityAuditRepository.save(identityAudit);
+                }
             }
         }
 
-        // 视频审核
-        optionalIdentityAudit = getLastVideoAudit(user);
-        if (optionalIdentityAudit.isPresent() &&
-                optionalIdentityAudit.get().getStatus() == 10) {
-            throw new ApiException(-1, "用户视频仍在审核中，无法再次提交");
-        } else {
+        if (mode == 0 || mode == 3) {
+            // 视频审核
+            Optional<IdentityAudit> optionalIdentityAudit = getLastVideoAudit(user);
+            if (optionalIdentityAudit.isPresent() &&
+                    optionalIdentityAudit.get().getStatus() == 10) {
+                throw new ApiException(-1, "用户视频仍在审核中，无法再次提交");
+            } else {
 //            IdentityAudit identityAudit = _createIdentityAudit(user, 3);
 //            identityAuditRepository.save(identityAudit);
 
-            IdentityAudit identityAudit = _createVideoAuditFromPrepare(user, 3);
-            if (Objects.nonNull(identityAudit)) {
-                identityAuditRepository.save(identityAudit);
+                IdentityAudit identityAudit = _createVideoAuditFromPrepare(user, 3);
+                if (Objects.nonNull(identityAudit)) {
+                    identityAuditRepository.save(identityAudit);
+                }
             }
         }
 
@@ -260,15 +267,16 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
         }
         IdentityAudit identityAudit = identityAuditOptional.get();
 
-        return !StringUtils.isEmpty(identityAudit.getHead()) &&
-                !StringUtils.isEmpty(identityAudit.getVoice()) &&
-                !StringUtils.isEmpty(identityAudit.getLabels()) &&
-                !StringUtils.isEmpty(identityAudit.getProfession()) &&
-                !StringUtils.isEmpty(identityAudit.getIntro()) &&
-                !StringUtils.isEmpty(identityAudit.getCity()) &&
-                identityAudit.getVideoPrice() != null &&
-                identityAudit.getCallPrice() != null &&
-                identityAudit.getMessagePrice() != null;
+        return
+                (!StringUtils.isEmpty(identityAudit.getHead()) || !StringUtils.isEmpty(user.getHead())) &&
+                        (!StringUtils.isEmpty(identityAudit.getVoice()) || !StringUtils.isEmpty(user.getVoice())) &&
+                        (!StringUtils.isEmpty(identityAudit.getLabels()) || !StringUtils.isEmpty(user.getLabels())) &&
+                        (!StringUtils.isEmpty(identityAudit.getProfession()) || !StringUtils.isEmpty(user.getProfession())) &&
+                        (!StringUtils.isEmpty(identityAudit.getIntro()) || !StringUtils.isEmpty(user.getIntro())) &&
+                        (!StringUtils.isEmpty(identityAudit.getCity()) || !StringUtils.isEmpty(user.getCity())) &&
+                        (identityAudit.getVideoPrice() != null || (user.getVideoPrice() != null)) &&
+                        (identityAudit.getCallPrice() != null || (user.getCallPrice() != null));
+//                identityAudit.getMessagePrice() != null;
     }
 
     /**

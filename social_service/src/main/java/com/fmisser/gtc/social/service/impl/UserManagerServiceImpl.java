@@ -8,6 +8,7 @@ import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.IdentityAuditService;
+import com.fmisser.gtc.social.service.ImService;
 import com.fmisser.gtc.social.service.UserManagerService;
 import com.fmisser.gtc.social.service.UserService;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,6 +32,7 @@ public class UserManagerServiceImpl implements UserManagerService {
     private final AssetRepository assetRepository;
     private final LabelRepository labelRepository;
     private final IdentityAuditService identityAuditService;
+    private final ImService imService;
 
     public UserManagerServiceImpl(UserService userService,
                                   UserRepository userRepository,
@@ -37,7 +40,8 @@ public class UserManagerServiceImpl implements UserManagerService {
                                   IdentityAuditRepository identityAuditRepository,
                                   AssetRepository assetRepository,
                                   LabelRepository labelRepository,
-                                  IdentityAuditService identityAuditService) {
+                                  IdentityAuditService identityAuditService,
+                                  ImService imService) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.recommendRepository = recommendRepository;
@@ -45,6 +49,7 @@ public class UserManagerServiceImpl implements UserManagerService {
         this.assetRepository = assetRepository;
         this.labelRepository = labelRepository;
         this.identityAuditService = identityAuditService;
+        this.imService = imService;
     }
 
     @Override
@@ -406,6 +411,7 @@ public class UserManagerServiceImpl implements UserManagerService {
             throw new ApiException(-1, "该条审核已完成！");
         }
 
+        User user = userService.getUserById(identityAudit.getUserId());
         if (operate == 1) {
             // 审核通过
             identityAudit.setStatus(30);
@@ -420,9 +426,39 @@ public class UserManagerServiceImpl implements UserManagerService {
                 identityAuditRepository.save(identityAuditPrepare);
             }
 
+            switch (type) {
+                case 1:
+                    imService.sendToUser(null, user, "您提交的个人资料已审核通过");
+                    break;
+                case 2:
+                    imService.sendToUser(null, user, "您提交的照片已审核通过");
+                    break;
+                case 3:
+                    imService.sendToUser(null, user, "您提交的视频已审核通过");
+                    break;
+            }
+
         } else {
             // 审核不通过
             identityAudit.setStatus(20);
+
+            String typeMsg;
+            switch (identityAudit.getType()) {
+                case 1:
+                    typeMsg = "个人资料";
+                    break;
+                case 2:
+                    typeMsg = "照片";
+                    break;
+                case 3:
+                    typeMsg = "视频";
+                    break;
+                default:
+                    typeMsg = "资料";
+            }
+            String remarkMessage = StringUtils.isEmpty(message) ? "未知原因" : message;
+            String formatMsg = String.format("您提交的%s审核因%s未通过，请重新提交", typeMsg, remarkMessage);
+            imService.sendToUser(null, user, formatMsg);
         }
 
         if (Objects.nonNull(message)) {
@@ -432,59 +468,61 @@ public class UserManagerServiceImpl implements UserManagerService {
         identityAuditRepository.save(identityAudit);
 
         if (operate == 1) {
-            User user = userRepository.findById(identityAudit.getUserId()).get();
+            // 已完成认证, 更新此次认证的数据
+            if (Objects.nonNull(identityAudit.getHead())) {
+                user.setHead(identityAudit.getHead());
+            }
 
-            if (user.getIdentity() == 1) {
-                // TODO: 2020/11/30  已完成身份认证, 更新此次认证的数据
-                if (Objects.nonNull(identityAudit.getHead())) {
-                    user.setHead(identityAudit.getHead());
-                }
+            if (Objects.nonNull(identityAudit.getNick())) {
+                user.setNick(identityAudit.getNick());
+            }
 
-                if (Objects.nonNull(identityAudit.getNick())) {
-                    user.setNick(identityAudit.getNick());
-                }
+            if (Objects.nonNull(identityAudit.getBirth())) {
+                user.setBirth(identityAudit.getBirth());
+            }
 
-                if (Objects.nonNull(identityAudit.getBirth())) {
-                    user.setBirth(identityAudit.getBirth());
-                }
+            if (Objects.nonNull(identityAudit.getCity())) {
+                user.setCity(identityAudit.getCity());
+            }
 
-                if (Objects.nonNull(identityAudit.getCity())) {
-                    user.setCity(identityAudit.getCity());
-                }
+            if (Objects.nonNull(identityAudit.getProfession())) {
+                user.setProfession(identityAudit.getProfession());
+            }
 
-                if (Objects.nonNull(identityAudit.getProfession())) {
-                    user.setProfession(identityAudit.getProfession());
-                }
+            if (Objects.nonNull(identityAudit.getIntro())) {
+                user.setIntro(identityAudit.getIntro());
+            }
 
-                if (Objects.nonNull(identityAudit.getIntro())) {
-                    user.setIntro(identityAudit.getIntro());
-                }
+            if (Objects.nonNull(identityAudit.getLabels())) {
+                String[] labelList = identityAudit.getLabels().split(",");
+                user.setLabels(_innerCreateLabels(labelList));
+            }
 
-                if (Objects.nonNull(identityAudit.getLabels())) {
-                    String[] labelList = identityAudit.getLabels().split(",");
-                    user.setLabels(_innerCreateLabels(labelList));
-                }
+            if (Objects.nonNull(identityAudit.getCallPrice())) {
+                user.setCallPrice(identityAudit.getCallPrice());
+            }
 
-                if (Objects.nonNull(identityAudit.getCallPrice())) {
-                    user.setCallPrice(identityAudit.getCallPrice());
-                }
+            if (Objects.nonNull(identityAudit.getVideoPrice())) {
+                user.setVideoPrice(identityAudit.getVideoPrice());
+            }
 
-                if (Objects.nonNull(identityAudit.getVideoPrice())) {
-                    user.setVideoPrice(identityAudit.getVideoPrice());
-                }
+            if (Objects.nonNull(identityAudit.getMessagePrice())) {
+                user.setMessagePrice(identityAudit.getMessagePrice());
+            }
 
-                if (Objects.nonNull(identityAudit.getMessagePrice())) {
-                    user.setMessagePrice(identityAudit.getMessagePrice());
-                }
+            if (Objects.nonNull(identityAudit.getPhotos())) {
+                user.setPhotos(identityAudit.getPhotos());
+            }
 
-                if (Objects.nonNull(identityAudit.getPhotos())) {
-                    user.setPhotos(identityAudit.getPhotos());
-                }
+            if (Objects.nonNull(identityAudit.getVideo())) {
+                user.setVideo(identityAudit.getVideo());
+            }
 
-                if (Objects.nonNull(identityAudit.getVideo())) {
-                    user.setVideo(identityAudit.getVideo());
-                }
-            } else {
+            if (Objects.nonNull(identityAudit.getVoice())) {
+                user.setVoice(identityAudit.getVoice());
+            }
+
+            if (user.getIdentity() == 0) {
                 // 判断是否不同的审核都已满足,如果都通过，则完成了认证
                 boolean allPass = true;
                 for (int type = 1; type <= 3; type++) {
@@ -495,15 +533,13 @@ public class UserManagerServiceImpl implements UserManagerService {
                     Optional<IdentityAudit> identityAuditOther = identityAuditRepository
                             .findTopByUserIdAndTypeOrderByCreateTimeDesc(identityAudit.getUserId(), type);
 
-                    if (identityAuditOther.isPresent() &&
-                            identityAuditOther.get().getStatus() != 30) {
+                    if (!identityAuditOther.isPresent() || identityAuditOther.get().getStatus() != 30) {
                         allPass = false;
                     }
                 }
 
                 if (allPass) {
                     // 都通过认证，则认为身份认证通过, 更新用户信息里的身份认证字段
-                    // TODO: 2020/12/5 主播认证通过
                     user.setIdentity(1);
                     userRepository.save(user);
 

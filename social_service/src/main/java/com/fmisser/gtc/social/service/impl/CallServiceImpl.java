@@ -43,15 +43,15 @@ public class CallServiceImpl implements CallService {
                         if (Objects.nonNull(userCallDto.getFinishTime())) {
                             long delta = userCallDto.getFinishTime().getTime() -
                                     userCallDto.getCreateTime().getTime();
-                            if (delta > 10) {
-                                // 未接听
+                            if (delta > 10 * 1000) {
+                                // 未接通
                                 userCallDto.setConnected(0L);
                             } else {
                                 // 已取消
                                 userCallDto.setConnected(-1L);
                             }
                         } else {
-                            // 如果没有 finish time 显示未接听
+                            // 如果没有 finish time 显示未接通
                             userCallDto.setConnected(-1L);
                         }
                     }
