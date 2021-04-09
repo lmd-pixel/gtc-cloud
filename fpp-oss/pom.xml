@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.fmisser.gtc</groupId>
-    <artifactId>gtc_cloud</artifactId>
+    <groupId>com.fmisser.fpp</groupId>
+    <artifactId>fpp-oss</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
@@ -16,11 +16,12 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
+
     <properties>
         <java.version>1.8</java.version>
         <spring-cloud.version>Hoxton.SR8</spring-cloud.version>
     </properties>
-
+    
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -33,17 +34,10 @@
         </dependencies>
     </dependencyManagement>
 
-    <modules>
-<!--        <module>registry</module>-->
-<!--        <module>auth_service</module>-->
-        <module>social_service</module>
-<!--        <module>gateway</module>-->
-<!--        <module>monitor</module>-->
 
-<!--        <module>notice_service</module>-->
-<!--        <module>im_service</module>-->
-        <module>base</module>
-        <module>fpp-oss</module>
+    <modules>
+        <module>fpp-oss-abstract-layer</module>
+        <module>fpp-oss-minio</module>
     </modules>
 
 </project>

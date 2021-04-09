@@ -8,7 +8,7 @@ import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
-@SpringBootApplication(scanBasePackages = {"com.fmisser.gtc.social", "com.fmisser.gtc.base"})
+@SpringBootApplication(scanBasePackages = {"com.fmisser.gtc.social", "com.fmisser.gtc.base", "com.fmisser.fpp.*"})
 @EnableEurekaClient
 @EnableJpaAuditing
 @EnableFeignClients

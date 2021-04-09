@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.controller;
 
+import com.fmisser.fpp.oss.abs.service.OssService;
 import com.fmisser.gtc.social.mq.WxWebHookBinding;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -19,6 +20,9 @@ public class TestController {
     @Autowired
     private WxWebHookBinding wxWebHookBinding;
 
+    @Autowired
+    private OssService ossService;
+
     @GetMapping("/slow")
     public Object slowTest() {
         try {
@@ -34,5 +38,11 @@ public class TestController {
         String message = String.format("1,%d,%d", 933, 22);
         Message<String> tipMsg = MessageBuilder.withPayload(message).build();
         return wxWebHookBinding.wxWebHookOutputChannel().send(tipMsg);
+    }
+
+    @ApiOperation("fpp-test")
+    @GetMapping("fpp-test")
+    public String fppTest() {
+        return ossService.getName();
     }
 }
