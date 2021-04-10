@@ -19,6 +19,7 @@ public class FollowNoticeProducer implements RabbitTemplate.ConfirmCallback, Rab
 
         this.rabbitTemplate.setConfirmCallback(this);
         this.rabbitTemplate.setReturnCallback(this);
+
     }
 
     @Override

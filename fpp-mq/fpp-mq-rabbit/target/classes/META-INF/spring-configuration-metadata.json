@@ -1,0 +1,17 @@
+{
+  "groups": [
+    {
+      "name": "fpp.mq.rabbit",
+      "type": "com.fmisser.fpp.mq.rabbit.prop.RabbitProp",
+      "sourceType": "com.fmisser.fpp.mq.rabbit.prop.RabbitProp"
+    }
+  ],
+  "properties": [
+    {
+      "name": "fpp.mq.rabbit.exchanges",
+      "type": "java.util.Map<java.lang.String,com.fmisser.fpp.mq.rabbit.conf.RabbitExchangeProperty>",
+      "sourceType": "com.fmisser.fpp.mq.rabbit.prop.RabbitProp"
+    }
+  ],
+  "hints": []
+}
