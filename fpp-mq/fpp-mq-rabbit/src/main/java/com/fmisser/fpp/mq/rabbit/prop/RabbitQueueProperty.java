@@ -1,4 +1,4 @@
-package com.fmisser.fpp.mq.rabbit.conf;
+package com.fmisser.fpp.mq.rabbit.prop;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,6 +21,5 @@ public class RabbitQueueProperty {
     private boolean durable = true;
     private boolean autoDelete = false;
     private boolean exclusive = false;
-    private String routingKey;
-    private Map<String, Object> arguments;
+    private RabbitQueueArgsProperty arguments;
 }
