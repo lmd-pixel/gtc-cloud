@@ -49,16 +49,22 @@ public interface ImService {
     int rejectGen(User user, Long roomId) throws ApiException;
 
     // 通话超时
-    int timeoutGen(User user, Long roomId) throws ApiException;
+    int timeoutGen(Long roomId) throws ApiException;
 
     // 通话结束（已接通）
     int endGen(User user, Long roomId) throws ApiException;
+
+    // 服务端发起通话结束 (已接通)
+    int endGenByServer(Long roomId) throws ApiException;
 
     // 挂断通话
     int hangupGen(User user, Long roomId) throws ApiException;
 
     // 结算
     Object resultGen(User user, Long roomId) throws ApiException;
+
+    // 计算
+    int calcGen(Long roomId) throws ApiException;
 
     /////// 新版本通话功能
 

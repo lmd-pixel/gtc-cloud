@@ -7,7 +7,6 @@ import com.fmisser.gtc.social.feign.WxWebHookFeign;
 import com.fmisser.gtc.social.repository.CallRepository;
 import com.fmisser.gtc.social.service.UserService;
 import com.rabbitmq.client.Channel;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.EnableBinding;
@@ -74,5 +73,6 @@ public class WxWebHookSubscribe {
             }
         }
 
+        channel.basicAck(deliveryTag, false);
     }
 }

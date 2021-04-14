@@ -42,7 +42,7 @@ public class ForbiddenServiceImpl implements ForbiddenService {
 
         if (days > 0) {
 
-            Date endTime = new Date(startTime.getTime() + days * 3600 * 1000);
+            Date endTime = new Date(startTime.getTime() + days * 3600 * 1000 * 24);
             forbidden.setEndTime(endTime);
         }
 

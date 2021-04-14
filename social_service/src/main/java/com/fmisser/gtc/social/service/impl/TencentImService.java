@@ -7,6 +7,7 @@ import com.fmisser.gtc.base.prop.OssConfProp;
 import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.feign.ImFeign;
+import com.fmisser.gtc.social.job.CallCalcJobScheduler;
 import com.fmisser.gtc.social.mq.WxWebHookBinding;
 import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.*;
@@ -87,6 +88,9 @@ public class TencentImService implements ImService {
     @Autowired
     private ActiveService activeService;
 
+    @Autowired
+    private CallCalcJobScheduler callCalcJobScheduler;
+
     @Override
     public String login(User user) throws ApiException {
         // TODO: 2021/1/7 记录用户登录
@@ -163,6 +167,7 @@ public class TencentImService implements ImService {
 
         // 设定开始时间
         call.setStartTime(new Date());
+        callRepository.save(call);
 
         return 1;
     }
@@ -452,6 +457,7 @@ public class TencentImService implements ImService {
         return resultMap;
     }
 
+    @Transactional
     @Override
     public Long callGen(User userFrom, User userTo, int type) throws ApiException {
         if (userFrom.getIdentity() == 0 && userTo.getIdentity() == 0) {
@@ -494,6 +500,9 @@ public class TencentImService implements ImService {
         return call.getRoomId();
     }
 
+
+    @SneakyThrows
+    @Transactional
     @Override
     public int acceptGen(User user, Long roomId) throws ApiException {
         Call call = callRepository.findByRoomId(roomId);
@@ -509,18 +518,98 @@ public class TencentImService implements ImService {
             throw new ApiException(-1, "您当前正忙，无法接听");
         }
 
+
         // 记录用户通话状态
         activeService.acceptCall(user, roomId);
-
-        // TODO: 2021/3/27 stop timeout queue
 
         // 设定开始时间
         call.setStartTime(new Date());
         callRepository.save(call);
 
+        Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
+        if (!optionalUserFrom.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userFrom = optionalUserFrom.get();
+
+        Optional<User> optionalUserTo = userRepository.findById(call.getUserIdTo());
+        if (!optionalUserTo.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userTo = optionalUserTo.get();
+
+        // 先计算一次
+        // 获取通话费用, userTo 永远是主播
+        BigDecimal callPrice = call.getType() == 0 ? userTo.getCallPrice() : userTo.getVideoPrice();;
+
+        if (Objects.nonNull(callPrice) && callPrice.compareTo(BigDecimal.ZERO) > 0) {
+            // 计算收益
+            Asset assetTo = assetRepository.findByUserId(call.getUserIdTo());
+
+            // 生成流水
+            CallBill callBill = new CallBill();
+            callBill.setCallId(call.getId());
+            callBill.setUserIdFrom(call.getUserIdFrom());
+            callBill.setUserIdTo(call.getUserIdTo());
+            callBill.setSerialNumber(createBillSerialNumber());
+            callBill.setType(call.getType());
+            callBill.setStage(0);
+
+            // 判断是否有优惠券
+            List<Coupon> couponList = couponService.getCallFreeCoupon(userFrom, call.getType());
+            Optional<Coupon> optionalCoupon = couponList.stream()
+                    .filter(couponService::isCouponValid)
+                    .findFirst();
+
+            if (optionalCoupon.isPresent()) {
+                Coupon availableCoupon = optionalCoupon.get();
+                // 使用优惠券
+                availableCoupon.setCount(availableCoupon.getCount() - 1);
+                couponRepository.save(availableCoupon);
+
+                // 设置流水，使用优惠券不计算收益
+                callBill.setSource(availableCoupon.getType());
+                callBill.setOriginCoin(BigDecimal.ZERO);
+                callBill.setCommissionCoin(BigDecimal.ZERO);
+                callBill.setCommissionRatio(BigDecimal.ZERO);
+                callBill.setProfitCoin(BigDecimal.ZERO);
+                callBill.setRemark("使用了优惠券");
+            } else {
+                Asset assetFrom = assetRepository.findByUserId(call.getUserIdFrom());
+                if (assetFrom.getCoin().compareTo(callPrice) < 0) {
+                    throw new ApiException(-1, "对方聊币不足，无法接听");
+                } else {
+                    // 扣款
+                    assetRepository.subCoin(call.getUserIdFrom(), callPrice);
+
+                    // 计算收益抽成
+                    BigDecimal profitRatio = call.getType() == 0 ? assetTo.getVoiceProfitRatio() : assetTo.getVideoProfitRatio();
+                    BigDecimal commissionRatio = BigDecimal.ONE.subtract(profitRatio);
+                    BigDecimal commissionCoin = commissionRatio.multiply(callPrice);
+                    // 直接加金币 去掉抽成价格
+                    BigDecimal coinProfit = callPrice.subtract(commissionCoin);
+                    assetRepository.addCoin(assetTo.getUserId(), coinProfit);
+
+                    callBill.setOriginCoin(callPrice);
+                    callBill.setCommissionCoin(commissionCoin);
+                    callBill.setCommissionRatio(commissionRatio);
+                    callBill.setProfitCoin(coinProfit);
+                }
+            }
+
+            callBillRepository.save(callBill);
+        }
+
+        // 取消超时
+        callCalcJobScheduler.stopCallTimeout(roomId);
+        // 启动计费
+        callCalcJobScheduler.startCallCalc(roomId);
+
         return 1;
     }
 
+    @SneakyThrows
+    @Transactional
     @Override
     public int inviteGen(User user, Long roomId) throws ApiException {
         Call call = callRepository.findByRoomId(roomId);
@@ -534,8 +623,8 @@ public class TencentImService implements ImService {
 
         // 记录用户通话状态
         activeService.inviteCall(user, roomId);
-
-        // TODO: 2021/3/27 start timeout queue
+        // 启动超时
+        callCalcJobScheduler.startCallTimeout(roomId);
 
         Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
         if (!optionalUserFrom.isPresent()) {
@@ -584,7 +673,12 @@ public class TencentImService implements ImService {
         // 记录用户通话状态
         activeService.cancelCall(user, roomId);
 
-        // TODO: 2021/3/27 stop timeout queue
+        // 取消计时
+        try {
+            callCalcJobScheduler.stopCallTimeout(roomId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
         if (!optionalUserFrom.isPresent()) {
@@ -629,7 +723,12 @@ public class TencentImService implements ImService {
         // 记录用户通话状态
         activeService.rejectCall(user, roomId);
 
-        // TODO: 2021/3/27 stop timeout queue
+        // 取消计时
+        try {
+            callCalcJobScheduler.stopCallTimeout(roomId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
         if (!optionalUserFrom.isPresent()) {
@@ -659,8 +758,9 @@ public class TencentImService implements ImService {
         return 1;
     }
 
+    @Transactional
     @Override
-    public int timeoutGen(User user, Long roomId) throws ApiException {
+    public int timeoutGen(Long roomId) throws ApiException {
         Call call = callRepository.findByRoomId(roomId);
         if (call.getIsFinished() == 1) {
             throw new ApiException(-1, "通话已结束");
@@ -670,9 +770,6 @@ public class TencentImService implements ImService {
         call.setIsFinished(1);
         call.setFinishTime(new Date());
         callRepository.save(call);
-
-        // 记录用户通话状态
-        activeService.timeoutCall(user, roomId);
 
         Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
         if (!optionalUserFrom.isPresent()) {
@@ -685,6 +782,10 @@ public class TencentImService implements ImService {
             throw new ApiException(-1, "用户不存在");
         }
         User userTo = optionalUserTo.get();
+
+        // 记录用户通话状态
+        activeService.timeoutCall(userFrom, roomId);
+        activeService.timeoutCall(userTo, roomId);
 
         if (call.getCallMode() == 0) {
             // 由用户发起通话
@@ -723,6 +824,13 @@ public class TencentImService implements ImService {
         // 记录用户通话状态
         activeService.endCall(user, roomId);
 
+        // 停止计时
+        try {
+            callCalcJobScheduler.stopCallCalc(roomId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
         if (!optionalUserFrom.isPresent()) {
             throw new ApiException(-1, "用户不存在");
@@ -734,6 +842,64 @@ public class TencentImService implements ImService {
             throw new ApiException(-1, "用户不存在");
         }
         User userTo = optionalUserTo.get();
+
+        if (call.getCallMode() == 0) {
+            // 由用户发起通话
+
+            // 发送自定义消息
+            return sendCallMsg(userFrom, userTo, 4);
+
+        } else if (call.getCallMode() == 1) {
+            // 由主播发起通话
+
+            // 发送自定义消息
+            return sendCallMsg(userTo, userFrom, 4);
+        }
+
+        return 1;
+    }
+
+    @Transactional
+    @Override
+    public int endGenByServer(Long roomId) throws ApiException {
+        Call call = callRepository.findByRoomId(roomId);
+        if (call.getIsFinished() == 1) {
+            throw new ApiException(-1, "通话已结束");
+        }
+
+        // 通话设置成结束
+        Date now = new Date();
+        call.setIsFinished(1);
+        call.setFinishTime(new Date());
+
+        // 计算时长
+        int deltaTime = (int) Math.ceil( (double) (now.getTime() - call.getStartTime().getTime()) / 1000L);
+        call.setDuration(deltaTime);
+
+        callRepository.save(call);
+
+        // 停止计时
+        try {
+            callCalcJobScheduler.stopCallCalc(roomId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
+        if (!optionalUserFrom.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userFrom = optionalUserFrom.get();
+
+        Optional<User> optionalUserTo = userRepository.findById(call.getUserIdTo());
+        if (!optionalUserTo.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userTo = optionalUserTo.get();
+
+        // 记录用户通话状态
+        activeService.endCall(userFrom, roomId);
+        activeService.endCall(userTo, roomId);
 
         if (call.getCallMode() == 0) {
             // 由用户发起通话
@@ -792,6 +958,151 @@ public class TencentImService implements ImService {
     @Override
     public Object resultGen(User user, Long roomId) throws ApiException {
         return null;
+    }
+
+    @Transactional
+    @Override
+    public int calcGen(Long roomId) throws ApiException {
+        Call call = callRepository.findByRoomId(roomId);
+        if (call.getIsFinished() == 1) {
+            return -1;
+        }
+
+        if (Objects.isNull(call.getStartTime())) {
+            return -1;
+        }
+
+        Optional<User> optionalUserTo = userRepository.findById(call.getUserIdTo());
+        if (!optionalUserTo.isPresent()) {
+            return -1;
+        }
+        User userTo = optionalUserTo.get();
+
+        Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
+        if (!optionalUserFrom.isPresent()) {
+            return -1;
+        }
+        User userFrom = optionalUserFrom.get();
+
+        // step1: 更新通话信息
+        Date now = new Date();
+        // 更新通话时长
+        Date startTime = call.getStartTime();
+        int deltaTime = (int) Math.ceil( (double) (now.getTime() - startTime.getTime()) / 1000L);
+        call.setDuration(deltaTime);
+
+        // save to db
+        callRepository.save(call);
+
+        // 是否需要结束通话
+        boolean needFinish = false;
+
+        // 获取通话费用, userTo 永远是主播
+        BigDecimal callPrice = call.getType() == 0 ? userTo.getCallPrice() : userTo.getVideoPrice();;
+
+        if (Objects.isNull(callPrice) || callPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            // 价格为0 或者 null 不计算收入
+            return 0;
+        }
+
+        // step2： 计算收益
+        Asset assetTo = assetRepository.findByUserId(call.getUserIdTo());
+
+        // 当前通话总时长
+        int duration = call.getDuration();
+        // 当前的时长应该包含几个阶段的付费
+        int stage = (int) ((duration / 60 )) + 1;
+
+        List<CallBill> callBillList = callBillRepository.findByCallId(call.getId());
+        int existStage = callBillList.size();
+
+        List<CallBill> newCallBillList = new ArrayList<>();
+        for (int i = existStage; i < stage; i++) {
+
+            // 生成流水
+            CallBill callBill = new CallBill();
+            callBill.setCallId(call.getId());
+            callBill.setUserIdFrom(call.getUserIdFrom());
+            callBill.setUserIdTo(call.getUserIdTo());
+            callBill.setSerialNumber(createBillSerialNumber());
+            callBill.setType(call.getType());
+            callBill.setStage(i);
+
+            // 判断本次通话是否已经使用过优惠券等
+            boolean usedCoupon = false;
+            List<CallBill> callBillWithTypeList = callBillRepository.findByCallIdAndSourceNot(call.getId(), 0);
+            if (callBillWithTypeList.size() <= 0) {
+
+                // 判断是否有优惠券
+                List<Coupon> couponList = couponService.getCallFreeCoupon(userFrom, call.getType());
+                Optional<Coupon> optionalCoupon = couponList.stream()
+                        .filter(couponService::isCouponValid)
+                        .findFirst();
+
+                if (optionalCoupon.isPresent()) {
+                    Coupon availableCoupon = optionalCoupon.get();
+                    // 使用优惠券
+                    availableCoupon.setCount(availableCoupon.getCount() - 1);
+                    couponRepository.save(availableCoupon);
+
+                    // 设置流水，使用优惠券不计算收益
+                    callBill.setSource(availableCoupon.getType());
+                    callBill.setOriginCoin(BigDecimal.ZERO);
+                    callBill.setCommissionCoin(BigDecimal.ZERO);
+                    callBill.setCommissionRatio(BigDecimal.ZERO);
+                    callBill.setProfitCoin(BigDecimal.ZERO);
+                    callBill.setRemark("使用了优惠券");
+
+                    usedCoupon = true;
+                }
+            }
+
+            // 如果没有使用优惠券
+            if (!usedCoupon) {
+                // 因为这里可能有多条数据，如果直接抛出异常，会导致可以结算的部分没结算,
+                // 所以金币不足，也正常记录，但收益都是0
+                Asset assetFrom = assetRepository.findByUserId(call.getUserIdFrom());
+                if (assetFrom.getCoin().compareTo(callPrice) < 0) {
+                    callBill.setOriginCoin(BigDecimal.ZERO);
+                    callBill.setCommissionCoin(BigDecimal.ZERO);
+                    callBill.setCommissionRatio(BigDecimal.ZERO);
+                    callBill.setProfitCoin(BigDecimal.ZERO);
+                    callBill.setRemark("用户金币不足");
+
+                    // 结束通话通知
+                    needFinish = true;
+                } else {
+
+                    // 扣款
+                    assetRepository.subCoin(call.getUserIdFrom(), callPrice);
+
+                    // 计算收益抽成
+                    BigDecimal profitRatio = call.getType() == 0 ? assetTo.getVoiceProfitRatio() : assetTo.getVideoProfitRatio();
+                    BigDecimal commissionRatio = BigDecimal.ONE.subtract(profitRatio);
+                    BigDecimal commissionCoin = commissionRatio.multiply(callPrice);
+                    // 直接加金币 去掉抽成价格
+                    BigDecimal coinProfit = callPrice.subtract(commissionCoin);
+                    assetRepository.addCoin(assetTo.getUserId(), coinProfit);
+
+                    callBill.setOriginCoin(callPrice);
+                    callBill.setCommissionCoin(commissionCoin);
+                    callBill.setCommissionRatio(commissionRatio);
+                    callBill.setProfitCoin(coinProfit);
+                }
+            }
+
+            newCallBillList.add(callBill);
+        }
+
+        if (newCallBillList.size() > 0) {
+            callBillRepository.saveAll(newCallBillList);
+        }
+
+        if (needFinish) {
+            return -1;
+        } else {
+            return 0;
+        }
     }
 
     /**
