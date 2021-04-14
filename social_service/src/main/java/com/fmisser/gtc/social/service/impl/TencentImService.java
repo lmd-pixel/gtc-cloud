@@ -862,9 +862,20 @@ public class TencentImService implements ImService {
     @Transactional
     @Override
     public int endGenByServer(Long roomId) throws ApiException {
+        // 停止计时
+        try {
+            callCalcJobScheduler.stopCallCalc(roomId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         Call call = callRepository.findByRoomId(roomId);
         if (call.getIsFinished() == 1) {
-            throw new ApiException(-1, "通话已结束");
+            return -1;
+        }
+
+        if (Objects.isNull(call.getStartTime())) {
+            return -2;
         }
 
         // 通话设置成结束
@@ -877,13 +888,6 @@ public class TencentImService implements ImService {
         call.setDuration(deltaTime);
 
         callRepository.save(call);
-
-        // 停止计时
-        try {
-            callCalcJobScheduler.stopCallCalc(roomId);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
         Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
         if (!optionalUserFrom.isPresent()) {
