@@ -34,7 +34,7 @@ public class RabbitConfig {
 
     @Bean
     public RabbitAdmin rabbitAdmin() {
-        // 为了兼容rabbit原始配置，不要使用ConnectionFactory创建RabbitAdmin,
+        // 为了兼容rabbit原始配置，不要使用ConnectionFactory创建RabbitAdmin
         return new RabbitAdmin(rabbitTemplate);
     }
 
@@ -42,11 +42,12 @@ public class RabbitConfig {
     public void init() {
         // 通过配置定义交换机，队列和绑定关系
 
-        Map<String, RabbitBindingProperty> exchanges = rabbitExtensionProperty.getBindings();
-        if (Objects.isNull(exchanges)) {
+        Map<String, RabbitBindingProperty> bindings = rabbitExtensionProperty.getBindings();
+        if (Objects.isNull(bindings)) {
             // ignore
+            return;
         }
-        exchanges.values()
+        bindings.values()
                 .forEach(rabbitBindingProperty -> {
                     // create & declare exchange
                     Exchange exchange = _innerCreateExchange(rabbitBindingProperty);
@@ -133,7 +134,8 @@ public class RabbitConfig {
 
         // params
         Map<String, Object> exchangeArgs = new HashMap<>();
-        if (rabbitBindingProperty.getExchangeArgs().getDelayed()) {
+        if (Objects.nonNull(rabbitBindingProperty.getExchangeArgs()) &&
+                rabbitBindingProperty.getExchangeArgs().getDelayed()) {
             // 延迟消息交换机
             // 需要插件支持：rabbitmq_delayed_message_exchange
             exchangeArgs.put("x-delayed-type", exchangeType);
