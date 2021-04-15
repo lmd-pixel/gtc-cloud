@@ -18,9 +18,11 @@ import java.util.Objects;
 /**
  * @author fmisser
  * @create 2021-04-10 下午2:57
- * @description
+ * @description rabbit 配置读取
+ * @deprecated 建议直接用注解方式定义exchange queue bindings
  */
 
+@Deprecated
 @Configuration
 public class RabbitConfig {
     private final RabbitExtensionProperty rabbitExtensionProperty;
