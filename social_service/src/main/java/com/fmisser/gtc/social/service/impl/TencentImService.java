@@ -976,8 +976,110 @@ public class TencentImService implements ImService {
     }
 
     @Override
-    public Object resultGen(User user, Long roomId) throws ApiException {
-        return null;
+    public Map<String, Object> resultGen(User user, Long roomId) throws ApiException {
+
+        Call call = callRepository.findByRoomId(roomId);
+        if (call.getIsFinished() == 1) {
+            throw new ApiException(-1, "通话还未结束");
+        }
+
+        if (Objects.isNull(call.getStartTime())) {
+            throw new ApiException(-1, "通话还未开始");
+        }
+
+        Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
+        if (!optionalUserFrom.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userFrom = optionalUserFrom.get();
+
+        Optional<User> optionalUserTo = userRepository.findById(call.getUserIdTo());
+        if (!optionalUserTo.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userTo = optionalUserTo.get();
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("duration", call.getDuration());
+
+        resultMap.put("coin", 0);
+        resultMap.put("card", 0);
+        resultMap.put("userIdTo", "");  // 对方的数字id
+
+        List<CallBill> callBillList = callBillRepository.findByCallId(call.getId());
+        if (user.getId().equals(call.getUserIdFrom())) {
+            // 计算消费
+            Optional<BigDecimal> totalConsume =
+                    callBillList.stream()
+                            .map(CallBill::getOriginCoin).reduce(BigDecimal::add);
+            totalConsume.ifPresent(bigDecimal -> resultMap.put("coin", BigDecimal.ZERO.subtract(bigDecimal)));
+
+            Optional<Integer> cardType = callBillList.stream().map(CallBill::getSource)
+                    .filter(s -> s > 0)
+                    .findFirst();
+            cardType.ifPresent( c -> resultMap.put("card", -1));
+
+            resultMap.put("userIdTo", userTo.getDigitId());
+
+        } else if (user.getId().equals(call.getUserIdTo())) {
+            // 计算收益
+            Optional<BigDecimal> totalProfit =
+                    callBillList.stream()
+                            .map(CallBill::getProfitCoin).reduce(BigDecimal::add);
+            totalProfit.ifPresent(bigDecimal -> resultMap.put("coin", bigDecimal));
+
+            Optional<Integer> cardType = callBillList.stream().map(CallBill::getSource)
+                    .filter(s -> s > 0)
+                    .findFirst();
+            cardType.ifPresent( c -> resultMap.put("card", 1));
+
+            resultMap.put("userIdTo", userFrom.getDigitId());
+        }
+
+        return resultMap;
+    }
+
+    @Override
+    public Map<String, Object> updateGen(User user, Long roomId) throws ApiException {
+        Call call = callRepository.findByRoomId(roomId);
+        if (call.getIsFinished() == 1) {
+            throw new ApiException(-1, "通话已经结束");
+        }
+
+        if (Objects.isNull(call.getStartTime())) {
+            throw new ApiException(-1, "通话还未开始");
+        }
+
+        Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
+        if (!optionalUserFrom.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userFrom = optionalUserFrom.get();
+
+        Optional<User> optionalUserTo = userRepository.findById(call.getUserIdTo());
+        if (!optionalUserTo.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userTo = optionalUserTo.get();
+
+        Map<String, Object> resultMap = new HashMap<>();
+        int deltaTime = (int) Math.ceil( (double) ( new Date().getTime() - call.getStartTime().getTime()) / 1000L);
+        resultMap.put("duration", deltaTime);
+
+        if (user.getId().equals(userFrom.getId())) {
+            // 通知用户是否需要充值
+
+            // 获取最新的余额是否足够一分钟通话，不足提醒需要充值
+            Asset assetFrom = assetRepository.findByUserId(userFrom.getId());
+            BigDecimal totalPrice = BigDecimal.valueOf(2).multiply(userTo.getCallPrice());
+            if (assetFrom.getCoin().compareTo(totalPrice) < 0) {
+                resultMap.put("need_recharge", 1);
+            } else {
+                resultMap.put("need_recharge", 0);
+            }
+        }
+
+        return resultMap;
     }
 
     @Transactional
