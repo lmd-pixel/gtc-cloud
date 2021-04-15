@@ -518,7 +518,6 @@ public class TencentImService implements ImService {
             throw new ApiException(-1, "您当前正忙，无法接听");
         }
 
-
         // 记录用户通话状态
         activeService.acceptCall(user, roomId);
 
@@ -537,6 +536,23 @@ public class TencentImService implements ImService {
             throw new ApiException(-1, "用户不存在");
         }
         User userTo = optionalUserTo.get();
+
+        if (call.getCallMode() == 0) {
+            // 由用户发起通话
+
+            // 判断当前用户是否在通话中
+
+            // 发送自定义消息
+            return sendCallMsg(userTo, userFrom, 5, roomId, call.getType());
+
+        } else if (call.getCallMode() == 1) {
+            // 由主播发起通话
+
+            // 判断当前用户是否在通话中
+
+            // 发送自定义消息
+            return sendCallMsg(userFrom, userTo, 5, roomId, call.getType());
+        }
 
         // 先计算一次
         // 获取通话费用, userTo 永远是主播
@@ -644,7 +660,7 @@ public class TencentImService implements ImService {
             // 判断当前用户是否在通话中
 
             // 发送自定义消息
-            return sendCallMsg(userFrom, userTo, 0);
+            return sendCallMsg(userFrom, userTo, 0, roomId, call.getType());
 
         } else if (call.getCallMode() == 1) {
             // 由主播发起通话
@@ -652,7 +668,7 @@ public class TencentImService implements ImService {
             // 判断当前用户是否在通话中
 
             // 发送自定义消息
-            return sendCallMsg(userTo, userFrom, 0);
+            return sendCallMsg(userTo, userFrom, 0, roomId, call.getType());
         }
 
         return 1;
@@ -696,13 +712,13 @@ public class TencentImService implements ImService {
             // 由用户发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userFrom, userTo, 1);
+            return sendCallMsg(userFrom, userTo, 1, roomId, call.getType());
 
         } else if (call.getCallMode() == 1) {
             // 由主播发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userTo, userFrom, 1);
+            return sendCallMsg(userTo, userFrom, 1, roomId, call.getType());
         }
 
         return 1;
@@ -746,13 +762,13 @@ public class TencentImService implements ImService {
             // 由用户发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userTo, userFrom, 2);
+            return sendCallMsg(userTo, userFrom, 2, roomId, call.getType());
 
         } else if (call.getCallMode() == 1) {
             // 由主播发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userFrom, userTo, 2);
+            return sendCallMsg(userFrom, userTo, 2, roomId, call.getType());
         }
 
         return 1;
@@ -791,13 +807,13 @@ public class TencentImService implements ImService {
             // 由用户发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userTo, userFrom, 3);
+            return sendCallMsg(userTo, userFrom, 3, roomId, call.getType());
 
         } else if (call.getCallMode() == 1) {
             // 由主播发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userFrom, userTo, 3);
+            return sendCallMsg(userFrom, userTo, 3, roomId, call.getType());
         }
 
         return 1;
@@ -847,13 +863,13 @@ public class TencentImService implements ImService {
             // 由用户发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userFrom, userTo, 4);
+            return sendCallMsg(userFrom, userTo, 4, roomId, call.getType());
 
         } else if (call.getCallMode() == 1) {
             // 由主播发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userTo, userFrom, 4);
+            return sendCallMsg(userTo, userFrom, 4, roomId, call.getType());
         }
 
         return 1;
@@ -909,13 +925,13 @@ public class TencentImService implements ImService {
             // 由用户发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userFrom, userTo, 4);
+            return sendCallMsg(userFrom, userTo, 4, roomId, call.getType());
 
         } else if (call.getCallMode() == 1) {
             // 由主播发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userTo, userFrom, 4);
+            return sendCallMsg(userTo, userFrom, 4, roomId, call.getType());
         }
 
         return 1;
@@ -1195,23 +1211,32 @@ public class TencentImService implements ImService {
     }
 
     @Override
-    public int sendCallMsg(User userFrom, User userTo, int mode) throws ApiException {
+    public int sendCallMsg(User userFrom, User userTo, int mode, long roomId, int roomType) throws ApiException {
         ImSendMsgDto msgCustom = null;
         if (mode == 0) {
+            String formatString = String.format("invite-call,%d,%d", roomId, roomType);
             msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                    "发起通话", "invite call", true);
+                    "发起通话", formatString, true);
         } else if (mode == 1) {
+            String formatString = String.format("cancel-call,%d,%d", roomId, roomType);
             msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                    "取消通话", "cancel call", true);
+                    "取消通话", formatString, true);
         } else if (mode == 2) {
+            String formatString = String.format("reject-call,%d,%d", roomId, roomType);
             msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                    "拒绝通话", "reject call", true);
+                    "拒绝通话", formatString, true);
         } else if (mode == 3) {
+            String formatString = String.format("timeout-call,%d,%d", roomId, roomType);
             msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                    "通话超时", "timeout call", true);
+                    "通话超时", formatString, true);
         } else if (mode == 4) {
+            String formatString = String.format("end-call,%d,%d", roomId, roomType);
             msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                    "通话结束", "end call", true);
+                    "通话结束", formatString, true);
+        } else if (mode == 5) {
+            String formatString = String.format("accept-call,%d,%d", roomId, roomType);
+            msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
+                    "已接听", formatString, true);
         }
 
         if (msgCustom != null) {

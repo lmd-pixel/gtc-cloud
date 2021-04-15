@@ -77,7 +77,7 @@ public interface ImService {
     int sendGiftMsg(User userFrom, User userTo, Gift gift, int count) throws ApiException;
 
     // mode 0 发起通话 1：取消通话 2：拒绝通话 3: 超时 4: 结束通话（已接通）
-    int sendCallMsg(User userFrom, User userTo, int mode) throws ApiException;
+    int sendCallMsg(User userFrom, User userTo, int mode, long roomId, int roomType) throws ApiException;
 
     int sendAfterSendMsg(User userFrom, User userTo, int tag, int coin, int card) throws ApiException;
 
