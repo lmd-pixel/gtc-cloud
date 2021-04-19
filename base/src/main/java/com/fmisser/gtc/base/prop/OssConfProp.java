@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Data
 @Configuration
-@PropertySource(value = "classpath:config/oss-conf-${base.profiles.active}.properties", encoding = "UTF-8")
+@PropertySource(value = "classpath:config/oss-conf-${spring.profiles.active}.properties", encoding = "UTF-8")
 public class OssConfProp {
 
     @Value("${oss.minio.url}")

@@ -476,7 +476,6 @@ public class TencentImService implements ImService {
             throw new ApiException(-1, "对方正在通话中，请稍后再试");
         }
 
-
         // 创建通话房间
         Call call = new Call();
         call.setType(type);
@@ -500,11 +499,13 @@ public class TencentImService implements ImService {
         return call.getRoomId();
     }
 
-
     @SneakyThrows
     @Transactional
     @Override
     public int acceptGen(User user, Long roomId) throws ApiException {
+        // 取消超时
+        callCalcJobScheduler.stopCallTimeout(roomId);
+
         Call call = callRepository.findByRoomId(roomId);
         if (call.getIsFinished() == 1) {
             throw new ApiException(-1, "通话已结束");
@@ -536,23 +537,6 @@ public class TencentImService implements ImService {
             throw new ApiException(-1, "用户不存在");
         }
         User userTo = optionalUserTo.get();
-
-        if (call.getCallMode() == 0) {
-            // 由用户发起通话
-
-            // 判断当前用户是否在通话中
-
-            // 发送自定义消息
-            return sendCallMsg(userTo, userFrom, 5, roomId, call.getType());
-
-        } else if (call.getCallMode() == 1) {
-            // 由主播发起通话
-
-            // 判断当前用户是否在通话中
-
-            // 发送自定义消息
-            return sendCallMsg(userFrom, userTo, 5, roomId, call.getType());
-        }
 
         // 先计算一次
         // 获取通话费用, userTo 永远是主播
@@ -616,8 +600,23 @@ public class TencentImService implements ImService {
             callBillRepository.save(callBill);
         }
 
-        // 取消超时
-        callCalcJobScheduler.stopCallTimeout(roomId);
+        if (call.getCallMode() == 0) {
+            // 由用户发起通话
+
+            // 判断当前用户是否在通话中
+
+            // 发送自定义消息
+            sendCallMsg(userTo, userFrom, 5, roomId, call.getType());
+
+        } else if (call.getCallMode() == 1) {
+            // 由主播发起通话
+
+            // 判断当前用户是否在通话中
+
+            // 发送自定义消息
+            sendCallMsg(userFrom, userTo, 5, roomId, call.getType());
+        }
+
         // 启动计费
         callCalcJobScheduler.startCallCalc(roomId);
 
@@ -633,14 +632,16 @@ public class TencentImService implements ImService {
             throw new ApiException(-1, "通话已结束");
         }
 
+        if (Objects.nonNull(call.getStartTime())) {
+            throw new ApiException(-1, "通话已经开始");
+        }
+
         if (activeService.isCallBusy(user)) {
             throw new ApiException(-1, "您当前正忙，无法呼出");
         }
 
         // 记录用户通话状态
         activeService.inviteCall(user, roomId);
-        // 启动超时
-        callCalcJobScheduler.startCallTimeout(roomId);
 
         Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
         if (!optionalUserFrom.isPresent()) {
@@ -660,7 +661,7 @@ public class TencentImService implements ImService {
             // 判断当前用户是否在通话中
 
             // 发送自定义消息
-            return sendCallMsg(userFrom, userTo, 0, roomId, call.getType());
+            sendCallMsg(userFrom, userTo, 0, roomId, call.getType());
 
         } else if (call.getCallMode() == 1) {
             // 由主播发起通话
@@ -668,17 +669,28 @@ public class TencentImService implements ImService {
             // 判断当前用户是否在通话中
 
             // 发送自定义消息
-            return sendCallMsg(userTo, userFrom, 0, roomId, call.getType());
+            sendCallMsg(userTo, userFrom, 0, roomId, call.getType());
         }
+
+        // 启动超时
+        callCalcJobScheduler.startCallTimeout(roomId);
 
         return 1;
     }
 
+    @SneakyThrows
     @Override
     public int cancelGen(User user, Long roomId) throws ApiException {
+        // 取消计时
+        callCalcJobScheduler.stopCallTimeout(roomId);
+
         Call call = callRepository.findByRoomId(roomId);
         if (call.getIsFinished() == 1) {
             throw new ApiException(-1, "通话已结束");
+        }
+
+        if (Objects.nonNull(call.getStartTime())) {
+            throw new ApiException(-1, "通话已开始");
         }
 
         // 通话设置成结束
@@ -689,13 +701,6 @@ public class TencentImService implements ImService {
         // 记录用户通话状态
         activeService.cancelCall(user, roomId);
 
-        // 取消计时
-        try {
-            callCalcJobScheduler.stopCallTimeout(roomId);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
         if (!optionalUserFrom.isPresent()) {
             throw new ApiException(-1, "用户不存在");
@@ -712,23 +717,31 @@ public class TencentImService implements ImService {
             // 由用户发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userFrom, userTo, 1, roomId, call.getType());
+            sendCallMsg(userFrom, userTo, 1, roomId, call.getType());
 
         } else if (call.getCallMode() == 1) {
             // 由主播发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userTo, userFrom, 1, roomId, call.getType());
+            sendCallMsg(userTo, userFrom, 1, roomId, call.getType());
         }
 
         return 1;
     }
 
+    @SneakyThrows
     @Override
     public int rejectGen(User user, Long roomId) throws ApiException {
+        // 取消计时
+        callCalcJobScheduler.stopCallTimeout(roomId);
+
         Call call = callRepository.findByRoomId(roomId);
         if (call.getIsFinished() == 1) {
             throw new ApiException(-1, "通话已结束");
+        }
+
+        if (Objects.nonNull(call.getStartTime())) {
+            throw new ApiException(-1, "通话已开始");
         }
 
         // 通话设置成结束
@@ -739,13 +752,6 @@ public class TencentImService implements ImService {
         // 记录用户通话状态
         activeService.rejectCall(user, roomId);
 
-        // 取消计时
-        try {
-            callCalcJobScheduler.stopCallTimeout(roomId);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
         if (!optionalUserFrom.isPresent()) {
             throw new ApiException(-1, "用户不存在");
@@ -762,13 +768,13 @@ public class TencentImService implements ImService {
             // 由用户发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userTo, userFrom, 2, roomId, call.getType());
+            sendCallMsg(userTo, userFrom, 2, roomId, call.getType());
 
         } else if (call.getCallMode() == 1) {
             // 由主播发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userFrom, userTo, 2, roomId, call.getType());
+            sendCallMsg(userFrom, userTo, 2, roomId, call.getType());
         }
 
         return 1;
@@ -780,6 +786,10 @@ public class TencentImService implements ImService {
         Call call = callRepository.findByRoomId(roomId);
         if (call.getIsFinished() == 1) {
             throw new ApiException(-1, "通话已结束");
+        }
+
+        if (Objects.nonNull(call.getStartTime())) {
+            throw new ApiException(-1, "通话已开始");
         }
 
         // 通话设置成结束
@@ -807,23 +817,31 @@ public class TencentImService implements ImService {
             // 由用户发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userTo, userFrom, 3, roomId, call.getType());
+            sendCallMsg(userTo, userFrom, 3, roomId, call.getType());
 
         } else if (call.getCallMode() == 1) {
             // 由主播发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userFrom, userTo, 3, roomId, call.getType());
+            sendCallMsg(userFrom, userTo, 3, roomId, call.getType());
         }
 
         return 1;
     }
 
+    @SneakyThrows
     @Override
     public int endGen(User user, Long roomId) throws ApiException {
+        // 停止计时
+        callCalcJobScheduler.stopCallCalc(roomId);
+
         Call call = callRepository.findByRoomId(roomId);
         if (call.getIsFinished() == 1) {
             throw new ApiException(-1, "通话已结束");
+        }
+
+        if (Objects.isNull(call.getStartTime())) {
+            throw new ApiException(-1, "通话还未开始");
         }
 
         // 通话设置成结束
@@ -839,13 +857,6 @@ public class TencentImService implements ImService {
 
         // 记录用户通话状态
         activeService.endCall(user, roomId);
-
-        // 停止计时
-        try {
-            callCalcJobScheduler.stopCallCalc(roomId);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
         Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
         if (!optionalUserFrom.isPresent()) {
@@ -863,27 +874,24 @@ public class TencentImService implements ImService {
             // 由用户发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userFrom, userTo, 4, roomId, call.getType());
+            sendCallMsg(userFrom, userTo, 4, roomId, call.getType());
 
         } else if (call.getCallMode() == 1) {
             // 由主播发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userTo, userFrom, 4, roomId, call.getType());
+            sendCallMsg(userTo, userFrom, 4, roomId, call.getType());
         }
 
         return 1;
     }
 
     @Transactional
+    @SneakyThrows
     @Override
     public int endGenByServer(Long roomId) throws ApiException {
         // 停止计时
-        try {
-            callCalcJobScheduler.stopCallCalc(roomId);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        callCalcJobScheduler.stopCallCalc(roomId);
 
         Call call = callRepository.findByRoomId(roomId);
         if (call.getIsFinished() == 1) {
@@ -925,13 +933,13 @@ public class TencentImService implements ImService {
             // 由用户发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userFrom, userTo, 4, roomId, call.getType());
+            sendCallMsg(userFrom, userTo, 4, roomId, call.getType());
 
         } else if (call.getCallMode() == 1) {
             // 由主播发起通话
 
             // 发送自定义消息
-            return sendCallMsg(userTo, userFrom, 4, roomId, call.getType());
+            sendCallMsg(userTo, userFrom, 4, roomId, call.getType());
         }
 
         return 1;
@@ -979,7 +987,7 @@ public class TencentImService implements ImService {
     public Map<String, Object> resultGen(User user, Long roomId) throws ApiException {
 
         Call call = callRepository.findByRoomId(roomId);
-        if (call.getIsFinished() == 1) {
+        if (call.getIsFinished() == 0) {
             throw new ApiException(-1, "通话还未结束");
         }
 

@@ -21,4 +21,6 @@ public interface ActiveRepository extends JpaRepository<Active, Long> {
     List<Long> countActiveOnce(Date startTime, Date endTime);
 
     Active findTopByUserIdAndStatusIn(Long userId, List<Integer> statusList);
+
+    Active findTopByUserIdAndType(Long userId, int type);
 }
