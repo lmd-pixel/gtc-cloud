@@ -7,7 +7,7 @@ import org.springframework.context.annotation.PropertySource;
 
 @Data
 @Configuration
-@PropertySource(value = "classpath:config/im-conf-${base.profiles.active}.properties", encoding = "UTF-8")
+@PropertySource(value = "classpath:config/im-conf-${spring.profiles.active}.properties", encoding = "UTF-8")
 public class ImConfProp {
 
     @Value("${tencent.im.sdkappid}")

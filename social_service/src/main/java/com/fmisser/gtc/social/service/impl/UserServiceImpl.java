@@ -116,7 +116,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public User create(String phone, int gender, String inviteCode, String version) throws ApiException {
+    public User create(String phone, int gender, String nick, String inviteCode, String version) throws ApiException {
         // check exist
         if (userRepository.existsByUsername(phone)) {
             // 已经存在
@@ -141,7 +141,16 @@ public class UserServiceImpl implements UserService {
 //        Long count = userRepository.countByCreateTimeBetween(startDay, endDay);
 //        String digitId = calcDigitIdV2(date, count + 1);
         user.setDigitId(digitId);
-        user.setNick(String.format("会员%s", digitId));
+
+        if (StringUtils.isEmpty(nick)) {
+            user.setNick(String.format("会员%s", digitId));
+        } else {
+            if (isNickExist(nick)) {
+                throw new ApiException(-1, "用户昵称重复");
+            } else {
+                user.setNick(nick);
+            }
+        }
 
         LocalDateTime defaultBirth = LocalDateTime.of(1990, 1, 1, 0, 0);
         user.setBirth(Date.from(defaultBirth.atZone(ZoneId.systemDefault()).toInstant()));
@@ -216,6 +225,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean isUserExist(String username) throws ApiException {
         Optional<User> userOptional = userRepository.findByUsername(username);
+        return userOptional.isPresent();
+    }
+
+    @Override
+    public boolean isNickExist(String nick) throws ApiException {
+        Optional<User> userOptional = userRepository.findByNick(nick);
         return userOptional.isPresent();
     }
 
@@ -362,6 +377,11 @@ public class UserServiceImpl implements UserService {
 
         // 处理文本结构
         if (nick != null && !nick.isEmpty()) {
+
+            if (isNickExist(nick)) {
+                throw new ApiException(-1, "昵称重复");
+            }
+
             user.setNick(nick);
             if (optionType == 2 || optionType == 3) {
                 audit.setNick(nick);

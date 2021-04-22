@@ -7,6 +7,7 @@ import com.fmisser.gtc.social.domain.User;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * im trtc 相关 服务
@@ -49,16 +50,25 @@ public interface ImService {
     int rejectGen(User user, Long roomId) throws ApiException;
 
     // 通话超时
-    int timeoutGen(User user, Long roomId) throws ApiException;
+    int timeoutGen(Long roomId) throws ApiException;
 
     // 通话结束（已接通）
     int endGen(User user, Long roomId) throws ApiException;
+
+    // 服务端发起通话结束 (已接通)
+    int endGenByServer(Long roomId) throws ApiException;
 
     // 挂断通话
     int hangupGen(User user, Long roomId) throws ApiException;
 
     // 结算
-    Object resultGen(User user, Long roomId) throws ApiException;
+    Map<String, Object> resultGen(User user, Long roomId) throws ApiException;
+
+    // 更新客户端状态
+    Map<String, Object> updateGen(User user, Long roomId) throws ApiException;
+
+    // 计算
+    int calcGen(Long roomId) throws ApiException;
 
     /////// 新版本通话功能
 
@@ -71,7 +81,7 @@ public interface ImService {
     int sendGiftMsg(User userFrom, User userTo, Gift gift, int count) throws ApiException;
 
     // mode 0 发起通话 1：取消通话 2：拒绝通话 3: 超时 4: 结束通话（已接通）
-    int sendCallMsg(User userFrom, User userTo, int mode) throws ApiException;
+    int sendCallMsg(User userFrom, User userTo, int mode, long roomId, int roomType) throws ApiException;
 
     int sendAfterSendMsg(User userFrom, User userTo, int tag, int coin, int card) throws ApiException;
 

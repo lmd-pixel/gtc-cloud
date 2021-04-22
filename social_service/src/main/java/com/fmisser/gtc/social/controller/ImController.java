@@ -182,6 +182,30 @@ public class ImController {
         return ApiResp.succeed(ret);
     }
 
+    @GetMapping("/update-gen")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    public ApiResp<Map<String, Object>> updateGen(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam("roomId") Long roomId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        return ApiResp.succeed(imService.updateGen(userDo, roomId));
+    }
+
+    @GetMapping("/result-gen")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    public ApiResp<Map<String, Object>> resultGen(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam("roomId") Long roomId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        return ApiResp.succeed(imService.resultGen(userDo, roomId));
+    }
+
     @GetMapping("/user-sig")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     public ApiResp<String> getUserSig() {

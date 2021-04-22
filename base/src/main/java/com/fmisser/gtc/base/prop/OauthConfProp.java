@@ -7,7 +7,7 @@ import org.springframework.context.annotation.PropertySource;
 
 @Data
 @Configuration
-@PropertySource(value = "classpath:config/oauth-conf-${base.profiles.active}.properties", encoding = "UTF-8")
+@PropertySource(value = "classpath:config/oauth-conf-${spring.profiles.active}.properties", encoding = "UTF-8")
 public class OauthConfProp {
     @Value("${oauth2.client}")
     private String oauth2Client;

@@ -17,4 +17,6 @@ public interface ActiveService {
     int acceptCall(User user, Long roomId) throws ApiException;
     int endCall(User user, Long roomId) throws ApiException;
     boolean isCallBusy(User user) throws ApiException;
+    int updateCall(User user, Long roomId) throws ApiException;
+    boolean isUserCalling(Long userId, Long roomId) throws ApiException;
 }

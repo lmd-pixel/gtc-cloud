@@ -4,26 +4,21 @@ import com.fmisser.gtc.base.dto.apple.IapReceiptVerifyDto;
 import com.fmisser.gtc.base.dto.social.IapReceiptDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.AppleConfProp;
-import com.fmisser.gtc.base.utils.CryptoUtils;
-import com.fmisser.gtc.social.domain.IapReceipt;
-import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.feign.IapVerifyFeign;
+import com.fmisser.gtc.social.repository.AssetRepository;
 import com.fmisser.gtc.social.repository.IapReceiptRepository;
 import com.fmisser.gtc.social.repository.RechargeRepository;
-import com.fmisser.gtc.social.service.RechargeService;
-import com.fmisser.gtc.social.service.TransactionService;
+import com.fmisser.gtc.social.service.*;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.net.URI;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.net.URISyntaxException;
+import java.util.*;
 
 @Service
 public class RechargeServiceImpl implements RechargeService {
@@ -38,19 +33,192 @@ public class RechargeServiceImpl implements RechargeService {
 
     private final RechargeRepository rechargeRepository;
 
+    private final ProductService productService;
+
+    private final AssetRepository assetRepository;
+
+    private final CouponService couponService;
+
+    private final SysConfigService sysConfigService;
+
     public RechargeServiceImpl(AppleConfProp appleConfProp,
                                IapVerifyFeign iapVerifyFeign,
                                IapReceiptRepository iapReceiptRepository,
                                TransactionService transactionService,
-                               RechargeRepository rechargeRepository) {
+                               RechargeRepository rechargeRepository,
+                               ProductService productService,
+                               AssetRepository assetRepository,
+                               CouponService couponService,
+                               SysConfigService sysConfigService) {
         this.appleConfProp = appleConfProp;
         this.iapVerifyFeign = iapVerifyFeign;
         this.iapReceiptRepository = iapReceiptRepository;
         this.transactionService = transactionService;
         this.rechargeRepository = rechargeRepository;
+        this.productService = productService;
+        this.assetRepository = assetRepository;
+        this.couponService = couponService;
+        this.sysConfigService = sysConfigService;
     }
 
-//    @Transactional
+    @Transactional
+    @Override
+    public String createOrder(User user, Long productId) throws ApiException {
+        Product product = productService.getValidProduct(productId);
+
+        Recharge recharge = new Recharge();
+        recharge.setOrderNumber(createRechargeOrderNumber(user.getId()));
+        recharge.setUserId(user.getId());
+        recharge.setProductId(product.getId());
+        recharge.setCoin(product.getCoin());
+        recharge.setPrice(product.getPrice());
+        recharge.setStatus(1);
+
+        recharge = rechargeRepository.save(recharge);
+
+        return recharge.getOrderNumber();
+    }
+
+    @Transactional
+    @Override
+    public String updateOrder(User user, String orderNumber, int status) throws ApiException {
+        Recharge recharge = rechargeRepository.findByOrderNumber(orderNumber);
+        if (!recharge.getUserId().equals(user.getId())) {
+            throw new ApiException(-1, "非法操作");
+        }
+
+        recharge.setStatus(status);
+
+        recharge = rechargeRepository.save(recharge);
+
+        return recharge.getOrderNumber();
+    }
+
+    @Retryable
+    @Transactional
+    @Override
+    public String completeIapOrder(User user, String orderNumber, int env, String receipt,
+                                   String iapProductId, String transactionId, Date purchaseDate) throws ApiException {
+
+        Recharge recharge = rechargeRepository.findByOrderNumber(orderNumber);
+        if (!recharge.getUserId().equals(user.getId())) {
+            throw new ApiException(-1, "非法操作");
+        }
+
+        if (recharge.getStatus() != 12) {
+            throw new ApiException(-1, "订单状态不可操作");
+        }
+
+        // 校验产品是否一致
+        Product product = productService.getProductByName(iapProductId);
+        if (Objects.isNull(product) || !product.getId().equals(recharge.getProductId())) {
+            throw new ApiException(-1, "非法操作");
+        }
+
+        String url = env == 1 ?
+                appleConfProp.getProdVerifyUrl() : appleConfProp.getSandBoxVerifyUrl();
+        IapReceiptVerifyDto iapReceiptVerifyDto = new IapReceiptVerifyDto(receipt);
+        // 去苹果服务器校验
+        IapReceiptDto iapReceiptDto = null;
+        try {
+            iapReceiptDto = iapVerifyFeign.verifyReceipt(new URI(url), iapReceiptVerifyDto);
+        } catch (Exception e) {
+            throw new ApiException(-1, "票据校验请求失败");
+        }
+
+        // 处理用户充值逻辑
+        if (iapReceiptDto.getStatus() != 0) {
+            throw new ApiException(-1,"订单票据校验失败");
+        }
+
+        // 检验票据和交易号，查找是否有一个匹配的充值选项
+        boolean valid = false;
+        for (IapReceiptDto.InApp inApp : iapReceiptDto.getReceipt().getIn_app()) {
+
+            if (inApp.getQuantity() == 1 &&
+                    inApp.getProduct_id().equals(iapProductId) &&
+                    inApp.getTransaction_id().equals(transactionId)) {
+                valid = true;
+                break;
+            }
+        }
+
+        if (!valid) {
+            throw new ApiException(-1, "充值数据异常");
+        }
+
+        // 检测票据是否已完成交易
+        IapReceipt iapReceipt = iapReceiptRepository.findByTransactionId(transactionId);
+        if (Objects.nonNull(iapReceipt)) {
+            // 校验用户
+            if (!user.getId().equals(iapReceipt.getUserId())) {
+                throw new ApiException(-1, "非法操作");
+            }
+
+            // 校验订单
+            if (!iapReceipt.getRechargeId().equals(recharge.getId())) {
+                throw new ApiException(-1, "非法操作");
+            }
+
+            // 检验票据状态
+            if (iapReceipt.getStatus() == 1) {
+                throw new ApiException(-1, "该交易已完成!");
+            }
+        } else {
+            iapReceipt = new IapReceipt();
+            iapReceipt.setRechargeId(recharge.getId());
+            iapReceipt.setUserId(user.getId());
+            iapReceipt.setReceipt(receipt);
+            iapReceipt.setEnv(env);
+            iapReceipt.setProductId(iapProductId);
+            iapReceipt.setTransactionId(transactionId);
+            iapReceipt.setPurchaseDate(purchaseDate);
+        }
+
+        // 加钱
+        BigDecimal addCoin = recharge.getCoin();
+        int ret = assetRepository.
+                addCoin(user.getId(), addCoin);
+        if (ret != 1) {
+            throw new ApiException(-1, "更新用户金币出错!");
+        }
+        Asset asset = assetRepository.findByUserId(iapReceipt.getUserId());
+
+        // 更新充值信息
+        recharge.setPay(product.getPrice());
+        // 苹果抽成数值在改变，所以这里默认不做抽成计算，全额统计
+        recharge.setIncome(product.getPrice());
+        recharge.setCoinAfter(asset.getCoin());
+        recharge.setCoinBefore(asset.getCoin().subtract(addCoin));
+        recharge.setStatus(20);
+        recharge.setType(0);
+        recharge.setRemark("iap recharge");
+        recharge.setFinishTime(new Date());
+        rechargeRepository.save(recharge);
+
+        // 票据设置完成交易
+        iapReceipt.setStatus(1);
+        iapReceiptRepository.save(iapReceipt);
+
+        // 判断是否是首次充值，首次充值送聊天券和视频卡
+        // 考虑以后退款等操作，都认为是已完成过充值，不再赠送
+        // TODO: 2021/4/21 异步去做 丢到消息队列
+        Long count = rechargeRepository.countByUserIdAndStatusGreaterThanEqual(iapReceipt.getUserId(), 20);
+        if (count == 1) {
+            // 首充
+            if (sysConfigService.isFirstRechargeFreeMsg()) {
+                couponService.addCommMsgFreeCoupon(iapReceipt.getUserId(), 100, 20);
+            }
+
+            if (sysConfigService.isFirstRechargeFreeVideo()) {
+                couponService.addCommVideoCoupon(iapReceipt.getUserId(), 1, 20);
+            }
+        }
+
+        return "success";
+    }
+
+    //    @Transactional
 //    @Retryable
     @Override
     @SneakyThrows
@@ -136,5 +304,14 @@ public class RechargeServiceImpl implements RechargeService {
     @Override
     public Long getUserRechargeCount(User user) throws ApiException {
         return rechargeRepository.countByUserIdAndStatusGreaterThanEqual(user.getId(), 20);
+    }
+
+    // 创建支付订单号
+    public static String createRechargeOrderNumber(Long userId) {
+        // 订单号 = 当前时间戳 + 用户id（格式化成10位） + 随机4位数
+        return String.format("%d%010d%04d",
+                new Date().getTime(),
+                userId,
+                new Random().nextInt(9999));
     }
 }

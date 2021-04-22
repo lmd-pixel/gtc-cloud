@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface ProductService {
     List<Product> getIapProductList() throws ApiException;
+    Product getValidProduct(Long productId) throws ApiException;
+    Product getProductByName(String name) throws ApiException;
 }

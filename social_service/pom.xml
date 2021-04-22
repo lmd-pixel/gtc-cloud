@@ -101,6 +101,18 @@
             <version>2.9.0</version>
         </dependency>
 
+        <!-- quartz -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-quartz</artifactId>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>com.mchange</groupId>-->
+<!--            <artifactId>c3p0</artifactId>-->
+<!--            <version>0.9.5.5</version>-->
+<!--        </dependency>-->
+
         <!-- es -->
 <!--        <dependency>-->
 <!--            <groupId>org.springframework.boot</groupId>-->

@@ -15,10 +15,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import javax.ws.rs.DELETE;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -33,17 +31,20 @@ public class UserController {
     private final IdentityAuditService identityAuditService;
     private final GreetService greetService;
     private final SysConfigService sysConfigService;
+    private final UserDeviceService userDeviceService;
 
     public UserController(UserService userService,
                           AssetService assetService,
                           IdentityAuditService identityAuditService,
                           GreetService greetService,
-                          SysConfigService sysConfigService) {
+                          SysConfigService sysConfigService,
+                          UserDeviceService userDeviceService) {
         this.userService = userService;
         this.assetService = assetService;
         this.identityAuditService = identityAuditService;
         this.greetService = greetService;
         this.sysConfigService = sysConfigService;
+        this.userDeviceService = userDeviceService;
     }
 
     @ApiOperation(value = "创建用户")
@@ -51,6 +52,7 @@ public class UserController {
     @PostMapping(value = "/create")
     ApiResp<User> create(@RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
                          @RequestParam(value = "phone", required = false, defaultValue = "") String phone,
+                         @RequestParam(value = "nick", required = false) String nick,
                          @RequestParam("gender") @Range(min = 0, max = 1) int gender,
                          @RequestParam(value = "invite", required = false) String invite) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -60,7 +62,7 @@ public class UserController {
             // return error
             throw new ApiException(-1, "非法操作，认证用户无法创建其他用户资料！");
         }
-        User user = userService.create(username, gender, invite, version);
+        User user = userService.create(username, gender, nick, invite, version);
 
         // 针对版本审核
         if (sysConfigService.getAppAuditVersion().equals(version)) {
@@ -309,6 +311,23 @@ public class UserController {
         } else {
             return ApiResp.succeed(ret);
         }
+    }
+
+    @ApiOperation(value = "上传设备信息")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @GetMapping("upload-device-info")
+    ApiResp<Integer> uploadDeviceInfo(@RequestParam("deviceType") Integer deviceType,
+                                      @RequestParam(value = "deviceName", required = false) String deviceName,
+                                      @RequestParam(value = "deviceCategory", required = false) String deviceCategory,
+                                      @RequestParam(value = "deviceIdfa", required = false) String deviceIdfa,
+                                      @RequestParam(value = "deviceToken", required = false) String deviceToken,
+                                      @RequestParam(value = "ipAddr", required = false) String ipAddr) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        int ret = userDeviceService.create(userDo, deviceType, deviceName, deviceCategory, deviceIdfa, deviceToken, ipAddr);
+        return ApiResp.succeed(ret);
     }
 
 }

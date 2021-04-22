@@ -52,9 +52,24 @@ public class Active {
      * 42：连续登录im 记录ip 平台
      * 43: 登出im 记录上一次在线时长
      * 44：连续的登出im，时长记做0
+     * 101：发起通话邀请
+     * 102: 取消通话邀请
+     * 103: 通话邀请超时
+     * 104: 拒绝通话邀请
+     * 105: 接受通话邀请
+     * 106: 结束通话邀请
+     * 201: 通话更新
      */
     @Column(nullable = false)
     private int status;
+
+    /**
+     * type = 0 用户活跃状态
+     * typ= 1 用户通话状态
+     * type = 2
+     */
+    @Column(columnDefinition = "int default 0")
+    private int type = 0;
 
     @Column
     private BigDecimal longitude;
