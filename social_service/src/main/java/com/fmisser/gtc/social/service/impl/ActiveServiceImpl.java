@@ -10,6 +10,7 @@ import com.fmisser.gtc.social.service.ActiveService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.Objects;
 
 @Service
@@ -77,6 +78,30 @@ public class ActiveServiceImpl implements ActiveService {
             }
         }
         return false;
+    }
+
+    @Override
+    public int updateCall(User user, Long roomId) throws ApiException {
+        Active active = prepareCallActive(user, roomId, 201);
+        activeRepository.save(active);
+        return 1;
+    }
+
+    @Override
+    public boolean isUserCalling(Long userId, Long roomId) throws ApiException {
+        Active active = activeRepository.findTopByUserIdAndStatusAndRoomId(userId, 201, roomId);
+        if (Objects.nonNull(active)) {
+            //
+            Date now = new Date();
+            Date lastActiveTime = active.getActiveTime();
+            long delta = now.getTime() - lastActiveTime.getTime();
+            if (delta / 1000 > 15) {
+                // 超过15秒没收到更新数据 则认为不在房间了
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private Active prepareCallActive(User user, Long roomId, int status) {

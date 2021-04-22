@@ -66,8 +66,9 @@ public class Recharge {
     /**
      * 充值状态
      * 1: 充值中
-     * 10: 充值失败
-     * 11: 取消充值
+     * 10: 付款失败
+     * 11: 取消付款
+     * 12: 付款成功
      * 20: 充值完成
      * 30: 全部退款
      * 31: 部分退款
@@ -108,4 +109,7 @@ public class Recharge {
     @LastModifiedBy
     @Column
     private String modifyBy;
+
+    @Version
+    private Long version;
 }

@@ -3,6 +3,7 @@ package com.fmisser.gtc.social.service.impl;
 import com.fmisser.gtc.base.dto.social.UserCallDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.OssConfProp;
+import com.fmisser.gtc.social.domain.Call;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.repository.CallRepository;
 import com.fmisser.gtc.social.service.CallService;
@@ -71,5 +72,10 @@ public class CallServiceImpl implements CallService {
                 });
 
         return userCallDtoList;
+    }
+
+    @Override
+    public Call getCallByRoomId(Long roomId) throws ApiException {
+        return callRepository.findByRoomId(roomId);
     }
 }

@@ -29,6 +29,8 @@ show global status like 'Thread%';
 ALTER TABLE `gtc-social-db`.t_dynamic CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 ALTER TABLE `gtc-social-db`.t_dynamic_comment CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
+-- 查看重复的nick
+select min(id) from `gtc-social-db`.t_user group by nick having COUNT(nick) > 1;
 
 -- procedure
 delimiter $$

@@ -1,6 +1,8 @@
 package com.fmisser.gtc.social.job;
 
+import com.fmisser.gtc.social.domain.Call;
 import com.fmisser.gtc.social.service.ActiveService;
+import com.fmisser.gtc.social.service.CallService;
 import com.fmisser.gtc.social.service.ImService;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -9,16 +11,20 @@ import org.quartz.JobKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 /**
  * @author fmisser
- * @create 2021-04-13 下午6:33
- * @description 通话邀请超时定时任务
+ * @create 2021-04-21 下午4:56
+ * @description 通话心跳检测定时任务
  */
 @Component
-public class CallTimeoutJob implements Job {
-
+public class CallHeartbeatJob implements Job {
     @Autowired
     private ImService imService;
+
+    @Autowired
+    private CallService callService;
 
     @Autowired
     private ActiveService activeService;
@@ -27,6 +33,14 @@ public class CallTimeoutJob implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         JobKey jobKey = context.getJobDetail().getKey();
         Long roomId = Long.parseLong(jobKey.getName());
-        imService.timeoutGen(roomId);
+
+        Call call = callService.getCallByRoomId(roomId);
+        if (call.getIsFinished() == 0) {
+          if (!activeService.isUserCalling(call.getUserIdFrom(), roomId) ||
+                !activeService.isUserCalling(call.getUserIdTo(), roomId)) {
+              // 有一个不在，结束房间
+              imService.endGenByServer(roomId);
+          }
+        }
     }
 }

@@ -39,6 +39,41 @@ public class RechargeController {
         this.consumeService = consumeService;
     }
 
+    @PostMapping(value = "/create-order")
+    public ApiResp<String> createOrder(@RequestParam("productId") Long productId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        return ApiResp.succeed(rechargeService.createOrder(userDo, productId));
+    }
+
+    @PostMapping(value = "/update-order")
+    public ApiResp<String> updateOrder(@RequestParam("productId") String orderNumber,
+                                       @RequestParam("status") Integer status) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        return ApiResp.succeed(rechargeService.updateOrder(userDo, orderNumber, status));
+    }
+
+    @PostMapping(value = "/complete-order-iap")
+    public ApiResp<String> completeOrderIap(@RequestParam("productId") String orderNumber,
+                                            @RequestParam(value = "env", required = false, defaultValue = "1") int env,
+                                            @RequestParam("receipt") String receipt,
+                                            @RequestParam("productId") String productId,
+                                            @RequestParam("transactionId") String transactionId,
+                                            @RequestParam("purchaseDate") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date purchaseDate
+                                            ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        return ApiResp.succeed(rechargeService.completeIapOrder(userDo, orderNumber,
+                env, receipt, productId, transactionId, purchaseDate));
+    }
+
     @PostMapping(value = "/iap-receipt-verify")
     public ApiResp<String> setIapCertificate(@RequestParam("receipt") String receipt,
                                              @RequestParam(value = "env", required = false, defaultValue = "0") int env,

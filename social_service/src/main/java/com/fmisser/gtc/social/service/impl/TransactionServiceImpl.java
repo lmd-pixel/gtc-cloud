@@ -8,7 +8,6 @@ import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.CouponService;
 import com.fmisser.gtc.social.service.SysConfigService;
 import com.fmisser.gtc.social.service.TransactionService;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Optional;
-import java.util.Random;
+
+import static com.fmisser.gtc.social.service.impl.RechargeServiceImpl.createRechargeOrderNumber;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
@@ -65,7 +65,7 @@ public class TransactionServiceImpl implements TransactionService {
 
 //        Product product = productRepository.findByName(productId);
         // 判断产品是否有效
-        Optional<Product> productOptional = productRepository.getValidProduct(productId);
+        Optional<Product> productOptional = productRepository.getValidProductByName(productId, new Date());
         if (!productOptional.isPresent()) {
             throw new ApiException(-1, "产品无效或已过期！");
         }
@@ -141,14 +141,5 @@ public class TransactionServiceImpl implements TransactionService {
         iapReceiptRepository.save(iapReceipt);
 
         return "success";
-    }
-
-    // 创建支付订单号
-    public static String createRechargeOrderNumber(Long userId) {
-        // 订单号 = 当前时间戳 + 用户id（格式化成10位） + 随机4位数
-        return String.format("%d%010d%04d",
-                new Date().getTime(),
-                userId,
-                new Random().nextInt(9999));
     }
 }

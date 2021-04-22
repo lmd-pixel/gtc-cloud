@@ -619,6 +619,7 @@ public class TencentImService implements ImService {
 
         // 启动计费
         callCalcJobScheduler.startCallCalc(roomId);
+        callCalcJobScheduler.startCallHeartbeat(roomId);
 
         return 1;
     }
@@ -834,6 +835,7 @@ public class TencentImService implements ImService {
     public int endGen(User user, Long roomId) throws ApiException {
         // 停止计时
         callCalcJobScheduler.stopCallCalc(roomId);
+        callCalcJobScheduler.stopCallHeartbeat(roomId);
 
         Call call = callRepository.findByRoomId(roomId);
         if (call.getIsFinished() == 1) {
@@ -892,6 +894,8 @@ public class TencentImService implements ImService {
     public int endGenByServer(Long roomId) throws ApiException {
         // 停止计时
         callCalcJobScheduler.stopCallCalc(roomId);
+        // 停止心跳检测
+        callCalcJobScheduler.stopCallHeartbeat(roomId);
 
         Call call = callRepository.findByRoomId(roomId);
         if (call.getIsFinished() == 1) {
@@ -1069,6 +1073,9 @@ public class TencentImService implements ImService {
             throw new ApiException(-1, "用户不存在");
         }
         User userTo = optionalUserTo.get();
+
+        // 记录用户通话状态
+        activeService.updateCall(user, roomId);
 
         Map<String, Object> resultMap = new HashMap<>();
         int deltaTime = (int) Math.ceil( (double) ( new Date().getTime() - call.getStartTime().getTime()) / 1000L);

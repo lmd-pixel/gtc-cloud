@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * @author fmisser
  * @create 2021-04-13 下午5:32
- * @description
+ * @description 通话计费定时任务
  */
 @Component
 public class CallCalcJob implements Job {

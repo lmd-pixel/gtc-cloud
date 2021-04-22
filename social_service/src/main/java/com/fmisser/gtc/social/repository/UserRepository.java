@@ -22,6 +22,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByCreateTimeBetween(Date start, Date end);
     Optional<User> findByUsername(String username);
     Optional<User> findByDigitId(String digitId);
+    Optional<User> findByNick(String nick);
     Page<User> findByIdentityOrderByCreateTimeDesc(int identity, Pageable pageable);
 
     // 注意 要开启事务, service 开启了的话这里不用开启

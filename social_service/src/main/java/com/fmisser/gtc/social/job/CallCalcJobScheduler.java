@@ -58,11 +58,32 @@ public class CallCalcJobScheduler {
         scheduler.scheduleJob(timeoutJob, timeoutTrigger);
     }
 
+    public void startCallHeartbeat(Long roomId) throws Exception {
+        JobDetail heartbeatJob = JobBuilder
+                .newJob(CallHeartbeatJob.class)
+                .withIdentity(roomId.toString(), "heartbeatGroup")
+                .build();
+
+        Trigger heartbeatTrigger = newTrigger()
+                .withIdentity(triggerKey(roomId.toString(), "heartbeatGroup"))
+                .withSchedule(simpleSchedule()
+                        .withIntervalInSeconds(15)
+                        .repeatForever())
+                .startNow()
+                .build();
+
+        scheduler.scheduleJob(heartbeatJob, heartbeatTrigger);
+    }
+
     public void stopCallCalc(Long roomId) throws Exception {
         scheduler.unscheduleJob(triggerKey(roomId.toString(), "calcGroup"));
     }
 
     public void stopCallTimeout(Long roomId) throws Exception {
         scheduler.unscheduleJob(triggerKey(roomId.toString(), "timeoutGroup"));
+    }
+
+    public void stopCallHeartbeat(Long roomId) throws Exception {
+        scheduler.unscheduleJob(triggerKey(roomId.toString(), "heartbeatGroup"));
     }
 }

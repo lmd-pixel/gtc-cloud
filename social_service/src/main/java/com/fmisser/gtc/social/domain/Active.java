@@ -58,6 +58,7 @@ public class Active {
      * 104: 拒绝通话邀请
      * 105: 接受通话邀请
      * 106: 结束通话邀请
+     * 201: 通话更新
      */
     @Column(nullable = false)
     private int status;
@@ -65,6 +66,7 @@ public class Active {
     /**
      * type = 0 用户活跃状态
      * typ= 1 用户通话状态
+     * type = 2
      */
     @Column(columnDefinition = "int default 0")
     private int type = 0;

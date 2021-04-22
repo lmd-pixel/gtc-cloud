@@ -16,6 +16,8 @@ import java.util.List;
 @Repository
 public interface RechargeRepository extends JpaRepository<Recharge, Long> {
 
+    Recharge findByOrderNumber(String orderNumber);
+
     Long countByUserIdAndStatusGreaterThanEqual(Long userId, int status);
 
     // 获取给定时间的充值人数(去重)，给定时间内充值金额(实际支付金额), 给定时间内的平台收入(实际收到的钱)
