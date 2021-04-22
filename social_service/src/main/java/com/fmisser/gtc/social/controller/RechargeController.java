@@ -40,16 +40,16 @@ public class RechargeController {
     }
 
     @PostMapping(value = "/create-order")
-    public ApiResp<String> createOrder(@RequestParam("productId") Long productId) {
+    public ApiResp<String> createOrder(@RequestParam("productName") String productName) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
 
-        return ApiResp.succeed(rechargeService.createOrder(userDo, productId));
+        return ApiResp.succeed(rechargeService.createOrder(userDo, productName));
     }
 
     @PostMapping(value = "/update-order")
-    public ApiResp<String> updateOrder(@RequestParam("productId") String orderNumber,
+    public ApiResp<String> updateOrder(@RequestParam("orderNumber") String orderNumber,
                                        @RequestParam("status") Integer status) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();

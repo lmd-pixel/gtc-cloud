@@ -7,7 +7,7 @@ import java.util.Date;
 
 public interface RechargeService {
 
-    String createOrder(User user, Long productId) throws ApiException;
+    String createOrder(User user, String productName) throws ApiException;
 
     String updateOrder(User user, String orderNumber, int status) throws ApiException;
 

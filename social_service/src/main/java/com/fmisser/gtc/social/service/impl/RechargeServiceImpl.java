@@ -63,8 +63,8 @@ public class RechargeServiceImpl implements RechargeService {
 
     @Transactional
     @Override
-    public String createOrder(User user, Long productId) throws ApiException {
-        Product product = productService.getValidProduct(productId);
+    public String createOrder(User user, String productName) throws ApiException {
+        Product product = productService.getProductByName(productName);
 
         Recharge recharge = new Recharge();
         recharge.setOrderNumber(createRechargeOrderNumber(user.getId()));
