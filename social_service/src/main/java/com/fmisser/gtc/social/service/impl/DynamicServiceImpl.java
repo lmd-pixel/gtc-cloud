@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.service.impl;
 
+import com.fmisser.fpp.oss.abs.service.OssService;
 import com.fmisser.gtc.base.aop.ReTry;
 import com.fmisser.gtc.base.dto.social.DynamicCommentDto;
 import com.fmisser.gtc.base.dto.social.DynamicDto;
@@ -17,7 +18,6 @@ import com.fmisser.gtc.social.repository.DynamicRepository;
 import com.fmisser.gtc.social.service.DynamicService;
 import com.fmisser.gtc.social.service.ImCallbackService;
 import com.fmisser.gtc.social.service.SysConfigService;
-import com.fmisser.gtc.social.utils.MinioUtils;
 import io.minio.ObjectWriteResponse;
 import lombok.SneakyThrows;
 import org.springframework.dao.PessimisticLockingFailureException;
@@ -42,24 +42,26 @@ public class DynamicServiceImpl implements DynamicService {
     private final DynamicHeartRepository dynamicHeartRepository;
     private final DynamicCommentRepository dynamicCommentRepository;
     private final OssConfProp ossConfProp;
-    private final MinioUtils minioUtils;
+//    private final MinioUtils minioUtils;
     private final ImCallbackService imCallbackService;
     private final SysConfigService sysConfigService;
+    private final OssService ossService;
 
     public DynamicServiceImpl(DynamicRepository dynamicRepository,
                               DynamicCommentRepository dynamicCommentRepository,
                               DynamicHeartRepository dynamicHeartRepository,
                               OssConfProp ossConfProp,
-                              MinioUtils minioUtils,
+//                              MinioUtils minioUtils,
                               ImCallbackService imCallbackService,
-                              SysConfigService sysConfigService) {
+                              SysConfigService sysConfigService, OssService ossService) {
         this.dynamicRepository = dynamicRepository;
         this.dynamicHeartRepository = dynamicHeartRepository;
         this.dynamicCommentRepository = dynamicCommentRepository;
         this.ossConfProp = ossConfProp;
-        this.minioUtils = minioUtils;
+//        this.minioUtils = minioUtils;
         this.imCallbackService = imCallbackService;
         this.sysConfigService = sysConfigService;
+        this.ossService = ossService;
     }
 
     @Override
@@ -128,15 +130,15 @@ public class DynamicServiceImpl implements DynamicService {
                         randomUUID,
                         suffixName);
 
-                ObjectWriteResponse response = minioPutImageAndThumbnail(ossConfProp.getUserDynamicBucket(),
+                String response = minioPutImageAndThumbnail(ossConfProp.getUserDynamicBucket(),
                         objectName,
                         inputStream,
                         file.getSize(),
                         "image/png",
-                        minioUtils);
+                        ossService);
 
-                if (!StringUtils.isEmpty(response.object())) {
-                    photoList.add(response.object());
+                if (!StringUtils.isEmpty(response)) {
+                    photoList.add(response);
                 }
 
             } else if (type == 2) {
@@ -153,10 +155,10 @@ public class DynamicServiceImpl implements DynamicService {
                         randomUUID,
                         suffixName);
 
-                ObjectWriteResponse response = minioUtils.put(ossConfProp.getUserDynamicBucket(), objectName,
+                String response = ossService.pubObject(ossConfProp.getUserDynamicBucket(), objectName,
                         inputStream, file.getSize(), "video/mp4");
 
-                dynamic.setVideo(response.object());
+                dynamic.setVideo(response);
 
                 // 只处理第一个能处理的视频
                 break;

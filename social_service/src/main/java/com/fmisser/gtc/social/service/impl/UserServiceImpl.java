@@ -1,18 +1,13 @@
 package com.fmisser.gtc.social.service.impl;
 
-import com.fmisser.gtc.base.dto.im.ImQueryStateDto;
+import com.fmisser.fpp.oss.abs.service.OssService;
 import com.fmisser.gtc.base.dto.im.ImQueryStateResp;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.i18n.SystemTips;
-import com.fmisser.gtc.base.prop.ImConfProp;
 import com.fmisser.gtc.base.prop.OssConfProp;
-import com.fmisser.gtc.base.response.ApiResp;
-import com.fmisser.gtc.base.response.ApiRespHelper;
 import com.fmisser.gtc.base.utils.CryptoUtils;
 import com.fmisser.gtc.base.utils.DateUtils;
-import com.fmisser.gtc.social.controller.BlockController;
 import com.fmisser.gtc.social.domain.*;
-import com.fmisser.gtc.social.feign.ImFeign;
 import com.fmisser.gtc.social.mq.GreetDelayedBinding;
 import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.*;
@@ -20,7 +15,6 @@ import com.fmisser.gtc.social.utils.MinioUtils;
 import io.minio.ObjectWriteResponse;
 import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,7 +39,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    private final MinioUtils minioUtils;
+//    private final MinioUtils minioUtils;
 
     private final LabelRepository labelRepository;
 
@@ -77,8 +71,10 @@ public class UserServiceImpl implements UserService {
 
     private final ImService imService;
 
+    private final OssService ossService;
+
     public UserServiceImpl(UserRepository userRepository,
-                           MinioUtils minioUtils,
+//                           MinioUtils minioUtils,
                            LabelRepository labelRepository,
                            OssConfProp ossConfProp,
                            IdentityAuditService identityAuditService,
@@ -93,10 +89,10 @@ public class UserServiceImpl implements UserService {
 //                           ImFeign imFeign,
 //                           ImConfProp imConfProp
                            ImService imService,
-                           IdentityAuditRepository identityAuditRepository
-                           ) {
+                           IdentityAuditRepository identityAuditRepository,
+                           OssService ossService) {
         this.userRepository = userRepository;
-        this.minioUtils = minioUtils;
+//        this.minioUtils = minioUtils;
         this.labelRepository = labelRepository;
         this.ossConfProp = ossConfProp;
         this.identityAuditService = identityAuditService;
@@ -112,6 +108,7 @@ public class UserServiceImpl implements UserService {
 //        this.imConfProp = imConfProp;
         this.imService = imService;
         this.identityAuditRepository = identityAuditRepository;
+        this.ossService = ossService;
     }
 
     @Transactional
@@ -478,16 +475,16 @@ public class UserServiceImpl implements UserService {
                         new Date().getTime(),
                         randomUUID,
                         suffixName);
-                ObjectWriteResponse response = minioUtils.put(ossConfProp.getUserProfileBucket(), objectName,
+                String response = ossService.pubObject(ossConfProp.getUserProfileBucket(), objectName,
                         inputStream, file.getSize(), "audio/mpeg");
 
-                if (response.object().isEmpty()) {
+                if (response.isEmpty()) {
                     throw new ApiException(-1, "存储语音文件失败!");
                 }
 
-                user.setVoice(response.object());
+                user.setVoice(response);
                 if (optionType == 2 || optionType == 3) {
-                    audit.setVoice(response.object());
+                    audit.setVoice(response);
                 }
 
             } else if (name.equals("head")) {
@@ -506,12 +503,13 @@ public class UserServiceImpl implements UserService {
                         randomUUID,
                         suffixName);
 
-                ObjectWriteResponse response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
-                                objectName, inputStream, file.getSize(), "image/png", minioUtils);
+                String response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
+                                objectName, inputStream, file.getSize(), "image/png",
+                        ossService);
 
-                user.setHead(response.object());
+                user.setHead(response);
                 if (optionType == 2 || optionType == 3) {
-                    audit.setHead(response.object());
+                    audit.setHead(response);
                 }
             }
         }
@@ -590,15 +588,15 @@ public class UserServiceImpl implements UserService {
                     randomUUID,
                     suffixName);
 
-            ObjectWriteResponse response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
+            String response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
                     objectName,
                     inputStream,
                     file.getSize(),
                     "image/png",
-                    minioUtils);
+                    ossService);
 
-            if (!StringUtils.isEmpty(response.object())) {
-                photoList.add(response.object());
+            if (!StringUtils.isEmpty(response)) {
+                photoList.add(response);
             }
         }
 
@@ -681,14 +679,14 @@ public class UserServiceImpl implements UserService {
                     randomUUID,
                     suffixName);
 
-            ObjectWriteResponse response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
+            String response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
                     objectName,
                     inputStream,
                     file.getSize(),
                     "image/png",
-                    minioUtils);
+                    ossService);
 
-            user.setSelfie(response.object());
+            user.setSelfie(response);
 
             // 只处理第一张能处理的照片
             break;
@@ -764,12 +762,12 @@ public class UserServiceImpl implements UserService {
                     randomUUID,
                     suffixName);
 
-            ObjectWriteResponse response = minioUtils.put(ossConfProp.getUserProfileBucket(), objectName,
+            String response = ossService.pubObject(ossConfProp.getUserProfileBucket(), objectName,
                     inputStream, file.getSize(), "video/mp4");
 
-            user.setVideo(response.object());
+            user.setVideo(response);
             if (optionType == 2 || optionType == 3) {
-                audit.setVideo(response.object());
+                audit.setVideo(response);
             }
 
             // 只处理第一个能处理的视频
@@ -1058,20 +1056,20 @@ public class UserServiceImpl implements UserService {
     // TODO: 2020/12/30 整理到其他地方
     // minio 存储原始图片和缩略图
     @SneakyThrows
-    public static ObjectWriteResponse minioPutImageAndThumbnail(String bucketName,
+    public static String minioPutImageAndThumbnail(String bucketName,
                                                                 String objectName,
                                                                 InputStream inputStream,
                                                                 Long size,
                                                                 String contentType,
-                                                                MinioUtils minioUtils) throws ApiException {
+                                                                OssService ossService) throws ApiException {
         BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
         // mark top
         bufferedInputStream.mark(Integer.MAX_VALUE);
 
-        ObjectWriteResponse response = minioUtils.put(bucketName, objectName,
+        String response = ossService.pubObject(bucketName, objectName,
                 bufferedInputStream, size, contentType);
 
-        if (response.object().isEmpty()) {
+        if (response.isEmpty()) {
             throw new ApiException(-1, "存储缩略图失败!");
         }
 
@@ -1100,10 +1098,10 @@ public class UserServiceImpl implements UserService {
         // 存储压缩图片
         InputStream thumbnailStream = new ByteArrayInputStream(outputStream.toByteArray());
         String thumbnailObjectName = String.format("thumbnail_%s", objectName);
-        ObjectWriteResponse responseThumbnail = minioUtils.put(bucketName, thumbnailObjectName,
-                thumbnailStream, outputStream.size(), contentType);
+        String responseThumbnail = ossService.pubObject(bucketName, thumbnailObjectName,
+                thumbnailStream, (long) outputStream.size(), contentType);
 
-        if (responseThumbnail.object().isEmpty()) {
+        if (responseThumbnail.isEmpty()) {
             throw new ApiException(-1, "存储缩略图失败!");
         }
 
