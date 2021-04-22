@@ -11,8 +11,6 @@ import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.mq.GreetDelayedBinding;
 import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.*;
-import com.fmisser.gtc.social.utils.MinioUtils;
-import io.minio.ObjectWriteResponse;
 import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.data.domain.Page;
@@ -475,7 +473,7 @@ public class UserServiceImpl implements UserService {
                         new Date().getTime(),
                         randomUUID,
                         suffixName);
-                String response = ossService.pubObject(ossConfProp.getUserProfileBucket(), objectName,
+                String response = ossService.putObject(ossConfProp.getUserProfileBucket(), objectName,
                         inputStream, file.getSize(), "audio/mpeg");
 
                 if (response.isEmpty()) {
@@ -762,7 +760,7 @@ public class UserServiceImpl implements UserService {
                     randomUUID,
                     suffixName);
 
-            String response = ossService.pubObject(ossConfProp.getUserProfileBucket(), objectName,
+            String response = ossService.putObject(ossConfProp.getUserProfileBucket(), objectName,
                     inputStream, file.getSize(), "video/mp4");
 
             user.setVideo(response);
@@ -1066,7 +1064,7 @@ public class UserServiceImpl implements UserService {
         // mark top
         bufferedInputStream.mark(Integer.MAX_VALUE);
 
-        String response = ossService.pubObject(bucketName, objectName,
+        String response = ossService.putObject(bucketName, objectName,
                 bufferedInputStream, size, contentType);
 
         if (response.isEmpty()) {
@@ -1098,7 +1096,7 @@ public class UserServiceImpl implements UserService {
         // 存储压缩图片
         InputStream thumbnailStream = new ByteArrayInputStream(outputStream.toByteArray());
         String thumbnailObjectName = String.format("thumbnail_%s", objectName);
-        String responseThumbnail = ossService.pubObject(bucketName, thumbnailObjectName,
+        String responseThumbnail = ossService.putObject(bucketName, thumbnailObjectName,
                 thumbnailStream, (long) outputStream.size(), contentType);
 
         if (responseThumbnail.isEmpty()) {

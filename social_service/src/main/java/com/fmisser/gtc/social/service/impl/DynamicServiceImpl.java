@@ -18,7 +18,6 @@ import com.fmisser.gtc.social.repository.DynamicRepository;
 import com.fmisser.gtc.social.service.DynamicService;
 import com.fmisser.gtc.social.service.ImCallbackService;
 import com.fmisser.gtc.social.service.SysConfigService;
-import io.minio.ObjectWriteResponse;
 import lombok.SneakyThrows;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
@@ -155,7 +154,7 @@ public class DynamicServiceImpl implements DynamicService {
                         randomUUID,
                         suffixName);
 
-                String response = ossService.pubObject(ossConfProp.getUserDynamicBucket(), objectName,
+                String response = ossService.putObject(ossConfProp.getUserDynamicBucket(), objectName,
                         inputStream, file.getSize(), "video/mp4");
 
                 dynamic.setVideo(response);

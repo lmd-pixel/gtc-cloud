@@ -13,11 +13,11 @@ public interface OssService {
     String deleteBucket(String name) throws RuntimeException;
     Boolean isBucketExist(String name) throws RuntimeException;
     <T> List<T> getAllBucket() throws RuntimeException;
-    String pubObject(String bucketName,
+    String putObject(String bucketName,
                      String objectName,
                      String fileName,
                      String contentType) throws RuntimeException;
-    String pubObject(String bucketName,
+    String putObject(String bucketName,
                      String objectName,
                      InputStream inputStream,
                      Long size,

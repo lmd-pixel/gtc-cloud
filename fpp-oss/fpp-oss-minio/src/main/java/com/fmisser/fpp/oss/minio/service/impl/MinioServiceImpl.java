@@ -60,7 +60,7 @@ public class MinioServiceImpl implements MinioService {
 
     @SneakyThrows
     @Override
-    public String pubObject(String bucketName,
+    public String putObject(String bucketName,
                             String objectName,
                             String fileName,
                             String contentType) throws RuntimeException {
@@ -76,7 +76,7 @@ public class MinioServiceImpl implements MinioService {
 
     @SneakyThrows
     @Override
-    public String pubObject(String bucketName,
+    public String putObject(String bucketName,
                             String objectName,
                             InputStream inputStream,
                             Long size,
