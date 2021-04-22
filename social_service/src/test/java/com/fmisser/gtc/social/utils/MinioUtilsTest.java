@@ -52,6 +52,12 @@ class MinioUtilsTest {
     }
 
     @Test
+    void getBucketPolicy() {
+        String bucketPolicy = minioUtils.getBucketPolicy("system-config");
+        System.out.println(bucketPolicy);
+    }
+
+    @Test
     void upload() {
     }
 

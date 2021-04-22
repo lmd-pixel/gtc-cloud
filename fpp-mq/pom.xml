@@ -7,9 +7,6 @@
     <groupId>com.fmisser.fpp</groupId>
     <artifactId>fpp-mq</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <modules>
-        <module>fpp-mq-rabbit</module>
-    </modules>
     <packaging>pom</packaging>
 
     <parent>
@@ -18,7 +15,6 @@
         <version>2.3.4.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-
 
     <properties>
         <java.version>1.8</java.version>
@@ -37,5 +33,8 @@
         </dependencies>
     </dependencyManagement>
 
+    <modules>
+        <module>fpp-mq-rabbit</module>
+    </modules>
 
 </project>

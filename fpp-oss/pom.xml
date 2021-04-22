@@ -16,7 +16,6 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-
     <properties>
         <java.version>1.8</java.version>
         <spring-cloud.version>Hoxton.SR8</spring-cloud.version>
@@ -33,7 +32,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
 
     <modules>
         <module>fpp-oss-abstract-layer</module>

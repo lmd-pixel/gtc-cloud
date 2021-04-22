@@ -1,38 +1,22 @@
-package com.fmisser.fpp.oss.minio.service;
+package com.fmisser.fpp.oss.minio.service.impl;
 
-import com.fmisser.fpp.oss.abs.service.OssService;
-import com.fmisser.fpp.oss.minio.prop.MinioProp;
+import com.fmisser.fpp.oss.minio.service.MinioService;
 import io.minio.*;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.InputStream;
 import java.util.List;
 
 @Service
-public class MinioOssService implements OssService {
-
-    private static MinioClient minioClient;
-    private final MinioProp minioProp;
-
-    public MinioOssService(MinioProp minioProp) {
-        this.minioProp = minioProp;
-    }
-
-    @PostConstruct
-    public void init() {
-        minioClient = MinioClient.builder()
-                .endpoint(minioProp.getMinioUrl())
-                .credentials(minioProp.getMinioAccessKey(), minioProp.getMinioSecretKey())
-                .build();
-    }
+@AllArgsConstructor
+public class MinioServiceImpl implements MinioService {
+    private final MinioClient minioClient;
 
     @Override
     public String getName() throws RuntimeException {
-//        return "minio";
-        return minioProp.getMinioVisitUrl() + minioProp.getGiftPrefix();
+        return "oss-minio";
     }
 
     @SneakyThrows

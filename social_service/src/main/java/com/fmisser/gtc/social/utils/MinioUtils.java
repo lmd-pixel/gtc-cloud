@@ -13,10 +13,10 @@ import java.util.List;
 
 /**
  * Minio 简单封装
+ * @deprecated 使用 minio module 提供的服务
  */
 
-// TODO: 2021/1/21 改成service
-
+@Deprecated
 @Component
 public class MinioUtils {
 
@@ -49,6 +49,14 @@ public class MinioUtils {
             minioClient.makeBucket(MakeBucketArgs.builder()
                     .bucket(bucketName).build());
         }
+    }
+
+    @SneakyThrows(Exception.class)
+    public String getBucketPolicy(String bucketName) {
+        GetBucketPolicyArgs args = GetBucketPolicyArgs.builder()
+                .bucket(bucketName)
+                .build();
+        return minioClient.getBucketPolicy(args);
     }
 
     @SneakyThrows(Exception.class)
