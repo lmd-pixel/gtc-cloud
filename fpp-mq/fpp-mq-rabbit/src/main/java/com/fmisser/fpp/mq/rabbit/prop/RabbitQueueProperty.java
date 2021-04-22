@@ -1,21 +1,14 @@
 package com.fmisser.fpp.mq.rabbit.prop;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import java.util.Map;
 
 /**
  * @author fmisser
  * @create 2021-04-10 下午2:38
- * @description
+ * @description 队列配置
  */
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class RabbitQueueProperty {
     private String name;
     private boolean durable = true;

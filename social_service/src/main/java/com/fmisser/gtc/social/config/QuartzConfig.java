@@ -1,29 +1,35 @@
-//package com.fmisser.gtc.social.config;
-//
-//import org.springframework.beans.factory.annotation.Qualifier;
-//import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
-//import org.springframework.boot.autoconfigure.quartz.QuartzDataSource;
-//import org.springframework.boot.autoconfigure.quartz.QuartzProperties;
-//import org.springframework.boot.autoconfigure.quartz.SchedulerFactoryBeanCustomizer;
-//import org.springframework.boot.context.properties.ConfigurationProperties;
-//import org.springframework.boot.jdbc.DataSourceBuilder;
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//import org.springframework.context.annotation.Primary;
-//import org.springframework.integration.support.PropertiesBuilder;
-//import org.springframework.scheduling.quartz.SchedulerFactoryBean;
-//
-//import javax.sql.DataSource;
-//import java.util.Properties;
-//
-///**
-// * @author fmisser
-// * @create 2021-04-17 下午5:56
-// * @description
-// */
+package com.fmisser.gtc.social.config;
+
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.autoconfigure.quartz.QuartzDataSource;
+import org.springframework.boot.autoconfigure.quartz.QuartzProperties;
+import org.springframework.boot.autoconfigure.quartz.SchedulerFactoryBeanCustomizer;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.scheduling.quartz.SchedulerFactoryBean;
+
+import javax.sql.DataSource;
+import java.util.Properties;
+
+/**
+ * @author fmisser
+ * @create 2021-04-17 下午5:56
+ * @description
+ * @deprecated 通过单独的quartz 模块处理
+ */
+@Deprecated
 //@Configuration
-//public class QuartzConfig {
+public class QuartzConfig {
+
+//    private final QuartzDataSourceProperty quartzDataSourceProperty;
 //
+//    public QuartzConfig(QuartzDataSourceProperty quartzDataSourceProperty) {
+//        this.quartzDataSourceProperty = quartzDataSourceProperty;
+//    }
+
+
 //    @Bean
 //    @Primary
 //    public DataSource dataSource() {
@@ -36,7 +42,7 @@
 //    public DataSourceProperties primaryDBProperties() {
 //        return new DataSourceProperties();
 //    }
-//
+////
 //    @Bean
 //    @QuartzDataSource
 //    @ConfigurationProperties("spring.datasource.quartz")
@@ -49,7 +55,7 @@
 //    public DataSource quartzDataSource() {
 //        return schedulerDBProperties().initializeDataSourceBuilder().build();
 //    }
-//
+
 //    @Bean
 //    public SchedulerFactoryBeanCustomizer schedulerFactoryBeanCustomizer(
 //            QuartzProperties quartzProperties) {
@@ -59,7 +65,12 @@
 //                Properties properties = new Properties();
 //                properties.putAll(quartzProperties.getProperties());
 //                schedulerFactoryBean.setQuartzProperties(properties);
+//
+//                if (quartzDataSourceProperty.getIsolate()) {
+//                    DataSource dataSource = quartzDataSourceProperty.getDatasource().initializeDataSourceBuilder().build();
+//                    schedulerFactoryBean.setDataSource(dataSource);
+//                }
 //            }
 //        };
 //    }
-//}
+}

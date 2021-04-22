@@ -4,6 +4,7 @@ import com.fmisser.fpp.mq.rabbit.prop.RabbitBindingProperty;
 import com.fmisser.fpp.mq.rabbit.prop.RabbitExtensionProperty;
 import com.fmisser.fpp.mq.rabbit.prop.RabbitQueueArgsProperty;
 import com.fmisser.fpp.mq.rabbit.prop.RabbitQueueProperty;
+import lombok.AllArgsConstructor;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -19,20 +20,16 @@ import java.util.Objects;
  * @author fmisser
  * @create 2021-04-10 下午2:57
  * @description rabbit 配置读取
- * @deprecated 建议直接用注解方式定义exchange queue bindings
+ * @deprecated 建议直接用@Bean方式定义交换机 队列 绑定关系，
+ * 因为这里只做了部分属性设置，不全面
  */
 
 @Deprecated
 @Configuration
+@AllArgsConstructor
 public class RabbitConfig {
     private final RabbitExtensionProperty rabbitExtensionProperty;
     private final RabbitTemplate rabbitTemplate;
-
-    public RabbitConfig(RabbitExtensionProperty rabbitExtensionProperty,
-                        RabbitTemplate rabbitTemplate) {
-        this.rabbitExtensionProperty = rabbitExtensionProperty;
-        this.rabbitTemplate = rabbitTemplate;
-    }
 
     @Bean
     public RabbitAdmin rabbitAdmin() {
