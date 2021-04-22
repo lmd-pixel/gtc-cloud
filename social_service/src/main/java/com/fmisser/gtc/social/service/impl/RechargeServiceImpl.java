@@ -100,13 +100,58 @@ public class RechargeServiceImpl implements RechargeService {
     public String completeIapOrder(User user, String orderNumber, int env, String receipt,
                                    String iapProductId, String transactionId, Date purchaseDate) throws ApiException {
 
-        Recharge recharge = rechargeRepository.findByOrderNumber(orderNumber);
-        if (!recharge.getUserId().equals(user.getId())) {
-            throw new ApiException(-1, "非法操作");
-        }
+        Recharge recharge;
 
-        if (recharge.getStatus() != 12) {
-            throw new ApiException(-1, "订单状态不可操作");
+        // 检测票据是否已完成交易
+        IapReceipt iapReceipt = iapReceiptRepository.findByTransactionId(transactionId);
+        if (Objects.nonNull(iapReceipt)) {
+
+            Optional<Recharge> rechargeOptional = rechargeRepository.findById(iapReceipt.getRechargeId());
+            if (!rechargeOptional.isPresent()) {
+                throw new ApiException(-1, "无订单信息");
+            }
+
+            recharge = rechargeOptional.get();
+
+            if (!recharge.getUserId().equals(user.getId())) {
+                throw new ApiException(-1, "非法操作");
+            }
+
+            if (recharge.getStatus() != 12) {
+                throw new ApiException(-1, "订单状态不可操作");
+            }
+
+            // 校验用户
+            if (!user.getId().equals(iapReceipt.getUserId())) {
+                throw new ApiException(-1, "非法操作");
+            }
+
+            // 检验票据状态
+            if (iapReceipt.getStatus() == 1) {
+                throw new ApiException(-1, "该交易已完成!");
+            }
+        } else {
+            if (Objects.isNull(orderNumber)) {
+                throw new ApiException(-1, "无订单信息");
+            }
+
+            recharge = rechargeRepository.findByOrderNumber(orderNumber);
+            if (!recharge.getUserId().equals(user.getId())) {
+                throw new ApiException(-1, "非法操作");
+            }
+
+            if (recharge.getStatus() != 12) {
+                throw new ApiException(-1, "订单状态不可操作");
+            }
+
+            iapReceipt = new IapReceipt();
+            iapReceipt.setRechargeId(recharge.getId());
+            iapReceipt.setUserId(user.getId());
+            iapReceipt.setReceipt(receipt);
+            iapReceipt.setEnv(env);
+            iapReceipt.setProductId(iapProductId);
+            iapReceipt.setTransactionId(transactionId);
+            iapReceipt.setPurchaseDate(purchaseDate);
         }
 
         // 校验产品是否一致
@@ -145,34 +190,6 @@ public class RechargeServiceImpl implements RechargeService {
 
         if (!valid) {
             throw new ApiException(-1, "充值数据异常");
-        }
-
-        // 检测票据是否已完成交易
-        IapReceipt iapReceipt = iapReceiptRepository.findByTransactionId(transactionId);
-        if (Objects.nonNull(iapReceipt)) {
-            // 校验用户
-            if (!user.getId().equals(iapReceipt.getUserId())) {
-                throw new ApiException(-1, "非法操作");
-            }
-
-            // 校验订单
-            if (!iapReceipt.getRechargeId().equals(recharge.getId())) {
-                throw new ApiException(-1, "非法操作");
-            }
-
-            // 检验票据状态
-            if (iapReceipt.getStatus() == 1) {
-                throw new ApiException(-1, "该交易已完成!");
-            }
-        } else {
-            iapReceipt = new IapReceipt();
-            iapReceipt.setRechargeId(recharge.getId());
-            iapReceipt.setUserId(user.getId());
-            iapReceipt.setReceipt(receipt);
-            iapReceipt.setEnv(env);
-            iapReceipt.setProductId(iapProductId);
-            iapReceipt.setTransactionId(transactionId);
-            iapReceipt.setPurchaseDate(purchaseDate);
         }
 
         // 加钱

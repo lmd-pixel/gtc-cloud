@@ -59,13 +59,12 @@ public class RechargeController {
     }
 
     @PostMapping(value = "/complete-order-iap")
-    public ApiResp<String> completeOrderIap(@RequestParam("productId") String orderNumber,
+    public ApiResp<String> completeOrderIap(@RequestParam(value = "orderNumber", required = false) String orderNumber,
                                             @RequestParam(value = "env", required = false, defaultValue = "1") int env,
                                             @RequestParam("receipt") String receipt,
                                             @RequestParam("productId") String productId,
                                             @RequestParam("transactionId") String transactionId,
-                                            @RequestParam("purchaseDate") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date purchaseDate
-                                            ) {
+                                            @RequestParam("purchaseDate") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date purchaseDate) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
