@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.controller;
 
+import com.fmisser.gtc.base.dto.social.ProfitConsumeDetail;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.Asset;
@@ -315,7 +316,7 @@ public class UserController {
 
     @ApiOperation(value = "上传设备信息")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
-    @GetMapping("upload-device-info")
+    @PostMapping("upload-device-info")
     ApiResp<Integer> uploadDeviceInfo(@RequestParam("deviceType") Integer deviceType,
                                       @RequestParam(value = "deviceName", required = false) String deviceName,
                                       @RequestParam(value = "deviceCategory", required = false) String deviceCategory,
@@ -330,4 +331,10 @@ public class UserController {
         return ApiResp.succeed(ret);
     }
 
+    @ApiOperation(value = "获取用户的收益消费列表")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @GetMapping("profit-consume-list")
+    ApiResp<ProfitConsumeDetail> getProfitConsumeList() {
+        return null;
+    }
 }

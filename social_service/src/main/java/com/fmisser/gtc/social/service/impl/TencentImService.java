@@ -503,9 +503,6 @@ public class TencentImService implements ImService {
     @Transactional
     @Override
     public int acceptGen(User user, Long roomId) throws ApiException {
-        // 取消超时
-        callCalcJobScheduler.stopCallTimeout(roomId);
-
         Call call = callRepository.findByRoomId(roomId);
         if (call.getIsFinished() == 1) {
             throw new ApiException(-1, "通话已结束");
@@ -523,7 +520,63 @@ public class TencentImService implements ImService {
         activeService.acceptCall(user, roomId);
 
         // 设定开始时间
-        call.setStartTime(new Date());
+        call.setAcceptTime(new Date());
+        callRepository.save(call);
+
+        Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
+        if (!optionalUserFrom.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userFrom = optionalUserFrom.get();
+
+        Optional<User> optionalUserTo = userRepository.findById(call.getUserIdTo());
+        if (!optionalUserTo.isPresent()) {
+            throw new ApiException(-1, "用户不存在");
+        }
+        User userTo = optionalUserTo.get();
+
+        if (call.getCallMode() == 0) {
+            // 由用户发起通话
+
+            // 判断当前用户是否在通话中
+
+            // 发送自定义消息
+            sendCallMsg(userTo, userFrom, 5, roomId, call.getType());
+
+        } else if (call.getCallMode() == 1) {
+            // 由主播发起通话
+
+            // 判断当前用户是否在通话中
+
+            // 发送自定义消息
+            sendCallMsg(userFrom, userTo, 5, roomId, call.getType());
+        }
+
+        return 1;
+    }
+
+    @SneakyThrows
+    @Transactional
+    @Override
+    public int handsGen(User user, Long roomId) throws ApiException {
+        // 取消超时
+        callCalcJobScheduler.stopCallTimeout(roomId);
+
+        Call call = callRepository.findByRoomId(roomId);
+        if (call.getIsFinished() == 1) {
+            throw new ApiException(-1, "通话已结束");
+        }
+
+        if (Objects.nonNull(call.getStartTime())) {
+            throw new ApiException(-1, "通话已经开始");
+        }
+
+        if (activeService.isCallBusy(user)) {
+            throw new ApiException(-1, "您当前正忙，无法接听");
+        }
+
+        // 设定开始时间
+        call.setStartTime(call.getAcceptTime());
         callRepository.save(call);
 
         Optional<User> optionalUserFrom = userRepository.findById(call.getUserIdFrom());
@@ -606,7 +659,7 @@ public class TencentImService implements ImService {
             // 判断当前用户是否在通话中
 
             // 发送自定义消息
-            sendCallMsg(userTo, userFrom, 5, roomId, call.getType());
+            sendCallMsg(userFrom, userTo, 6, roomId, call.getType());
 
         } else if (call.getCallMode() == 1) {
             // 由主播发起通话
@@ -614,7 +667,7 @@ public class TencentImService implements ImService {
             // 判断当前用户是否在通话中
 
             // 发送自定义消息
-            sendCallMsg(userFrom, userTo, 5, roomId, call.getType());
+            sendCallMsg(userTo, userFrom, 6, roomId, call.getType());
         }
 
         // 启动计费
@@ -1354,6 +1407,10 @@ public class TencentImService implements ImService {
             String formatString = String.format("accept-call,%d,%d", roomId, roomType);
             msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
                     "已接听", formatString, true);
+        } else if (mode == 6) {
+            String formatString = String.format("hands-call,%d,%d", roomId, roomType);
+            msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
+                    "已确认", formatString, true);
         }
 
         if (msgCustom != null) {

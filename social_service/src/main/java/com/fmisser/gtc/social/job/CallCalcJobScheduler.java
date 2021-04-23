@@ -67,7 +67,7 @@ public class CallCalcJobScheduler {
         Trigger heartbeatTrigger = newTrigger()
                 .withIdentity(triggerKey(roomId.toString(), "heartbeatGroup"))
                 .withSchedule(simpleSchedule()
-                        .withIntervalInSeconds(15)
+                        .withIntervalInSeconds(10)
                         .repeatForever())
                 .startNow()
                 .build();

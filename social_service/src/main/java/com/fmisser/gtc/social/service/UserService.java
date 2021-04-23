@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.service;
 
+import com.fmisser.gtc.base.dto.social.ProfitConsumeDetail;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.User;
 import org.springframework.web.multipart.MultipartFile;
@@ -62,4 +63,7 @@ public interface UserService {
 
     // 通话前检查
     Integer callPreCheck(User fromUser, User toUser, int type) throws ApiException;
+
+    // 获取收益消费列表
+    List<ProfitConsumeDetail> getProfitConsumeList(User user, int pageIndex, int pageSize) throws ApiException;
 }

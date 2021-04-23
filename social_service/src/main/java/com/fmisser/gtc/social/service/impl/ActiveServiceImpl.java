@@ -58,6 +58,13 @@ public class ActiveServiceImpl implements ActiveService {
     }
 
     @Override
+    public int handsCall(User user, Long roomId) throws ApiException {
+        Active active = prepareCallActive(user, roomId, 107);
+        activeRepository.save(active);
+        return 1;
+    }
+
+    @Override
     public int endCall(User user, Long roomId) throws ApiException {
         Active active = prepareCallActive(user, roomId, 106);
         activeRepository.save(active);
@@ -89,13 +96,14 @@ public class ActiveServiceImpl implements ActiveService {
 
     @Override
     public boolean isUserCalling(Long userId, Long roomId) throws ApiException {
-        Active active = activeRepository.findTopByUserIdAndStatusAndRoomId(userId, 201, roomId);
+        Active active = activeRepository
+                .findTopByUserIdAndStatusAndRoomIdOrderByActiveTimeDesc(userId, 201, roomId);
         if (Objects.nonNull(active)) {
             //
             Date now = new Date();
             Date lastActiveTime = active.getActiveTime();
             long delta = now.getTime() - lastActiveTime.getTime();
-            if (delta / 1000 > 15) {
+            if (delta / 1000 > 10) {
                 // 超过15秒没收到更新数据 则认为不在房间了
                 return false;
             }

@@ -58,6 +58,7 @@ public class Active {
      * 104: 拒绝通话邀请
      * 105: 接受通话邀请
      * 106: 结束通话邀请
+     * 107: 确认通话
      * 201: 通话更新
      */
     @Column(nullable = false)

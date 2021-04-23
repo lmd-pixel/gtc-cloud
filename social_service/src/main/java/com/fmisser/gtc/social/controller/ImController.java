@@ -143,6 +143,19 @@ public class ImController {
         return ApiResp.succeed(ret);
     }
 
+    @PostMapping("/hands-gen")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    public ApiResp<Integer> handsGen(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam("roomId") Long roomId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        int ret = imService.handsGen(userDo, roomId);
+        return ApiResp.succeed(ret);
+    }
+
     @PostMapping("/invite-gen")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     public ApiResp<Integer> inviteGen(

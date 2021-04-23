@@ -2,6 +2,7 @@ package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.fpp.oss.abs.service.OssService;
 import com.fmisser.gtc.base.dto.im.ImQueryStateResp;
+import com.fmisser.gtc.base.dto.social.ProfitConsumeDetail;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.i18n.SystemTips;
 import com.fmisser.gtc.base.prop.OssConfProp;
@@ -11,6 +12,7 @@ import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.mq.GreetDelayedBinding;
 import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.*;
+import lombok.Data;
 import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.data.domain.Page;
@@ -1048,6 +1050,19 @@ public class UserServiceImpl implements UserService {
         } else {
             // 当前自己余额不足，无法发起通话
             return 0;
+        }
+    }
+
+    @Override
+    public List<ProfitConsumeDetail> getProfitConsumeList(User user, int pageIndex, int pageSize) throws ApiException {
+        Date now = new Date();
+        long limit = now.getTime() - 15 * 24 * 3600 * 1000;
+        Date limitDay = new Date(limit);
+        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+        if (user.getIdentity() == 1) {
+            return userRepository.getAnchorProfitList(user.getId(), limitDay, pageable).getContent();
+        } else {
+            return userRepository.getUserConsumeList(user.getId(), limitDay, pageable).getContent();
         }
     }
 

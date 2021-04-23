@@ -40,6 +40,9 @@ public interface ImService {
     // 接受通话
     int acceptGen(User user, Long roomId) throws ApiException;
 
+    // 握手通话，真正开始通话
+    int handsGen(User user, Long roomId) throws ApiException;
+
     // 邀请通话
     int inviteGen(User user, Long roomId) throws ApiException;
 
@@ -80,7 +83,7 @@ public interface ImService {
 
     int sendGiftMsg(User userFrom, User userTo, Gift gift, int count) throws ApiException;
 
-    // mode 0 发起通话 1：取消通话 2：拒绝通话 3: 超时 4: 结束通话（已接通）
+    // mode 0 发起通话 1：取消通话 2：拒绝通话 3: 超时 4: 结束通话（已接通）5: 接受通话 6：确认通话
     int sendCallMsg(User userFrom, User userTo, int mode, long roomId, int roomType) throws ApiException;
 
     int sendAfterSendMsg(User userFrom, User userTo, int tag, int coin, int card) throws ApiException;

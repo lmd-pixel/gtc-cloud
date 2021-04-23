@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.repository;
 
 import com.fmisser.gtc.base.dto.social.AnchorDto;
+import com.fmisser.gtc.base.dto.social.ProfitConsumeDetail;
 import com.fmisser.gtc.base.dto.social.ConsumerDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcConsumeDto;
 import com.fmisser.gtc.social.domain.User;
@@ -10,7 +11,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -485,4 +485,59 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 获取随机主播
     @Query(value = "SELECT * FROM t_user tu WHERE tu.identity = 1 ORDER BY RAND() LIMIT ?1", nativeQuery = true)
     List<User> findRandAnchorList(int limit);
+
+
+    @Query(value = "SELECT v_profit.type, v_profit.val, v_profit.time FROM\n" +
+            "(\n" +
+            "    SELECT 1 AS type, SUM(tcb.profit_coin) AS val, MAX(tcb.creat_time) AS time\n" +
+            "    FROM t_call_bill tcb\n" +
+            "    WHERE tcb.user_id_to = ?1 AND tcb.type = 0 AND tcb.creat_time > ?2\n" +
+            "    GROUP BY tcb.call_id\n" +
+            "    UNION ALL\n" +
+            "    SELECT 2 AS type, SUM(tcb.profit_coin) AS val, MAX(tcb.creat_time) AS time\n" +
+            "    FROM t_call_bill tcb\n" +
+            "    WHERE tcb.user_id_to = ?1 AND tcb.type = 1 AND tcb.creat_time > ?2\n" +
+            "    GROUP BY tcb.call_id\n" +
+            "    UNION ALL\n" +
+            "    SELECT 3 AS type, 1.00 AS val, MAX(tcb.creat_time) AS time\n" +
+            "    FROM t_call_bill tcb\n" +
+            "    WHERE tcb.user_id_to = ?1 AND tcb.type = 1 AND tcb.source > 0 AND tcb.creat_time > ?2\n" +
+            "    GROUP BY tcb.call_id\n" +
+            "    UNION ALL\n" +
+            "    SELECT 4 AS type, tgb.profit_coin AS val, tgb.creat_time AS time\n" +
+            "    FROM t_gift_bill tgb\n" +
+            "    WHERE tgb.user_id_to = ?1 AND tgb.creat_time > ?2\n" +
+            "    UNION ALL\n" +
+            "    SELECT 8 AS type, tgb2.origin_coin AS val, tgb2.creat_time AS time FROM t_gift_bill tgb2\n" +
+            "    WHERE tgb2.user_id_from = ?1 AND tgb2.creat_time > ?2\n" +
+            "    ) v_profit\n" +
+            "ORDER BY v_profit.time DESC;", nativeQuery = true)
+    Page<ProfitConsumeDetail> getAnchorProfitList(Long userId, Date date, Pageable pageable);
+
+    @Query(value = "SELECT v_consume.type, v_consume.val, v_consume.time FROM\n" +
+            "    (\n" +
+            "        SELECT 5 AS type, SUM(tcb.origin_coin) AS val, MAX(tcb.creat_time) AS time\n" +
+            "        FROM t_call_bill tcb\n" +
+            "        WHERE tcb.user_id_from = ?1 AND tcb.type = 0 AND tcb.creat_time > ?2\n" +
+            "        GROUP BY tcb.call_id\n" +
+            "        UNION ALL\n" +
+            "        SELECT 6 AS type, SUM(tcb.origin_coin) AS val, MAX(tcb.creat_time) AS time\n" +
+            "        FROM t_call_bill tcb\n" +
+            "        WHERE tcb.user_id_from = ?1 AND tcb.type = 1 AND tcb.creat_time > ?2\n" +
+            "        GROUP BY tcb.call_id\n" +
+            "        UNION ALL\n" +
+            "        SELECT 7 AS type, 1.00 AS val, MAX(tcb.creat_time) AS time\n" +
+            "        FROM t_call_bill tcb\n" +
+            "        WHERE tcb.user_id_from = ?1 AND tcb.type = 1 AND tcb.source > 0 AND tcb.creat_time > ?2\n" +
+            "        GROUP BY tcb.call_id\n" +
+            "        UNION ALL\n" +
+            "        SELECT 4 AS type, tgb.profit_coin AS val, tgb.creat_time AS time\n" +
+            "        FROM t_gift_bill tgb\n" +
+            "        WHERE tgb.user_id_to = ?1 AND tgb.creat_time > ?2\n" +
+            "        UNION ALL\n" +
+            "        SELECT 8 AS type, tgb2.origin_coin AS val, tgb2.creat_time AS time FROM t_gift_bill tgb2\n" +
+            "        WHERE tgb2.user_id_from = ?1 AND tgb2.creat_time > ?2\n" +
+            "    ) v_consume\n" +
+            "ORDER BY v_consume.time DESC", nativeQuery = true)
+    Page<ProfitConsumeDetail> getUserConsumeList(Long userId, Date date, Pageable pageable);
 }

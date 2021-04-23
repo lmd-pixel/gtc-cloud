@@ -24,5 +24,5 @@ public interface ActiveRepository extends JpaRepository<Active, Long> {
 
     Active findTopByUserIdAndType(Long userId, int type);
 
-    Active findTopByUserIdAndStatusAndRoomId(Long userId, int status, Long roomId);
+    Active findTopByUserIdAndStatusAndRoomIdOrderByActiveTimeDesc(Long userId, int status, Long roomId);
 }

@@ -11,6 +11,7 @@ import com.fmisser.gtc.social.repository.IapReceiptRepository;
 import com.fmisser.gtc.social.repository.RechargeRepository;
 import com.fmisser.gtc.social.service.*;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
+@Slf4j
 @Service
 public class RechargeServiceImpl implements RechargeService {
 
@@ -100,6 +102,9 @@ public class RechargeServiceImpl implements RechargeService {
     public String completeIapOrder(User user, String orderNumber, int env, String receipt,
                                    String iapProductId, String transactionId, Date purchaseDate) throws ApiException {
 
+        log.info("[info][Recharge Service] request complete iap order, user: {} orderNumber: {} and iapProductId: {} and transactionId: {}" +
+                " and receipt: {}",  user.getDigitId(), orderNumber, iapProductId, transactionId, receipt);
+
         Recharge recharge;
 
         // 检测票据是否已完成交易
@@ -108,39 +113,55 @@ public class RechargeServiceImpl implements RechargeService {
 
             Optional<Recharge> rechargeOptional = rechargeRepository.findById(iapReceipt.getRechargeId());
             if (!rechargeOptional.isPresent()) {
+                log.error("[error][Recharge Service] no order info , user: {} orderNumber: {} and iapProductId: {} and transactionId: {}" +
+                        " and receipt: {} ", user.getDigitId(), orderNumber, iapProductId, transactionId, receipt);
                 throw new ApiException(-1, "无订单信息");
             }
 
             recharge = rechargeOptional.get();
 
             if (!recharge.getUserId().equals(user.getId())) {
+                log.error("[error][Recharge Service] user info not match , user: {} orderNumber: {} and iapProductId: {} and transactionId: {}" +
+                        " and receipt: {} ", user.getDigitId(), orderNumber, iapProductId, transactionId, receipt);
                 throw new ApiException(-1, "非法操作");
             }
 
             if (recharge.getStatus() != 12) {
+                log.error("[error][Recharge Service] order status can't operate , user: {} orderNumber: {} and iapProductId: {} and transactionId: {}" +
+                        " and receipt: {} ", user.getDigitId(), orderNumber, iapProductId, transactionId, receipt);
                 throw new ApiException(-1, "订单状态不可操作");
             }
 
             // 校验用户
             if (!user.getId().equals(iapReceipt.getUserId())) {
+                log.error("[error][Recharge Service] user info not match 2, user: {} orderNumber: {} and iapProductId: {} and transactionId: {}" +
+                        " and receipt: {} ", user.getDigitId(), orderNumber, iapProductId, transactionId, receipt);
                 throw new ApiException(-1, "非法操作");
             }
 
             // 检验票据状态
             if (iapReceipt.getStatus() == 1) {
+                log.error("[error][Recharge Service] order status complete , user: {} orderNumber: {} and iapProductId: {} and transactionId: {}" +
+                        " and receipt: {} ", user.getDigitId(), orderNumber, iapProductId, transactionId, receipt);
                 throw new ApiException(-1, "该交易已完成!");
             }
         } else {
             if (Objects.isNull(orderNumber)) {
+                log.error("[error][Recharge Service] no order info , user: {} orderNumber: {} and iapProductId: {} and transactionId: {}" +
+                        " and receipt: {} ", user.getDigitId(), orderNumber, iapProductId, transactionId, receipt);
                 throw new ApiException(-1, "无订单信息");
             }
 
             recharge = rechargeRepository.findByOrderNumber(orderNumber);
             if (!recharge.getUserId().equals(user.getId())) {
+                log.error("[error][Recharge Service] user info not match , user: {} orderNumber: {} and iapProductId: {} and transactionId: {}" +
+                        " and receipt: {} ", user.getDigitId(), orderNumber, iapProductId, transactionId, receipt);
                 throw new ApiException(-1, "非法操作");
             }
 
             if (recharge.getStatus() != 12) {
+                log.error("[error][Recharge Service] order status can't operate 2, user: {} orderNumber: {} and iapProductId: {} and transactionId: {}" +
+                        " and receipt: {} ", user.getDigitId(), orderNumber, iapProductId, transactionId, receipt);
                 throw new ApiException(-1, "订单状态不可操作");
             }
 
@@ -157,6 +178,8 @@ public class RechargeServiceImpl implements RechargeService {
         // 校验产品是否一致
         Product product = productService.getProductByName(iapProductId);
         if (Objects.isNull(product) || !product.getId().equals(recharge.getProductId())) {
+            log.error("[error][Recharge Service] product not match , user: {} orderNumber: {} and iapProductId: {} and transactionId: {}" +
+                    " and receipt: {} ", user.getDigitId(), orderNumber, iapProductId, transactionId, receipt);
             throw new ApiException(-1, "非法操作");
         }
 
@@ -168,11 +191,15 @@ public class RechargeServiceImpl implements RechargeService {
         try {
             iapReceiptDto = iapVerifyFeign.verifyReceipt(new URI(url), iapReceiptVerifyDto);
         } catch (Exception e) {
+            log.error("[error][Recharge Service] receipt verify request failed , user: {} orderNumber: {} and iapProductId: {} and transactionId: {}" +
+                    " and receipt: {} ", user.getDigitId(), orderNumber, iapProductId, transactionId, receipt);
             throw new ApiException(-1, "票据校验请求失败");
         }
 
         // 处理用户充值逻辑
         if (iapReceiptDto.getStatus() != 0) {
+            log.error("[error][Recharge Service] receipt verify failed , user: {} orderNumber: {} and iapProductId: {} and transactionId: {}" +
+                    " and receipt: {} ", user.getDigitId(), orderNumber, iapProductId, transactionId, receipt);
             throw new ApiException(-1,"订单票据校验失败");
         }
 
@@ -189,6 +216,8 @@ public class RechargeServiceImpl implements RechargeService {
         }
 
         if (!valid) {
+            log.error("[error][Recharge Service] no valid recharge info , user: {} orderNumber: {} and iapProductId: {} and transactionId: {}" +
+                    " and receipt: {} ", user.getDigitId(), orderNumber, iapProductId, transactionId, receipt);
             throw new ApiException(-1, "充值数据异常");
         }
 
@@ -197,6 +226,8 @@ public class RechargeServiceImpl implements RechargeService {
         int ret = assetRepository.
                 addCoin(user.getId(), addCoin);
         if (ret != 1) {
+            log.error("[error][Recharge Service] update user assets failed , user: {} orderNumber: {} and iapProductId: {} and transactionId: {}" +
+                    " and receipt: {} ", user.getDigitId(), orderNumber, iapProductId, transactionId, receipt);
             throw new ApiException(-1, "更新用户金币出错!");
         }
         Asset asset = assetRepository.findByUserId(iapReceipt.getUserId());
