@@ -1,2 +1,5 @@
-com/fmisser/fpp/oss/minio/prop/MinioProp.class
-com/fmisser/fpp/oss/minio/service/MinioOssService.class
+META-INF/spring-configuration-metadata.json
+com/fmisser/fpp/oss/minio/service/MinioService.class
+com/fmisser/fpp/oss/minio/conf/MinioConfig.class
+com/fmisser/fpp/oss/minio/prop/MinioExtensionProperty.class
+com/fmisser/fpp/oss/minio/service/impl/MinioServiceImpl.class

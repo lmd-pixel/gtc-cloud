@@ -44,6 +44,9 @@ public class UserDevice {
     @Column
     private String ipAddr;
 
+    @Column
+    private String lang;
+
     @CreatedDate
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")

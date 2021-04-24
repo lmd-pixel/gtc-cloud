@@ -9,5 +9,6 @@ import com.fmisser.gtc.social.domain.User;
  * @description
  */
 public interface UserDeviceService {
-    int create(User user, int deviceType, String deviceName, String deviceCategory, String idfa, String deviceToken, String ipAddr) throws ApiException;
+    int create(User user, int deviceType, String deviceName,
+               String deviceCategory, String idfa, String deviceToken, String ipAddr, String lang) throws ApiException;
 }

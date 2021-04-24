@@ -18,6 +18,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -322,12 +323,17 @@ public class UserController {
                                       @RequestParam(value = "deviceCategory", required = false) String deviceCategory,
                                       @RequestParam(value = "deviceIdfa", required = false) String deviceIdfa,
                                       @RequestParam(value = "deviceToken", required = false) String deviceToken,
-                                      @RequestParam(value = "ipAddr", required = false) String ipAddr) {
+                                      @RequestParam(value = "ipAddr", required = false) String ipAddr,
+                                      @RequestParam(value = "lang", required = false) String lang,
+                                      HttpServletRequest req) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
 
-        int ret = userDeviceService.create(userDo, deviceType, deviceName, deviceCategory, deviceIdfa, deviceToken, ipAddr);
+        String remoteAddr = req.getRemoteAddr();
+
+        int ret = userDeviceService.create(userDo, deviceType, deviceName, deviceCategory,
+                deviceIdfa, deviceToken, remoteAddr, lang);
         return ApiResp.succeed(ret);
     }
 

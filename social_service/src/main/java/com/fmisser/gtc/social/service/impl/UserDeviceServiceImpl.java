@@ -21,7 +21,8 @@ public class UserDeviceServiceImpl implements UserDeviceService {
     private UserDeviceRepository userDeviceRepository;
 
     @Override
-    public int create(User user, int deviceType, String deviceName, String deviceCategory, String deviceIdfa, String deviceToken, String ipAddr) throws ApiException {
+    public int create(User user, int deviceType, String deviceName, String deviceCategory,
+                      String deviceIdfa, String deviceToken, String ipAddr, String lang) throws ApiException {
         UserDevice userDevice = new UserDevice();
         userDevice.setUserId(user.getId());
         userDevice.setDeviceType(deviceType);
@@ -39,6 +40,9 @@ public class UserDeviceServiceImpl implements UserDeviceService {
         }
         if (!StringUtils.isEmpty(ipAddr)) {
             userDevice.setIpAddr(ipAddr);
+        }
+        if (!StringUtils.isEmpty(lang)) {
+            userDevice.setLang(lang);
         }
 
         userDeviceRepository.save(userDevice);
