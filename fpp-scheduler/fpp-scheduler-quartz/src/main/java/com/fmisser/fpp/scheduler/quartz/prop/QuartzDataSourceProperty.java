@@ -42,6 +42,9 @@ import org.springframework.context.annotation.Configuration;
  *     }
  *
  * 第二种自定义数据源参数，然后通过quartz 自定义配置指定该数据源,这里使用第二种方式
+ *
+ * 创建数据库表建议手动创建
+ * 从quartz项目中找到初始化脚本：classpath:org/quartz/impl/jdbcjobstore/tables_mysql_innodb.sql
  */
 @Data
 @Configuration
