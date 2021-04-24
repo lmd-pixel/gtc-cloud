@@ -340,7 +340,7 @@ public class UserController {
     @ApiOperation(value = "获取用户的收益消费列表")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @GetMapping("profit-consume-list")
-    ApiResp<ProfitConsumeDetail> getProfitConsumeList() {
-        return null;
+    ApiResp<List<ProfitConsumeDetail>> getProfitConsumeList() {
+        return ApiResp.succeed(new ArrayList<ProfitConsumeDetail>());
     }
 }
