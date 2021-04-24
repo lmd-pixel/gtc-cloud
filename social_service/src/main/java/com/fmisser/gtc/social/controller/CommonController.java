@@ -3,12 +3,11 @@ package com.fmisser.gtc.social.controller;
 import com.fmisser.gtc.base.dto.social.RecvGiftDto;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.*;
-import com.fmisser.gtc.social.mq.WxWebHookBinding;
 import com.fmisser.gtc.social.service.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
@@ -17,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.*;
 
+@Slf4j
 @Api(description = "通用API")
 @RestController
 @RequestMapping("/comm")
@@ -101,6 +101,8 @@ public class CommonController {
     @GetMapping(value = "/list-iap-products")
     public ApiResp<List<Product>> getIapProducts() {
         List<Product> products = this.productService.getIapProductList();
+        log.info("get iap product: {}", products);
+
         return ApiResp.succeed(products);
     }
 

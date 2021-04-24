@@ -9,13 +9,15 @@ services:
       - discovery.seed_hosts=es02,es03
       - cluster.initial_master_nodes=es01,es02,es03
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+#      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
-      - data01:/usr/share/elasticsearch/data
+      - /data/es-cluster/data01:/usr/share/elasticsearch/data
+      - "./jvm.options.d:/usr/share/elasticsearch/config/jvm.options.d"
+      - "./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml"
     ports:
       - 9200:9200
     networks:
@@ -29,13 +31,15 @@ services:
       - discovery.seed_hosts=es01,es03
       - cluster.initial_master_nodes=es01,es02,es03
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+#      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
-      - data02:/usr/share/elasticsearch/data
+      - /data/es-cluster/data02:/usr/share/elasticsearch/data
+      - "./jvm.options.d:/usr/share/elasticsearch/config/jvm.options.d"
+      - "./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml"
     networks:
       - elastic
   es03:
@@ -47,23 +51,17 @@ services:
       - discovery.seed_hosts=es01,es02
       - cluster.initial_master_nodes=es01,es02,es03
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+#      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
-      - data03:/usr/share/elasticsearch/data
+      - /data/es-cluster/data03:/usr/share/elasticsearch/data
+      - "./jvm.options.d:/usr/share/elasticsearch/config/jvm.options.d"
+      - "./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml"
     networks:
       - elastic
-
-volumes:
-  data01:
-    driver: local
-  data02:
-    driver: local
-  data03:
-    driver: local
 
 networks:
   elastic:

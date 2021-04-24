@@ -19,13 +19,64 @@ docker exec -it gtc_cloud_db mysqldump -uroot -pgtc_cloud@123456 gtc-auth-db > /
 
 ## docker origin:
 
+############################## mysql
 sudo docker run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=gtc_cloud@123456 --name gtc_cloud_db -d mysql:5.7
-sudo docker run -p 15672:15672 -p 5672:5672 -e RABBITMQ_DEFAULT_USER=root -e RABBITMQ_DEFAULT_PASS=gtc_cloud@123456 --name gtc_cloud_mq -d rabbitmq:management
-sudo docker run -p 9000:9000 -e MINIO_ACCESS_KEY=root -e MINIO_SECRET_KEY=gtc_cloud@123456 --name gtc_cloud_file -d minio/minio server /data
-sudo docker run -p 6379:6379 --name gtc_cloud_cache -d redis --requirepass "gtc_cloud@123456"
-sudo docker run -p 2181:2181 -p 8080:8080 -p 8085:8085 -p 9090:9090 -p 9095:9095 -p 16000:16000 -p 16010:16010 -p 16020:16020 -p 16030:16030 -p 16201:16201 -p 16301:16301 --name gtc_cloud_nosql -d harisekhon/hbase
-sudo docker run -p 9411:9411 --name gtc_zipkin -d openzipkin/zipkin
 
+############################## rabbit
+sudo docker run -p 15672:15672 -p 5672:5672 -e RABBITMQ_DEFAULT_USER=root -e RABBITMQ_DEFAULT_PASS=gtc_cloud@123456 --name gtc_cloud_mq -d rabbitmq:management
+
+############################## minio
+sudo docker run -p 9000:9000 -e MINIO_ACCESS_KEY=root -e MINIO_SECRET_KEY=gtc_cloud@123456 --name gtc_cloud_file -d minio/minio server /data
+
+############################## redis
+sudo docker run -p 6379:6379 --name gtc_cloud_cache -d redis --requirepass "gtc_cloud@123456"
+
+############################## hbase
+sudo docker run -p 2181:2181 -p 8080:8080 -p 8085:8085 -p 9090:9090 -p 9095:9095 -p 16000:16000 -p 16010:16010 -p 16020:16020 -p 16030:16030 -p 16201:16201 -p 16301:16301 --name gtc_cloud_nosql -d harisekhon/hbase
+
+############################## es single
+
+# 创建一个网络
+docker network create -d bridge es-network
+
+# 启动
+sudo docker run -p 9200:9200 --network=es-network -e "discovery.type=single-node" -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" --name gtc_cloud_es -d docker.elastic.co/elasticsearch/elasticsearch:7.12.0
+
+# 更新配置，增加密码
+docker cp gtc_cloud_es:/usr/share/elasticsearch/config/elasticsearch.yml .
+
+vim elasticsearch.yml 添加下面两行:
+xpack.security.enabled: true
+discovery.type: single-node
+
+docker cp ./elasticsearch.yml gtc_cloud_es:/usr/share/elasticsearch/config/elasticsearch.yml
+docker restart gtc_cloud_es
+
+# 进入容器设置密码
+docker exec -it gtc_cloud_es /bin/bash
+./bin/elasticsearch-setup-passwords interactive
+
+############################## kibana
+docker run -p 5601:5601 --network=es-network --name gtc_cloud_kibana -d docker.elastic.co/kibana/kibana:7.12.0
+
+# 更新配置
+docker cp gtc_cloud_kibana:/usr/share/kibana/config/kibana.yml .
+
+vim kibana.yml
+修改：
+elasticsearch.hosts: [ "http://gtc_cloud_es:9200" ]
+新增：
+elasticsearch.username: "elastic"
+elasticsearch.password: "gtc_cloud@123456"
+i18n.locale: "zh-CN"
+
+docker cp ./kibana.yml gtc_cloud_kibana:/usr/share/kibana/config/kibana.yml
+docker restart gtc_cloud_kibana
+
+############################## zipkin
+sudo docker run -p 9411:9411 --name gtc_cloud_zipkin -e STORAGE_TYPE=elasticsearch -e ES_HOSTS=http://42.192.212.67:9200 -e ES_USERNAME=elastic -e ES_PASSWORD=gtc_cloud@123456 -d openzipkin/zipkin
+
+############################## 服务
 sudo docker run -p 8001:8001 --name gtc_registry -d registry
 sudo docker run -p 8002:8002 --name gtc_auth -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -d auth
 sudo docker run -p 8003:8003 --name gtc_social -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -d social
