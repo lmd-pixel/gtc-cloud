@@ -198,4 +198,16 @@ public class CommonController {
         List<RecvGiftDto> recvGiftDtoList = giftService.getRecvGiftList(userDo, pageIndex, pageSize);
         return ApiResp.succeed(recvGiftDtoList);
     }
+
+    @ApiOperation("更新指引")
+    @GetMapping("/leader")
+    public ApiResp<Object> getLeader(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version) {
+        Map<String, Object> objectMap = new HashMap<>();
+        objectMap.put("show", -1);  // -1 不显示 0 提示更新 1 强制更新
+        objectMap.put("desc", "");
+        objectMap.put("url", "");
+
+        return ApiResp.succeed(objectMap);
+    }
 }

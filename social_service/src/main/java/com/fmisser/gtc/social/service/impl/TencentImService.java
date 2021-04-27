@@ -167,7 +167,6 @@ public class TencentImService implements ImService {
 
         // 设定开始时间
         call.setStartTime(new Date());
-        callRepository.save(call);
 
         return 1;
     }

@@ -160,6 +160,8 @@ public class UserServiceImpl implements UserService {
         // 创建资产
         Asset asset = new Asset();
         asset.setUserId(user.getId());
+        asset.setVoiceProfitRatio(BigDecimal.valueOf(0.50));
+        asset.setVideoProfitRatio(BigDecimal.valueOf(0.50));
         assetRepository.save(asset);
 
         // 设置邀请信息

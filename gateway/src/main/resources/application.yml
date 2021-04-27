@@ -44,6 +44,16 @@ spring:
           args:
             name: fallbackcmd
             fallbackUri: forward:/fallback
+      - id: pay-route
+        uri: lb://pay
+        predicates:
+        - Path=/api/pay/**
+        filters:
+        - StripPrefix=2
+        - name: Hystrix
+          args:
+            name: fallbackcmd
+            fallbackUri: forward:/fallback
       # cors 全局设置
       globalcors:
         cors-configurations:
@@ -94,4 +104,3 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8001/eureka/
-
