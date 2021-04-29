@@ -40,4 +40,9 @@ public interface OAuthFeign {
                    @RequestParam("token") String token,
                    @RequestParam("scope") String scope,
                    @RequestParam(value = "grant_type") String grant_type);
+
+    @PostMapping(value = "/oauth/token")
+    TokenDto refreshToken(@RequestHeader("Authorization") String basicAuth,
+                        @RequestParam("refresh_token") String refreshToken,
+                        @RequestParam(value = "grant_type") String grant_type);
 }

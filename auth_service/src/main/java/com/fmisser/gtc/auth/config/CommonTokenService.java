@@ -23,10 +23,10 @@ public class CommonTokenService extends DefaultTokenServices {
     @Override
     public OAuth2AccessToken createAccessToken(OAuth2Authentication authentication) throws AuthenticationException {
         // 每次请求都删除旧的token
-        OAuth2AccessToken existingAccessToken = getAccessToken(authentication);
-        if (existingAccessToken != null) {
-            revokeToken(existingAccessToken.getValue());
-        }
+//        OAuth2AccessToken existingAccessToken = getAccessToken(authentication);
+//        if (existingAccessToken != null) {
+//            revokeToken(existingAccessToken.getValue());
+//        }
         return super.createAccessToken(authentication);
     }
 }

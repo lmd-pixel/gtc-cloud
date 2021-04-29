@@ -107,11 +107,16 @@ public class AuthorizationServerWithJDBCConfig extends AuthorizationServerConfig
                         endpoints.getOAuth2RequestFactory())));
 
         endpoints
+                // FIXME: reuse 模式似乎存在问题，通过refresh token去刷新access token 成功后接下来再刷新会出错
+                //  具体可以看spring security oauth 项目的 issues 有说
+                //  这里设置成 no reuse，每次使用新的refresh token去刷新access token，两者都会更新并获得新的有效时长
+                .reuseRefreshTokens(false)
                 .tokenStore(tokenStore())
                 .accessTokenConverter(jwtAccessTokenConverter)
                 .userDetailsService(userDetailsService)
-                .authenticationManager(authenticationManager)
-                .tokenServices(commonTokenService()); // 自定义token service
+                .authenticationManager(authenticationManager);
+        // FIXME: 2021/4/27 自定义token service 时access token 和 refresh token有效期设置无效（jdbc），只会用默认值
+//                .tokenServices(commonTokenService()); // 自定义token service
 
         // 自定义异常返回
         // controller封装了一层oauth/token的调用，不用再处理自定义异常

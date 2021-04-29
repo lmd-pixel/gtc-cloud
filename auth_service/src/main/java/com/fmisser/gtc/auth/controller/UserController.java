@@ -48,7 +48,7 @@ public class UserController {
 
     @PostMapping("/sms-login")
     public ApiResp<TokenDto> phoneCodeLogin(@RequestParam("phone") @Size(min = 11, max = 11, message = "请输入有效的手机号") String phone,
-                                       @RequestParam("code") String code) throws ApiException {
+                                            @RequestParam("code") String code) throws ApiException {
         try {
             return ApiResp.succeed(userService.smsLogin(phone, code));
         } catch (Exception e) {
@@ -58,13 +58,18 @@ public class UserController {
 
     @PostMapping("/apple-login")
     public ApiResp<TokenDto> appleLogin(@RequestParam("subject") String subject,
-                                            @RequestParam("token") String token) throws ApiException {
+                                        @RequestParam("token") String token) throws ApiException {
         return ApiResp.succeed(userService.appleLogin(subject, token));
+    }
+
+    @PostMapping("/refresh-token")
+    public ApiResp<TokenDto> refreshToken(@RequestParam("refreshToken") String refreshToken) throws ApiException {
+        return ApiResp.succeed(userService.refreshToken(refreshToken));
     }
 
     @PostMapping("/phone-code")
     public ApiResp<String> sendPhoneCode(@RequestParam("phone") @Size(min = 11, max = 11, message = "请输入有效的手机号") String phone,
-                                   @RequestParam("type") int type) throws ApiException {
+                                         @RequestParam("type") int type) throws ApiException {
         boolean ret = smsService.sendPhoneCode(phone, type);
         if (ret) {
             return ApiResp.succeed("");

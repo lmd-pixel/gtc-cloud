@@ -44,6 +44,11 @@ public interface UserService extends UserDetailsService {
     TokenDto appleLogin(String subject, String token) throws ApiException;
 
     /**
+     * 通过refresh token 刷新 token
+     */
+    TokenDto refreshToken(String refreshToken) throws ApiException;
+
+    /**
      * 用户登出
      */
     int logout(User user) throws ApiException;

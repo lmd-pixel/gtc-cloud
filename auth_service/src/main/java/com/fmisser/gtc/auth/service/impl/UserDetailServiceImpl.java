@@ -169,30 +169,32 @@ public class UserDetailServiceImpl implements UserService {
 
     @Override
     public TokenDto autoLogin(String phone, String token) throws ApiException {
-        // TODO: 2020/12/8 client client secret scope 使用配置
         String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
         return oAuthFeign.autoLogin(basicAuth, phone, token, oauthConfProp.getOauth2Scope(), "auto_login");
     }
 
     @Override
     public TokenDto smsLogin(String phone, String code) throws ApiException {
-        // TODO: 2020/12/8 client client secret scope 使用配置
         String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
         return oAuthFeign.smsLogin(basicAuth, phone, code, oauthConfProp.getOauth2Scope(), "sms_login");
     }
 
     @Override
     public TokenDto login(String username, String password) throws ApiException {
-        // TODO: 2020/12/8 client client secret scope 使用配置
         String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
         return oAuthFeign.login(basicAuth, username, password, oauthConfProp.getOauth2Scope(), "password");
     }
 
     @Override
     public TokenDto appleLogin(String subject, String token) throws ApiException {
-        // TODO: 2020/12/8 client client secret scope 使用配置
         String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
         return oAuthFeign.appleLogin(basicAuth, subject, token, oauthConfProp.getOauth2Scope(), "apple_login");
+    }
+
+    @Override
+    public TokenDto refreshToken(String refreshToken) throws ApiException {
+        String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
+        return oAuthFeign.refreshToken(basicAuth, refreshToken, "refresh_token");
     }
 
     /**
