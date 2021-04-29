@@ -20,4 +20,6 @@ public interface ImCallbackService {
 
     int textModeration(String userId, String text);
 
+    boolean textNoPrice(String text);
+
 }

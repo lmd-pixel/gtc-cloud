@@ -151,12 +151,20 @@ public class TencentImCallbackService implements ImCallbackService {
             }
         }
 
-        if (sysConfigService.isAppAudit()) {
-            // 审核中，消息聊天不扣费
+        // 判断是否是需要过滤的内容
+        Optional<ImMsgBody> msgBody = imBeforeSendMsgDto.getMsgBody().stream()
+                .filter(imMsgBody -> imMsgBody.getMsgType().equals("TIMTextElem") &&
+                        textNoPrice(imMsgBody.getMsgContent().getText()))
+                .findAny();
+
+        if (msgBody.isPresent()) {
             return resp;
         }
 
-        // TODO: 2020/11/20 记录数据
+//        if (sysConfigService.isAppAudit()) {
+//            // 审核中，消息聊天不扣费
+//            return resp;
+//        }
 
         String userDigitIdFrom = imBeforeSendMsgDto.getFrom_Account();
         String userDigitIdTo = imBeforeSendMsgDto.getTo_Account();
@@ -225,10 +233,10 @@ public class TencentImCallbackService implements ImCallbackService {
         resp.setActionStatus("OK");
         resp.setErrorCode(0);
 
-        if (sysConfigService.isAppAudit()) {
-            // 审核中消息聊天不扣费
-            return resp;
-        }
+//        if (sysConfigService.isAppAudit()) {
+//            // 审核中消息聊天不扣费
+//            return resp;
+//        }
 
         // TODO: 2020/11/20 记录数据
 
@@ -256,6 +264,17 @@ public class TencentImCallbackService implements ImCallbackService {
 
         // 打招呼功能
         greetService.userReplyToday(userFrom, userTo, imAfterSendMsgDto.getMsgSeq());
+
+
+        // 判断是否是需要过滤的内容
+        Optional<ImMsgBody> msgBody = imAfterSendMsgDto.getMsgBody().stream()
+                .filter(imMsgBody -> imMsgBody.getMsgType().equals("TIMTextElem") &&
+                        textNoPrice(imMsgBody.getMsgContent().getText()))
+                .findAny();
+
+        if (msgBody.isPresent()) {
+            return resp;
+        }
 
         // 结算功能
         if (userTo.getIdentity() == 0) {
@@ -409,5 +428,28 @@ public class TencentImCallbackService implements ImCallbackService {
         }
 
         return 1;
+    }
+
+    @Override
+    public boolean textNoPrice(String text) {
+        if (text.equals("Initiate calling") || text.equals("Cancel calling") ||
+                text.equals("Accepted") || (text.contains("accepted") && text.length() < 20) ||
+                (text.contains("is busy") && text.length() < 20) ||
+                (text.contains("declined calling") && text.length() < 32) ||
+                text.equals("Calling busy") ||
+                text.equals("Calling declined") ||
+                text.equals("Calling no reponse") ||
+                text.equals("发起通话") || text.equals("取消通话") ||
+                text.equals("已接听") || (text.contains("已接听") && text.length() < 20) ||
+                (text.contains("忙线") && text.length() < 20) ||
+                (text.contains("拒绝通话") && text.length() < 32) ||
+                text.equals("对方忙线") ||
+                text.equals("拒绝通话") ||
+                text.equals("无应答")
+        ) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

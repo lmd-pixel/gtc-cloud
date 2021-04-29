@@ -46,6 +46,7 @@ public class RecommendServiceImpl implements RecommendService {
 
         List<RecommendAnchorDto> recommendAnchorDtoList =
                 recommendRepository.getRandRecommendAnchorWithGender(3, gender);
+        Collections.shuffle(recommendAnchorDtoList);
 
         // 先拿排班里面的数据
         List<RecommendAnchorDto> systemList = recommendAnchorDtoList
