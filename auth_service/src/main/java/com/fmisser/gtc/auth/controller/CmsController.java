@@ -90,6 +90,15 @@ public class CmsController {
         return ApiResp.succeed(userService.create(username, password, "ROLE_OPERATE"));
     }
 
+    @ApiOperation(value = "创建支付服务账号(需要管理者权限)")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @RequestMapping(value = "/create-pay-server", method = RequestMethod.POST)
+    public ApiResp<User> createPayServer(@RequestParam("username") String username,
+                                       @RequestParam("password") @Size(min = 6, max = 16) String password) {
+        return ApiResp.succeed(userService.create(username, password, "ROLE_PAY_SERVER"));
+    }
+
     @ApiOperation(value = "禁用/启用账号")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")

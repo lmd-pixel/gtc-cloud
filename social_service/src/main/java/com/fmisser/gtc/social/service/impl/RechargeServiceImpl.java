@@ -354,6 +354,62 @@ public class RechargeServiceImpl implements RechargeService {
         return rechargeRepository.countByUserIdAndStatusGreaterThanEqual(user.getId(), 20);
     }
 
+    @Retryable
+    @Transactional
+    @Override
+    public int completePayOrder(User user, User inviteUser, String orderNumber, Long productId, BigDecimal coin,
+                                    BigDecimal price, BigDecimal pay) throws ApiException {
+
+        Asset asset = assetRepository.findByUserId(user.getId());
+
+        Recharge recharge = new Recharge();
+        recharge.setOrderNumber(orderNumber);
+        recharge.setUserId(user.getId());
+        recharge.setProductId(productId);
+        recharge.setCoin(coin);
+        recharge.setPrice(price);
+        recharge.setPay(pay);
+        recharge.setIncome(pay);
+        recharge.setCoinBefore(asset.getCoin());
+        recharge.setCoinAfter(asset.getCoin().add(coin));
+        recharge.setStatus(20);
+        recharge.setType(11);
+
+        // 如果邀请人不为空
+        if (Objects.nonNull(inviteUser)) {
+            Asset inviteUserAsset = assetRepository.findByUserId(inviteUser.getId());
+
+            BigDecimal rewardCoin = coin.multiply(BigDecimal.valueOf(0.02));
+
+            Recharge rewardRecharge = new Recharge();
+            rewardRecharge.setOrderNumber(createRechargeOrderNumber(inviteUser.getId()));
+            rewardRecharge.setUserId(inviteUser.getId());
+            rewardRecharge.setProductId(0L);
+            rewardRecharge.setCoin(coin.multiply(BigDecimal.valueOf(0.02)));
+            rewardRecharge.setPrice(BigDecimal.ZERO);
+            rewardRecharge.setPay(BigDecimal.ZERO);
+            rewardRecharge.setIncome(BigDecimal.ZERO);
+            rewardRecharge.setCoinBefore(inviteUserAsset.getCoin());
+            rewardRecharge.setCoinAfter(inviteUserAsset.getCoin().add(rewardCoin));
+            rewardRecharge.setStatus(20);
+            rewardRecharge.setType(12);
+            rewardRecharge.setRemark(user.getDigitId());
+
+            assetRepository.addCoin(inviteUser.getId(), rewardCoin);
+
+            rechargeRepository.save(rewardRecharge);
+
+            // 上分保存邀请人的信息
+            recharge.setRemark(inviteUser.getDigitId());
+        }
+
+        assetRepository.addCoin(user.getId(), coin);
+
+        rechargeRepository.save(recharge);
+
+        return 1;
+    }
+
     // 创建支付订单号
     public static String createRechargeOrderNumber(Long userId) {
         // 订单号 = 当前时间戳 + 用户id（格式化成10位） + 随机4位数

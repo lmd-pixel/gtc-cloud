@@ -3,6 +3,7 @@ package com.fmisser.gtc.social.service;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.User;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 public interface RechargeService {
@@ -20,4 +21,8 @@ public interface RechargeService {
                             Date purchaseDate) throws ApiException;
 
     Long getUserRechargeCount(User user) throws ApiException;
+
+    // 上分接口直接创建的订单
+    int completePayOrder(User user, User inviteUser, String orderNumber, Long productId,
+                            BigDecimal coin, BigDecimal price, BigDecimal pay) throws ApiException;
 }

@@ -243,6 +243,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User getAnchorByDigitIdPeace(String digitId) throws ApiException {
+        Optional<User> userOptional = userRepository.findByDigitId(digitId);
+        if (userOptional.isPresent()) {
+            if (userOptional.get().getIdentity() == 1) {
+                return userOptional.get();
+            }
+        }
+        return null;
+    }
+
+    @Override
     public User getUserById(Long id) throws ApiException {
         Optional<User> userOptional = userRepository.findById(id);
         if (!userOptional.isPresent()) {

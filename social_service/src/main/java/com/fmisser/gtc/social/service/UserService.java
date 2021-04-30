@@ -23,6 +23,8 @@ public interface UserService {
     // 通过数字id查找用户实体
     User getUserByDigitId(String digitId) throws ApiException;
 
+    User getAnchorByDigitIdPeace(String digitId) throws ApiException;
+
     User getUserById(Long id) throws ApiException;
 
     // 获取自己的完整信息

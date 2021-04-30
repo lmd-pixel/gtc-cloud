@@ -171,7 +171,7 @@ public class ImMsgFactory {
         return imSendMsgDto;
     }
 
-    static public ImSendMsgDto buildCallMsg(String fromAccount, String toAccount, String content, String msgData, boolean syncMsg) {
+    static public ImSendMsgDto buildCallMsg(String fromAccount, String toAccount, String content, String msgData, boolean syncMsg, boolean playSound) {
         ImSendMsgDto imSendMsgDto = new ImSendMsgDto();
         imSendMsgDto.setSyncOtherMachine(syncMsg ? 1 : 2);
         imSendMsgDto.setTo_Account(toAccount);
@@ -208,11 +208,16 @@ public class ImMsgFactory {
         imOfflinePushInfo.setExt("");
 
         ImOfflinePushInfo.ImApnsInfo imApnsInfo = new ImOfflinePushInfo.ImApnsInfo();
-        imApnsInfo.setSound("https://oss.55peiliao.com/system-config/media/audio/call_alarm.mp3");
+//        imApnsInfo.setSound("https://oss.55peiliao.com/system-config/media/audio/call_alarm.mp3");
+        if (playSound) {
+            imApnsInfo.setSound("call_apns_alarm.mp3");
+        } else {
+            imApnsInfo.setSound("");
+        }
         imApnsInfo.setImage("");
         imApnsInfo.setBadgeMode(1);
-        imApnsInfo.setTitle("来了老弟");
-        imApnsInfo.setSubTitle("来聊个五毛钱的天");
+        imApnsInfo.setTitle("");
+        imApnsInfo.setSubTitle("content");
         imOfflinePushInfo.setApnsInfo(imApnsInfo);
 
         ImOfflinePushInfo.ImAndroidInfo imAndroidInfo = new ImOfflinePushInfo.ImAndroidInfo();

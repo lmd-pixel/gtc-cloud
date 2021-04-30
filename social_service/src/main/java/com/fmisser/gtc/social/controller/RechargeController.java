@@ -12,12 +12,14 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -120,4 +122,26 @@ public class RechargeController {
         Long count = rechargeService.getUserRechargeCount(userDo);
         return ApiResp.succeed(count);
     }
+
+    @ApiOperation("支付服务上分")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @PreAuthorize("hasRole('ROLE_PAY_SERVER')")
+    @PostMapping("/update-coin")
+    public ApiResp<Long> payServer(@RequestParam("userId") String userId,
+                                   @RequestParam(value = "inviteId", required = false) String inviteId,
+                                   @RequestParam("orderNumber") String orderNumber,
+                                   @RequestParam("productId") Long productId,
+                                   @RequestParam("coin") BigDecimal coin,
+                                   @RequestParam("price") BigDecimal price,
+                                   @RequestParam("pay") BigDecimal pay) {
+
+        User user = userService.getUserByDigitId(userId);
+        User inviteUser = null;
+        if (!StringUtils.isEmpty(inviteId)) {
+            inviteUser = userService.getAnchorByDigitIdPeace(inviteId);
+        }
+        long ret = rechargeService.completePayOrder(user, inviteUser, orderNumber, productId, coin, price, pay);
+        return ApiResp.succeed(ret);
+    }
+
 }

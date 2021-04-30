@@ -78,7 +78,7 @@ public class Recharge {
     private int status;
 
     /**
-     * 充值平台 0： iap
+     * 充值平台 0： iap, 11: pay server 的上分用户 12： pay server 上分用户的邀请用户
      */
     @Column
     private int type;

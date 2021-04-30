@@ -1385,31 +1385,31 @@ public class TencentImService implements ImService {
         if (mode == 0) {
             String formatString = String.format("invite-call,%d,%d", roomId, roomType);
             msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                    "发起通话", formatString, true);
+                    "发起通话", formatString, true, true);
         } else if (mode == 1) {
             String formatString = String.format("cancel-call,%d,%d", roomId, roomType);
             msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                    "取消通话", formatString, true);
+                    "取消通话", formatString, true, false);
         } else if (mode == 2) {
             String formatString = String.format("reject-call,%d,%d", roomId, roomType);
             msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                    "拒绝通话", formatString, true);
+                    "拒绝通话", formatString, true, false);
         } else if (mode == 3) {
             String formatString = String.format("timeout-call,%d,%d", roomId, roomType);
             msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                    "通话超时", formatString, true);
+                    "通话超时", formatString, true, false);
         } else if (mode == 4) {
             String formatString = String.format("end-call,%d,%d", roomId, roomType);
             msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                    "通话结束", formatString, true);
+                    "通话结束", formatString, true, false);
         } else if (mode == 5) {
             String formatString = String.format("accept-call,%d,%d", roomId, roomType);
             msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                    "已接听", formatString, true);
+                    "已接听", formatString, true, false);
         } else if (mode == 6) {
             String formatString = String.format("hands-call,%d,%d", roomId, roomType);
             msgCustom = ImMsgFactory.buildCallMsg(userFrom.getDigitId(), userTo.getDigitId(),
-                    "已确认", formatString, true);
+                    "已确认", formatString, true, false);
         }
 
         if (msgCustom != null) {
