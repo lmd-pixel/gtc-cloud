@@ -358,7 +358,7 @@ public class RechargeServiceImpl implements RechargeService {
     @Transactional
     @Override
     public int completePayOrder(User user, User inviteUser, String orderNumber, Long productId, BigDecimal coin,
-                                    BigDecimal price, BigDecimal pay) throws ApiException {
+                                    BigDecimal price, BigDecimal pay, String currency) throws ApiException {
 
         Asset asset = assetRepository.findByUserId(user.getId());
 
@@ -374,6 +374,7 @@ public class RechargeServiceImpl implements RechargeService {
         recharge.setCoinAfter(asset.getCoin().add(coin));
         recharge.setStatus(20);
         recharge.setType(11);
+        recharge.setCurrency(currency);
 
         // 如果邀请人不为空
         if (Objects.nonNull(inviteUser)) {

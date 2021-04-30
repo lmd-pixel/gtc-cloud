@@ -24,5 +24,5 @@ public interface RechargeService {
 
     // 上分接口直接创建的订单
     int completePayOrder(User user, User inviteUser, String orderNumber, Long productId,
-                            BigDecimal coin, BigDecimal price, BigDecimal pay) throws ApiException;
+                            BigDecimal coin, BigDecimal price, BigDecimal pay, String currency) throws ApiException;
 }

@@ -125,7 +125,7 @@ public class RechargeController {
 
     @ApiOperation("支付服务上分")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
-    @PreAuthorize("hasRole('ROLE_PAY_SERVER')")
+    @PreAuthorize("hasRole('PAY_SERVER')")
     @PostMapping("/update-coin")
     public ApiResp<Long> payServer(@RequestParam("userId") String userId,
                                    @RequestParam(value = "inviteId", required = false) String inviteId,
@@ -133,14 +133,16 @@ public class RechargeController {
                                    @RequestParam("productId") Long productId,
                                    @RequestParam("coin") BigDecimal coin,
                                    @RequestParam("price") BigDecimal price,
-                                   @RequestParam("pay") BigDecimal pay) {
+                                   @RequestParam("pay") BigDecimal pay,
+                                   @RequestParam("currency") String currency) {
 
         User user = userService.getUserByDigitId(userId);
         User inviteUser = null;
         if (!StringUtils.isEmpty(inviteId)) {
             inviteUser = userService.getAnchorByDigitIdPeace(inviteId);
         }
-        long ret = rechargeService.completePayOrder(user, inviteUser, orderNumber, productId, coin, price, pay);
+        long ret = rechargeService.completePayOrder(user, inviteUser, orderNumber,
+                productId, coin, price, pay, currency);
         return ApiResp.succeed(ret);
     }
 

@@ -83,6 +83,12 @@ public class Recharge {
     @Column
     private int type;
 
+    /**
+     * 币种 CNY USD
+     */
+    @Column(length = 16)
+    private String currency;
+
     @Column
     private String remark;
 
