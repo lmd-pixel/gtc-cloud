@@ -132,7 +132,8 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
         // 验证token
         JwtParser jwtParser = Jwts.parser()
                 .requireIssuer(appleConfProp.getAuthIssuerUrl())
-                .requireAudience(appleConfProp.getAuthAudience())
+//                不验证
+//                .requireAudience(appleConfProp.getAuthAudience())
                 .requireSubject(subject)
                 .setSigningKey(publicKey);
 

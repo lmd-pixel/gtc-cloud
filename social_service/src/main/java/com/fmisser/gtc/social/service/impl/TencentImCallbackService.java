@@ -151,6 +151,11 @@ public class TencentImCallbackService implements ImCallbackService {
             }
         }
 
+        if (sysConfigService.isAppAudit()) {
+            // 审核中，消息聊天不扣费
+            return resp;
+        }
+
         // 判断是否是需要过滤的内容
         Optional<ImMsgBody> msgBody = imBeforeSendMsgDto.getMsgBody().stream()
                 .filter(imMsgBody -> imMsgBody.getMsgType().equals("TIMTextElem") &&
@@ -160,11 +165,6 @@ public class TencentImCallbackService implements ImCallbackService {
         if (msgBody.isPresent()) {
             return resp;
         }
-
-//        if (sysConfigService.isAppAudit()) {
-//            // 审核中，消息聊天不扣费
-//            return resp;
-//        }
 
         String userDigitIdFrom = imBeforeSendMsgDto.getFrom_Account();
         String userDigitIdTo = imBeforeSendMsgDto.getTo_Account();
@@ -233,10 +233,10 @@ public class TencentImCallbackService implements ImCallbackService {
         resp.setActionStatus("OK");
         resp.setErrorCode(0);
 
-//        if (sysConfigService.isAppAudit()) {
-//            // 审核中消息聊天不扣费
-//            return resp;
-//        }
+        if (sysConfigService.isAppAudit()) {
+            // 审核中消息聊天不扣费
+            return resp;
+        }
 
         // TODO: 2020/11/20 记录数据
 

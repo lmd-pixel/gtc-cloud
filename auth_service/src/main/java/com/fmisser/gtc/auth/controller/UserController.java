@@ -57,7 +57,7 @@ public class UserController {
     }
 
     @PostMapping("/apple-login")
-    public ApiResp<TokenDto> appleLogin(@RequestHeader("identity") String identity,
+    public ApiResp<TokenDto> appleLogin(@RequestHeader(value = "identity", required = false) String identity,
                                         @RequestParam("subject") String subject,
                                         @RequestParam("token") String token) throws ApiException {
         return ApiResp.succeed(userService.appleLogin(subject, token));
