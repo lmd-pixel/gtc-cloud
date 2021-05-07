@@ -147,6 +147,12 @@ public class SysConfigServiceImpl implements SysConfigService {
         return sysConfig.getValue1().equals("1");
     }
 
+    @Override
+    public BigDecimal getRechargeInviterRewardRatio() throws ApiException {
+        SysConfig sysConfig = sysConfigRepository.findByName("recharge_inviter_reward_ratio");
+        return BigDecimal.valueOf(Double.parseDouble(sysConfig.getValue1()));
+    }
+
     @SneakyThrows
     private boolean _commonCheck(SysConfig sysConfig) {
         String value2 = sysConfig.getValue2();

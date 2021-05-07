@@ -39,4 +39,6 @@ public interface SysConfigService {
     boolean isFirstRechargeFreeMsg() throws ApiException;
 
     boolean isRandRecommend() throws ApiException;
+
+    BigDecimal getRechargeInviterRewardRatio() throws ApiException;
 }

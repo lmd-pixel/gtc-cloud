@@ -32,6 +32,20 @@ ALTER TABLE `gtc-social-db`.t_dynamic_comment CONVERT TO CHARACTER SET utf8mb4 C
 -- 查看重复的nick
 select min(id) from `gtc-social-db`.t_user group by nick having COUNT(nick) > 1;
 
+# 修改密码 创建账户
+show databases;
+set password for 'root'@'localhost' = password('my_password');
+use mysql;
+select User,Host,Password from mysql.user;
+
+GRANT ALL PRIVILEGES ON *.* TO 'fmisser'@'%' IDENTIFIED BY 'my_password' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'fmisser'@'localhost' IDENTIFIED BY 'my_password' WITH GRANT OPTION;
+flush privileges;
+
+GRANT SELECT ON *.* TO 'readany'@'%' IDENTIFIED BY '123456' WITH GRANT OPTION;
+GRANT SELECT ON *.* TO 'readany'@'localhost' IDENTIFIED BY '123456' WITH GRANT OPTION;
+flush privileges;
+
 -- procedure
 delimiter $$
 create procedure pre()

@@ -380,13 +380,14 @@ public class RechargeServiceImpl implements RechargeService {
         if (Objects.nonNull(inviteUser)) {
             Asset inviteUserAsset = assetRepository.findByUserId(inviteUser.getId());
 
-            BigDecimal rewardCoin = coin.multiply(BigDecimal.valueOf(0.02));
+            BigDecimal ratio = sysConfigService.getRechargeInviterRewardRatio();
+            BigDecimal rewardCoin = coin.multiply(ratio);
 
             Recharge rewardRecharge = new Recharge();
             rewardRecharge.setOrderNumber(createRechargeOrderNumber(inviteUser.getId()));
             rewardRecharge.setUserId(inviteUser.getId());
             rewardRecharge.setProductId(0L);
-            rewardRecharge.setCoin(coin.multiply(BigDecimal.valueOf(0.02)));
+            rewardRecharge.setCoin(coin.multiply(ratio));
             rewardRecharge.setPrice(BigDecimal.ZERO);
             rewardRecharge.setPay(BigDecimal.ZERO);
             rewardRecharge.setIncome(BigDecimal.ZERO);
