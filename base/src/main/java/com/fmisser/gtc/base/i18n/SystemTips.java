@@ -20,4 +20,13 @@ public class SystemTips {
 //        return String.format(localeMsg, nick);
         return localeMsg;
     }
+
+    // 充值消息
+    public String recharge1Msg() {
+        return localeMessageUtil.getLocaleMessage("msg.assist.recharge1");
+    }
+
+    public String recharge2Msg() {
+        return localeMessageUtil.getLocaleMessage("msg.assist.recharge2");
+    }
 }
