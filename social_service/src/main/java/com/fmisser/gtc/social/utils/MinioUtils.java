@@ -6,6 +6,7 @@ import io.minio.messages.Bucket;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.PostConstruct;
 import java.io.InputStream;
@@ -99,6 +100,7 @@ public class MinioUtils {
 
     @SneakyThrows
     public String getObjectUrl(String bucketName, String objectName) {
-        return minioClient.getObjectUrl(bucketName, objectName);
+//        return minioClient.getObjectUrl(bucketName, objectName);
+        throw new NotImplementedException();
     }
 }
