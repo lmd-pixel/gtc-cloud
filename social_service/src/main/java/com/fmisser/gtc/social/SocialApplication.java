@@ -13,7 +13,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @EnableJpaAuditing
 @EnableFeignClients
 //@EnableOAuth2Sso
-@EnableCaching
+//@EnableCaching
 public class SocialApplication {
 
     public static void main(String[] args) {

@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.controller;
 
+import com.fmisser.fpp.cache.redis.service.RedisService;
 import com.fmisser.gtc.base.dto.social.ProfitConsumeDetail;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.response.ApiResp;
@@ -10,6 +11,7 @@ import com.fmisser.gtc.social.service.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
+import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,6 +28,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/user")
 @Validated
+@AllArgsConstructor
 public class UserController {
 
     private final UserService userService;
@@ -34,20 +37,7 @@ public class UserController {
     private final GreetService greetService;
     private final SysConfigService sysConfigService;
     private final UserDeviceService userDeviceService;
-
-    public UserController(UserService userService,
-                          AssetService assetService,
-                          IdentityAuditService identityAuditService,
-                          GreetService greetService,
-                          SysConfigService sysConfigService,
-                          UserDeviceService userDeviceService) {
-        this.userService = userService;
-        this.assetService = assetService;
-        this.identityAuditService = identityAuditService;
-        this.greetService = greetService;
-        this.sysConfigService = sysConfigService;
-        this.userDeviceService = userDeviceService;
-    }
+    private final AssistService assistService;
 
     @ApiOperation(value = "创建用户")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
@@ -177,7 +167,9 @@ public class UserController {
             greetService.createGreet(userDo);
         }
 
-//        User user = userService.profile(userDo);
+        // 发送充值消息
+        assistService.sendRechargeMsg(userDo);
+
         User user = userService.getSelfProfile(userDo);
 
         // 针对版本审核
