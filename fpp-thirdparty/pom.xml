@@ -4,9 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.fmisser.gtc</groupId>
-    <artifactId>gtc_cloud</artifactId>
+    <groupId>com.fmisser.fpp</groupId>
+    <artifactId>fpp-thirdparty</artifactId>
     <version>1.0-SNAPSHOT</version>
+
     <packaging>pom</packaging>
 
     <parent>
@@ -34,21 +35,8 @@
     </dependencyManagement>
 
     <modules>
-<!--        <module>registry</module>-->
-<!--        <module>auth_service</module>-->
-        <module>social_service</module>
-<!--        <module>gateway</module>-->
-<!--        <module>monitor</module>-->
-
-<!--        <module>notice_service</module>-->
-<!--        <module>im_service</module>-->
-        <module>base</module>
-        <module>fpp-oss</module>
-        <module>fpp-mq</module>
-        <module>fpp-scheduler</module>
-        <module>fpp-log</module>
-        <module>fpp-cache</module>
-        <module>fpp-thirdparty</module>
+        <module>fpp-thirdparty-jpush</module>
+        <module>fpp-thirdparty-apple</module>
     </modules>
 
 </project>
