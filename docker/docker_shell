@@ -85,9 +85,13 @@ sudo docker run -p 8089:8089 --name gtc_monitor -d monitor
 
 sudo docker run -p 8080:8080 --name gtc_pay -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/pay/:/root/logs/pay/ -d pay
 
+# php
 sudo docker run -p 9000:9000 --name gtc_website -v /root/docker/php-website/hangzhouYY:/www:rw --privileged=true -d php:5.6-fpm
 # 如果需要mysql 支持，进入容易执行并重启
 docker-php-ext-install pdo_mysql
+
+# portainer docker监控
+sudo docker run -p 19000:9000 -p 18000:8000 --name gtc_portainer -v /var/run/docker.sock:/var/run/docker.sock -d portainer/portainer
 
 ## docker compose
 
