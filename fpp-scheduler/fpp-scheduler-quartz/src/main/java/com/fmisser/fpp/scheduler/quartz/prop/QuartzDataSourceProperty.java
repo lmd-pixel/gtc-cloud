@@ -3,8 +3,6 @@ package com.fmisser.fpp.scheduler.quartz.prop;
 import lombok.Data;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * @author fmisser
@@ -47,8 +45,6 @@ import org.springframework.context.annotation.Configuration;
  * 从quartz项目中找到初始化脚本：classpath:org/quartz/impl/jdbcjobstore/tables_mysql_innodb.sql
  */
 @Data
-@Configuration
-@EnableConfigurationProperties(QuartzDataSourceProperty.class)
 @ConfigurationProperties(prefix = "spring.quartz")
 public class QuartzDataSourceProperty {
     // 数据源配置
