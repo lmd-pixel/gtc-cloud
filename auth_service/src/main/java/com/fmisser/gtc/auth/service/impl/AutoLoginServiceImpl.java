@@ -1,5 +1,6 @@
 package com.fmisser.gtc.auth.service.impl;
 
+import com.fmisser.fpp.thirdparty.jpush.service.JPushService;
 import com.fmisser.gtc.auth.domain.PhoneTokenRequest;
 import com.fmisser.gtc.auth.feign.JPushVerifyFeign;
 import com.fmisser.gtc.auth.repository.PhoneTokenRequestRepository;
@@ -26,16 +27,21 @@ public class AutoLoginServiceImpl implements AutoLoginService {
 
     private final PhoneTokenRequestRepository phoneTokenRequestRepository;
 
+    private final JPushService jPushService;
+
     public AutoLoginServiceImpl(JPushConfProp jPushConfProp,
                                 JPushVerifyFeign jPushVerifyFeign,
-                                PhoneTokenRequestRepository phoneTokenRequestRepository) {
+                                PhoneTokenRequestRepository phoneTokenRequestRepository,
+                                JPushService jPushService) {
         this.jPushConfProp = jPushConfProp;
         this.jPushVerifyFeign = jPushVerifyFeign;
         this.phoneTokenRequestRepository = phoneTokenRequestRepository;
+        this.jPushService = jPushService;
     }
 
     @Override
     @SneakyThrows
+    @Deprecated
     public String checkPhoneToken(String phone, String token) throws ApiException {
         String basicAuthString = JPushUtils
                 .genAuthString(jPushConfProp.getAppKey(), jPushConfProp.getMasterSecret());
@@ -85,5 +91,10 @@ public class AutoLoginServiceImpl implements AutoLoginService {
         } else {
             throw new ApiException(-1, "认证失败!");
         }
+    }
+
+    @Override
+    public String jpushVerifyLoginToken(String identity, String loginToken) throws ApiException {
+        return jPushService.verifyLoginToken(identity, loginToken);
     }
 }

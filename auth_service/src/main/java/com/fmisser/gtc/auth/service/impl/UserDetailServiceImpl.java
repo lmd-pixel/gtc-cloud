@@ -1,5 +1,6 @@
 package com.fmisser.gtc.auth.service.impl;
 
+import com.fmisser.fpp.thirdparty.jpush.service.JPushService;
 import com.fmisser.gtc.auth.domain.Role;
 import com.fmisser.gtc.auth.domain.User;
 import com.fmisser.gtc.auth.feign.OAuthFeign;
@@ -14,6 +15,7 @@ import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.OauthConfProp;
 import com.fmisser.gtc.base.utils.AuthUtils;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -43,6 +45,8 @@ public class UserDetailServiceImpl implements UserService {
 
     private final OauthConfProp oauthConfProp;
 
+    private final JPushService jPushService;
+
     public UserDetailServiceImpl(UserRepository userRepository,
                                  RoleRepository roleRepository,
                                  PasswordEncoder passwordEncoder,
@@ -50,7 +54,8 @@ public class UserDetailServiceImpl implements UserService {
                                  AutoLoginService autoLoginService,
                                  OAuthFeign oAuthFeign,
                                  ThirdPartyLoginService thirdPartyLoginService,
-                                 OauthConfProp oauthConfProp) {
+                                 OauthConfProp oauthConfProp,
+                                 JPushService jPushService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -59,6 +64,7 @@ public class UserDetailServiceImpl implements UserService {
         this.oAuthFeign = oAuthFeign;
         this.thirdPartyLoginService = thirdPartyLoginService;
         this.oauthConfProp = oauthConfProp;
+        this.jPushService = jPushService;
     }
 
     @Override
@@ -164,9 +170,9 @@ public class UserDetailServiceImpl implements UserService {
     }
 
     @Override
-    public TokenDto autoLogin(String phone, String token) throws ApiException {
+    public TokenDto autoLogin(String identity, String token) throws ApiException {
         String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
-        return oAuthFeign.autoLogin(basicAuth, phone, token, oauthConfProp.getOauth2Scope(), "auto_login");
+        return oAuthFeign.autoLogin(basicAuth, identity, token, oauthConfProp.getOauth2Scope(), "auto_login");
     }
 
     @Override
@@ -215,11 +221,19 @@ public class UserDetailServiceImpl implements UserService {
     /**
      * 自定义手机号一键登录模式
      * 注册，登录一体
-     * @param phone 这个参数无用，前端不传
+     * @param identity
      */
-    public UserDetails loadUserByPhoneAuto(String phone, String token) {
+    public UserDetails loadUserByPhoneAuto(String identity, String token) {
         // verify phone token
-        String phoneDecode = autoLoginService.checkPhoneToken(phone, token);
+
+        String phoneDecode;
+        if (StringUtils.isEmpty(identity)) {
+            // 兼容老版本
+            phoneDecode = autoLoginService.checkPhoneToken("", token);
+        } else {
+            phoneDecode =  jPushService.verifyLoginToken(identity, token);
+        }
+
         if (phoneDecode.isEmpty()) {
             return null;
         }

@@ -46,8 +46,8 @@ public class AutoLoginTokenGranter extends AbstractTokenGranter {
     }
 
     private UserDetails getUser(Map<String, String> params) {
-        // 获取 phone 和 token 字段
+        // 获取 phone 和 identity 字段
         // TODO: 2020/12/8 使用配置
-        return userDetailsService.loadUserByPhoneAuto(params.get("phone"), params.get("token"));
+        return userDetailsService.loadUserByPhoneAuto(params.get("identity"), params.get("token"));
     }
 }

@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication(scanBasePackages = {"com.fmisser.gtc.auth", "com.fmisser.gtc.base"})
+@SpringBootApplication(scanBasePackages = {"com.fmisser.gtc.auth", "com.fmisser.gtc.base", "com.fmisser.fpp.*"})
 @EnableEurekaClient
 @EnableJpaAuditing
 @EnableFeignClients

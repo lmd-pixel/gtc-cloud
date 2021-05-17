@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface OAuthFeign {
     @PostMapping(value = "/oauth/token")
     TokenDto autoLogin(@RequestHeader("Authorization") String basicAuth,
-                              @RequestParam("phone") String phone,
+                              @RequestParam("identity") String identity,
                               @RequestParam("token") String token,
                               @RequestParam("scope") String scope,
                               @RequestParam(value = "grant_type") String grant_type);

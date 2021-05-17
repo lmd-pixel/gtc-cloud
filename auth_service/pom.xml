@@ -96,6 +96,13 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
+        <!-- fpp -->
+        <dependency>
+            <groupId>com.fmisser.fpp</groupId>
+            <artifactId>fpp-thirdparty-jpush</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
     </dependencies>
 
     <build>

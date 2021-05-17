@@ -26,7 +26,7 @@ public interface UserService extends UserDetailsService {
     /**
      * 手机号一键登录
      */
-    TokenDto autoLogin(String phone, String token) throws ApiException;
+    TokenDto autoLogin(String identity, String token) throws ApiException;
 
     /**
      * 手机号验证码登录
