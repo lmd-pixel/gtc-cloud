@@ -81,8 +81,8 @@ public class JPushServiceImpl implements JPushService {
     protected JPushAppProperty getJPushPropertyFromIdentity(String identity) {
         return jPushExtensionProperty.getApps().values().parallelStream()
                 .filter(jPushAppProperty ->
-                        jPushAppProperty.getAutoLogin().getBundleId().equals(identity) ||
-                                jPushAppProperty.getAutoLogin().getPackageName().equals(identity))
+                        (!StringUtils.isEmpty(jPushAppProperty.getAutoLogin().getBundleId()) && jPushAppProperty.getAutoLogin().getBundleId().equals(identity)) ||
+                                (!StringUtils.isEmpty(jPushAppProperty.getAutoLogin().getPackageName()) && jPushAppProperty.getAutoLogin().getPackageName().equals(identity)))
                 .findFirst()
                 .orElse(null);
     }
