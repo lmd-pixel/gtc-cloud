@@ -34,6 +34,15 @@
     </dependencyManagement>
 
     <modules>
+        <module>fpp-oss</module>
+        <module>fpp-mq</module>
+        <module>fpp-scheduler</module>
+        <module>fpp-log</module>
+        <module>fpp-cache</module>
+        <module>fpp-thirdparty</module>
+
+        <module>base</module>
+
 <!--        <module>registry</module>-->
         <module>auth_service</module>
 <!--        <module>social_service</module>-->
@@ -42,13 +51,7 @@
 
 <!--        <module>notice_service</module>-->
 <!--        <module>im_service</module>-->
-        <module>base</module>
-        <module>fpp-oss</module>
-        <module>fpp-mq</module>
-        <module>fpp-scheduler</module>
-        <module>fpp-log</module>
-        <module>fpp-cache</module>
-        <module>fpp-thirdparty</module>
+
     </modules>
 
 </project>
