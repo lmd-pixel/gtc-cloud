@@ -12,10 +12,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: gtc-test-build
+#    defaults:
+#      run:
+#        shell: bash
+#        working-directory: gtc-test-build
 
     steps:
     - uses: actions/checkout@master
@@ -44,7 +44,7 @@ jobs:
     - name: Start to upload docker image
       run: |
         export DOCKER_HOST=tcp://${{ secrets.TEST_HOST }}:2375
-        cd auth
+        cd auth_service
         mvn docker:build
 
     - name: Connect to server & Close docker tranfer port & restart docker
