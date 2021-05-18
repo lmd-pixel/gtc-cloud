@@ -22,5 +22,5 @@ jobs:
         java-version: '1.8'
     - name: Build with Maven
       run: |
-        cd base & mvn -B clean install --file pox.xml -Dmaven.test.skip=true
-        cd ../ & mvn -B clean package --file pom.xml -Dmaven.test.skip=true
+        mvn -B clean install --file base/pox.xml -Dmaven.test.skip=true
+        mvn -B clean package --file pom.xml -Dmaven.test.skip=true
