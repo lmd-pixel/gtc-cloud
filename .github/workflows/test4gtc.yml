@@ -26,15 +26,16 @@ jobs:
         mvn -B clean package --file pom.xml -Dmaven.test.skip=true
 
     - name: Connet to server & Open docker transfer port
-      run: |
-        ssh -tt ${{ secrets.TEST_USERNAME }}@${{ secrets.TEST_HOST }}
-        expect {
-        	"yes/no" { send "yes\r";exp_continue; }
-        	"*password:*" {send "${{ secrets.TEST_PASSWORD }}\r" }
-        }
-        whoami
-        cd /root
-        ./open_port_2375.sh
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.TEST_HOST }}
+        username: ${{ secrets.TEST_USERNAME }}
+        password: ${{ secrets.TEST_PASSWORD }}
+        port: ${{ secrets.TEST_PORT }}
+        script: |
+          whoami
+          cd /root
+          ./open_port_2375.sh
 
     - name: Start to upload docker image
       run: |
@@ -43,18 +44,19 @@ jobs:
         mvn docker:build
 
     - name: Connect to server & Close docker tranfer port & restart docker
-      run: |
-        ssh -tt ${{ secrets.TEST_USERNAME }}@${{ secrets.TEST_HOST }}
-        expect {
-            "yes/no" { send "yes\r";exp_continue; }
-            "*password:*" {send "${{ secrets.TEST_PASSWORD }}\r" }
-        }
-        whoami
-        cd /root
-        ./close_port_2375.sh
-        docker stop gtc_auth
-        docker rm gtc_auth
-        sudo docker run -p 8002:8002 --name gtc_auth -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/auth/:/ROOT/logs/ -d auth
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.TEST_HOST }}
+        username: ${{ secrets.TEST_USERNAME }}
+        password: ${{ secrets.TEST_PASSWORD }}
+        port: ${{ secrets.TEST_PORT }}
+        script: |
+          whoami
+          cd /root
+          ./close_port_2375.sh
+          docker stop gtc_auth
+          docker rm gtc_auth
+          sudo docker run -p 8002:8002 --name gtc_auth -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/auth/:/ROOT/logs/ -d auth
 
 
 
