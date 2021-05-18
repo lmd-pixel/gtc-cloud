@@ -11,11 +11,15 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: gtc-test-build
 
     steps:
     - uses: actions/checkout@master
+
     - name: Set up JDK 8
       uses: actions/setup-java@v1
       with:
