@@ -27,12 +27,11 @@ jobs:
 
     - name: Connet to server & Open docker transfer port
       run: |
-        ssh -t -p ${{ secrets.TEST_PORT }} ${{ secrets.TEST_USERNAME }}@${{ secrets.TEST_HOST }}
+        ssh -tt -p ${{ secrets.TEST_PORT }} ${{ secrets.TEST_USERNAME }}@${{ secrets.TEST_HOST }}
         expect {
         	"yes/no" { send "yes\r";exp_continue; }
         	"*password:*" {send "${{ secrets.TEST_PASSWORD }}\r" }
         }
-        interact
         whoami
         cd /root
         ./open_port_2375.sh
@@ -45,12 +44,11 @@ jobs:
 
     - name: Connect to server & Close docker tranfer port & restart docker
       run: |
-        ssh -t -p ${{ secrets.TEST_PORT }} ${{ secrets.TEST_USERNAME }}@${{ secrets.TEST_HOST }}
+        ssh -tt -p ${{ secrets.TEST_PORT }} ${{ secrets.TEST_USERNAME }}@${{ secrets.TEST_HOST }}
         expect {
             "yes/no" { send "yes\r";exp_continue; }
             "*password:*" {send "${{ secrets.TEST_PASSWORD }}\r" }
         }
-        interact
         whoami
         cd /root
         ./close_port_2375.sh
