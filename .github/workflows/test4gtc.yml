@@ -27,7 +27,7 @@ jobs:
 
     - name: Connet to server & Open docker transfer port
       run: |
-        ssh -tt -p ${{ secrets.TEST_PORT }} ${{ secrets.TEST_USERNAME }}@${{ secrets.TEST_HOST }}
+        ssh -tt ${{ secrets.TEST_USERNAME }}@${{ secrets.TEST_HOST }}
         expect {
         	"yes/no" { send "yes\r";exp_continue; }
         	"*password:*" {send "${{ secrets.TEST_PASSWORD }}\r" }
@@ -44,7 +44,7 @@ jobs:
 
     - name: Connect to server & Close docker tranfer port & restart docker
       run: |
-        ssh -tt -p ${{ secrets.TEST_PORT }} ${{ secrets.TEST_USERNAME }}@${{ secrets.TEST_HOST }}
+        ssh -tt ${{ secrets.TEST_USERNAME }}@${{ secrets.TEST_HOST }}
         expect {
             "yes/no" { send "yes\r";exp_continue; }
             "*password:*" {send "${{ secrets.TEST_PASSWORD }}\r" }
