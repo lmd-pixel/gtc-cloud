@@ -43,11 +43,12 @@
 
         <module>base</module>
 
-        <module>registry</module>
         <module>auth_service</module>
         <module>social_service</module>
-        <module>gateway</module>
-        <module>monitor</module>
+
+<!--        <module>registry</module>-->
+<!--        <module>gateway</module>-->
+<!--        <module>monitor</module>-->
 <!--        <module>notice_service</module>-->
 <!--        <module>im_service</module>-->
 

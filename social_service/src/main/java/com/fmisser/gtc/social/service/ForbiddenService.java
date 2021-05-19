@@ -13,7 +13,7 @@ import java.util.Map;
 public interface ForbiddenService {
     /**
      * 封号，如果当前时间内已经被封号或者存在永久封号，会失败
-     * @param days 0 表示永久封号
+     * @param days 0 表示永久封号, -1 表示注销账号
      */
     int forbidden(User user, int days, String message) throws ApiException;
 

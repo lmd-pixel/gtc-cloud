@@ -29,7 +29,7 @@ public class ForbiddenServiceImpl implements ForbiddenService {
     public int forbidden(User user, int days, String message) throws ApiException {
         Forbidden forbidden = getUserForbidden(user);
         if (Objects.nonNull(forbidden)) {
-            throw new ApiException(-1, "用户已经被封号！");
+            throw new ApiException(-1, "用户已经被封号或账号已注销！");
         }
 
         forbidden = new Forbidden();
@@ -42,7 +42,7 @@ public class ForbiddenServiceImpl implements ForbiddenService {
 
         if (days > 0) {
 
-            Date endTime = new Date(startTime.getTime() + days * 3600 * 1000 * 24);
+            Date endTime = new Date(startTime.getTime() + (long) days * 3600 * 1000 * 24);
             forbidden.setEndTime(endTime);
         }
 
@@ -63,7 +63,7 @@ public class ForbiddenServiceImpl implements ForbiddenService {
 
     @Override
     public Forbidden getUserForbidden(User user) throws ApiException {
-        return forbiddenRepository.getCurrentForbidden(user.getId());
+        return forbiddenRepository.getCurrentForbiddenV2(user.getId(), new Date());
     }
 
     @Override

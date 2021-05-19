@@ -48,7 +48,9 @@ public class CommonAccessDecisionManager implements AccessDecisionManager {
                 User user = userService.getUserByUsername(username);
                 Forbidden forbidden = forbiddenService.getUserForbidden(user);
                 if (forbidden != null) {
-                    if (forbidden.getDays() == 0) {
+                    if (forbidden.getDays() < 0) {
+                        throw new ForbiddenAccountAccessDeniedException("当前账号已注销，无法使用");
+                    } else if (forbidden.getDays() == 0) {
                         throw new ForbiddenAccountAccessDeniedException("当前账号存在严重违规行为，已被系统永久禁封");
                     } else {
                         SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("MM月dd日HH:mm");

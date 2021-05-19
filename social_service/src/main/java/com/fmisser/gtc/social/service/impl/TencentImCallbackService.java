@@ -188,7 +188,11 @@ public class TencentImCallbackService implements ImCallbackService {
         if (forbidden != null) {
             resp.setActionStatus("FAIL");
             resp.setErrorCode(121002);
-            resp.setErrorInfo("账号存在违规行为已被封禁，请联系客服处理!");
+            if (forbidden.getDays() < 0) {
+                resp.setErrorInfo("账号已注销，请联系客服处理!");
+            } else {
+                resp.setErrorInfo("账号存在违规行为已被封禁，请联系客服处理!");
+            }
             return resp;
         }
 

@@ -13,9 +13,15 @@ import java.util.List;
 public interface ForbiddenRepository extends JpaRepository<Forbidden, Long> {
     @Query(value = "SELECT * FROM t_forbidden " +
             "where user_id = ?1 AND disable = 0 AND " +
-            "(days = 0 OR (start_time IS NOT NULL AND end_time IS NOT NULL AND NOW() BETWEEN start_time AND end_time))"
+            "(days <= 0 OR (start_time IS NOT NULL AND end_time IS NOT NULL AND NOW() BETWEEN start_time AND end_time))"
             , nativeQuery = true)
     Forbidden getCurrentForbidden(Long userId);
+
+    @Query(value = "SELECT * FROM t_forbidden " +
+            "where user_id = ?1 AND disable = 0 AND " +
+            "(days <= 0 OR (start_time IS NOT NULL AND end_time IS NOT NULL AND ?2 BETWEEN start_time AND end_time))"
+            , nativeQuery = true)
+    Forbidden getCurrentForbiddenV2(Long userId, Date time);
 
     List<Forbidden> findByUserIdAndDisable(Long userId, int disable);
 
@@ -27,7 +33,7 @@ public interface ForbiddenRepository extends JpaRepository<Forbidden, Long> {
             "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
             "(tu.identity LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL ) " +
             "WHERE tf.disable = 0 AND " +
-            "(days = 0 OR (start_time IS NOT NULL AND end_time IS NOT NULL AND NOW() BETWEEN start_time AND end_time))",
+            "(days <= 0 OR (start_time IS NOT NULL AND end_time IS NOT NULL AND NOW() BETWEEN start_time AND end_time))",
             countQuery = "SELECT COUNT(*) FROM t_forbidden tf " +
                     "INNER JOIN t_user tu ON tu.id = tf.user_id AND " +
                     "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
@@ -46,7 +52,7 @@ public interface ForbiddenRepository extends JpaRepository<Forbidden, Long> {
             "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
             "(tu.identity LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL ) " +
             "WHERE tf.disable = 0 AND " +
-            "(days = 0 OR (start_time IS NOT NULL AND end_time IS NOT NULL AND ?4 BETWEEN start_time AND end_time))",
+            "(days <= 0 OR (start_time IS NOT NULL AND end_time IS NOT NULL AND ?4 BETWEEN start_time AND end_time))",
             countQuery = "SELECT COUNT(*) FROM t_forbidden tf " +
                     "INNER JOIN t_user tu ON tu.id = tf.user_id AND " +
                     "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
