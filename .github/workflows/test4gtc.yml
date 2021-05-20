@@ -27,6 +27,7 @@ jobs:
 
     - name: Build with Maven
       run: |
+        sed -i "s/spring.profiles.active=.*$/spring.profiles.active=test/g" social_service/src/main/resources/application.properties
         mvn -B clean package --file pom.xml -Dmaven.test.skip=true
 
     - name: Connet to server & Open docker transfer port
@@ -44,9 +45,10 @@ jobs:
     - name: Start to upload docker image
       run: |
         export DOCKER_HOST=tcp://${{ secrets.TEST_HOST }}:2375
-        cd auth_service
-        mvn docker:build
-        cd ../social_service
+#        cd auth_service
+#        mvn docker:build
+#        cd ..
+        cd  social_service
         mvn docker:build
 
     - name: Connect to server & Close docker tranfer port & restart docker
@@ -60,9 +62,9 @@ jobs:
           whoami
           cd /root
           ./close_port_2375.sh
-          docker stop gtc_auth
-          docker rm gtc_auth
-          sudo docker run -p 8002:8002 --name gtc_auth -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/auth/:/ROOT/logs/ -d auth
+#          docker stop gtc_auth
+#          docker rm gtc_auth
+#          sudo docker run -p 8002:8002 --name gtc_auth -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/auth/:/ROOT/logs/ -d auth
           docker stop gtc_social
           docker rm gtc_social
           sudo docker run -p 8003:8003 --name gtc_social -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/social/:/ROOT/logs/ -d social

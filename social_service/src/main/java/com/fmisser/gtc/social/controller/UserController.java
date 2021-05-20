@@ -167,8 +167,10 @@ public class UserController {
             greetService.createGreet(userDo);
         }
 
-        // 发送充值消息
-        assistService.sendRechargeMsg(userDo);
+        // 当不是审核版本时发送充值消息
+        if (!sysConfigService.getAppAuditVersion().equals(version)) {
+            assistService.sendRechargeMsg(userDo);
+        }
 
         User user = userService.getSelfProfile(userDo);
 
