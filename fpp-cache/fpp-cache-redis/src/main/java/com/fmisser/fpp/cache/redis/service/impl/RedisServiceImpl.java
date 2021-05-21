@@ -91,4 +91,21 @@ public class RedisServiceImpl implements RedisService {
         redisTemplate.opsForValue().set(key, value, ttl, TimeUnit.SECONDS);
         return true;
     }
+
+    @Override
+    public long listLeftPush(String key, Object... values) throws RuntimeException {
+        Long ret = redisTemplate.opsForList().leftPushAll(key, values);
+
+        if (Objects.isNull(ret)) {
+            log.error("redis template list left push keys return null!");
+            throw new RuntimeException("redis template list left push keys return null!");
+        }
+
+        return ret;
+    }
+
+    @Override
+    public Object listRightPop(String key) throws RuntimeException {
+        return redisTemplate.opsForList().rightPop(key);
+    }
 }

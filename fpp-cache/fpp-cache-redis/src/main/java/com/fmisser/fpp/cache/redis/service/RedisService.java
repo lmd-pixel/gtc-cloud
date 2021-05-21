@@ -16,4 +16,6 @@ public interface RedisService {
     Object get(String key) throws RuntimeException;
     boolean set(String key, Object value) throws RuntimeException;
     boolean set(String key, Object value, long ttl) throws RuntimeException;
+    long listLeftPush(String key, Object... values) throws RuntimeException;
+    Object listRightPop(String key) throws RuntimeException;
 }
