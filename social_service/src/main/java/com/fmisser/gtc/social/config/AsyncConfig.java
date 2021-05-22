@@ -16,14 +16,14 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @EnableAsync
 public class AsyncConfig {
 
-    @Bean("async-task-exec")
-    public TaskExecutor taskExecutor() {
-        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setCorePoolSize(20);
-        taskExecutor.setMaxPoolSize(200);
-        taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
-        taskExecutor.setThreadNamePrefix("Async-");
-
-        return taskExecutor;
-    }
+//    @Bean("async-task-exec")
+//    public TaskExecutor taskExecutor() {
+//        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+//        taskExecutor.setCorePoolSize(20);
+//        taskExecutor.setMaxPoolSize(200);
+//        taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
+//        taskExecutor.setThreadNamePrefix("Async-");
+//
+//        return taskExecutor;
+//    }
 }

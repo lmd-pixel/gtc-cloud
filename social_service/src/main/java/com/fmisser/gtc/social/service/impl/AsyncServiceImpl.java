@@ -24,7 +24,8 @@ public class AsyncServiceImpl implements AsyncService {
 
     private final ImService imService;
 
-    @Async("async-task-exec")
+//    @Async("async-task-exec")
+    @Async
     @Override
     public CompletableFuture<Integer> setProfileAsync(User user, Long delayMills) throws ApiException {
         if (delayMills > 0) {
