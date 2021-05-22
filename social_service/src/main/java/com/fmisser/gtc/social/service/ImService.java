@@ -90,6 +90,8 @@ public interface ImService {
 
     ImQueryStateResp queryState(List<String> accountList) throws ApiException;
 
+    int setProfile(User user) throws ApiException;
+
     // 腾讯api 结束房间
     int trtcDismissRoom(Long roomId) throws ApiException;
 }

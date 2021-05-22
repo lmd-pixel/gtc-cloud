@@ -7,10 +7,8 @@ import com.fmisser.gtc.base.dto.social.calc.CalcUserDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.repository.*;
-import com.fmisser.gtc.social.service.IdentityAuditService;
-import com.fmisser.gtc.social.service.ImService;
-import com.fmisser.gtc.social.service.UserManagerService;
-import com.fmisser.gtc.social.service.UserService;
+import com.fmisser.gtc.social.service.*;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class UserManagerServiceImpl implements UserManagerService {
 
     private final UserService userService;
@@ -33,24 +32,7 @@ public class UserManagerServiceImpl implements UserManagerService {
     private final LabelRepository labelRepository;
     private final IdentityAuditService identityAuditService;
     private final ImService imService;
-
-    public UserManagerServiceImpl(UserService userService,
-                                  UserRepository userRepository,
-                                  RecommendRepository recommendRepository,
-                                  IdentityAuditRepository identityAuditRepository,
-                                  AssetRepository assetRepository,
-                                  LabelRepository labelRepository,
-                                  IdentityAuditService identityAuditService,
-                                  ImService imService) {
-        this.userService = userService;
-        this.userRepository = userRepository;
-        this.recommendRepository = recommendRepository;
-        this.identityAuditRepository = identityAuditRepository;
-        this.assetRepository = assetRepository;
-        this.labelRepository = labelRepository;
-        this.identityAuditService = identityAuditService;
-        this.imService = imService;
-    }
+    private final AsyncService asyncService;
 
     @Override
     public Pair<List<AnchorDto>,Map<String, Object>> getAnchorList(String digitId, String nick, String phone, Integer gender,
@@ -554,6 +536,8 @@ public class UserManagerServiceImpl implements UserManagerService {
                             null, null, null, null);
                 }
             }
+
+            asyncService.setProfileAsync(user, 0L);
         }
 
         return 1;

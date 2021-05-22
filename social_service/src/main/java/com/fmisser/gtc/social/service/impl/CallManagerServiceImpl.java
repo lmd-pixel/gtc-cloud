@@ -36,8 +36,11 @@ public class CallManagerServiceImpl implements CallManagerService {
         List<CallDto> callDtoList = callRepository.getCallList(callDigitId, callNick, acceptDigitId, acceptNick,
                 type, connected, startTime, endTime, pageSize, (pageIndex - 1) * pageSize);
 
-        CalcTotalCallDto calcTotalCallDto = callRepository.calcTotalCall(callDigitId, callNick, acceptDigitId, acceptNick,
-                type, connected, startTime, endTime);
+        CalcTotalCallDto calcTotalCallDto = callRepository
+                .calcTotalCall(callDigitId, callNick, acceptDigitId, acceptNick, type, connected, startTime, endTime);
+        CalcTotalCallDto calcTotalCallDtoForVideCard = callRepository
+                .calcTotalCallFreeCard(callDigitId, callNick, acceptDigitId, acceptNick, type, connected, startTime, endTime);
+
 
         Map<String, Object> extra = new HashMap<>();
         extra.put("totalPage", (calcTotalCallDto.getCallTimes() / pageSize) + 1 );
@@ -59,7 +62,7 @@ public class CallManagerServiceImpl implements CallManagerService {
                     .divide(BigDecimal.valueOf(calcTotalCallDto.getCallTimes()), 2, BigDecimal.ROUND_HALF_UP);
             extra.put("connectedRatio", connectedRatio);
         }
-        extra.put("videoCard", calcTotalCallDto.getVideoCard());
+        extra.put("videoCard", calcTotalCallDtoForVideCard.getVideoCard());
 
         return Pair.of(callDtoList, extra);
     }

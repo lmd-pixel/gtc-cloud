@@ -35,25 +35,30 @@ public interface CallRepository extends JpaRepository<Call, Long> {
             "GROUP BY type", nativeQuery = true)
     List<Long> countCallOnce(Date startTime, Date endTime);
 
-    // 通话统计
+    /**
+     * 通话统计，这里不在统计视频卡，视频卡使用单独接口处理:
+     * {@link CallRepository#calcTotalCallFreeCard(String, String, String, String, Integer, Integer, Date, Date)}
+     * 也可以使用 union 联合写成一个sql，可读性太差，这里不考虑
+     */
     @Query(value = "SELECT COUNT(DISTINCT callDigitId) AS callUsers, " +
             "COUNT(*) AS callTimes, " +
             "COUNT(DISTINCT CASE WHEN connected=1 THEN acceptDigitId END) AS acceptUsers, " +
             "COUNT(IF(connected=1,TRUE,NULL)) AS acceptTimes, " +
-            "SUM(duration) AS duration, " +
-            "SUM(card) AS videoCard " +
+            "SUM(duration) AS duration " +
+//            "SUM(card) AS videoCard " +
             "FROM ( SELECT " +
             "IF(tc.call_mode=1,tu2.digit_id,tu.digit_id) AS callDigitId, " +
             "IF(tc.call_mode=1,tu2.nick,tu.nick) AS callNick, " +
             "IF(tc.call_mode=1,tu.digit_id,tu2.digit_id) AS acceptDigitId, " +
             "IF(tc.call_mode=1,tu.nick,tu2.nick) AS acceptNick, " +
             "tc.type AS type, tc.call_mode AS mode, IF(tc.duration>0,1,0) AS connected, " +
-            "tc.duration AS duration, tc.created_time AS startTime, tc.finish_time AS finishTime, " +
-            "COUNT(IF(tcb.source>0,TRUE,NULL)) AS card " +
+            "tc.duration AS duration, tc.created_time AS startTime, tc.finish_time AS finishTime " +
+//            "(SELECT COUNT(tcb.source) FROM t_call_bill tcb WHERE tcb.source > 0 AND tcb.call_id = tc.id) AS card " +
+//            "COUNT(IF(tcb.source>0,TRUE,NULL)) AS card " +
             "FROM t_call tc " +
             "INNER JOIN t_user tu ON tc.user_id_from = tu.id " +
             "INNER JOIN t_user tu2 ON tc.user_id_to = tu2.id " +
-            "LEFT JOIN t_call_bill tcb ON tcb.call_id = tc.id " +
+//            "LEFT JOIN t_call_bill tcb ON tcb.call_id = tc.id AND tcb.source > 0 " +
             "WHERE " +
             "(IF(tc.call_mode=1,tu2.digit_id,tu.digit_id) LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
             "(IF(tc.call_mode=1,tu2.nick,tu.nick) LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
@@ -78,6 +83,28 @@ public interface CallRepository extends JpaRepository<Call, Long> {
                                    Integer type, Integer durationType,
                                    Date startTime, Date endTime);
 
+    // 查询使用视频卡的情况，考虑到连表查询很慢，这里单独统计
+    @Query(value = "SELECT " +
+            "COUNT(tcb.id) AS videoCard " +
+//            "(SELECT COUNT(tcb.source) FROM t_call_bill tcb WHERE tcb.source > 0 AND tcb.call_id = tc.id) AS card " +
+//            "COUNT(IF(tcb.source>0,TRUE,NULL)) AS card " +
+            "FROM t_call_bill tcb " +
+            "INNER JOIN t_user tu ON tcb.user_id_from = tu.id " +
+            "INNER JOIN t_user tu2 ON tcb.user_id_to = tu2.id " +
+            "WHERE tcb.source > 0 AND " +
+            "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+            "(tu2.digit_id LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
+            "(tu2.nick LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) AND " +
+            "(tcb.type LIKE CONCAT('%', ?5, '%') OR ?5 IS NULL) AND " +
+            "(1 LIKE CONCAT('%', ?6, '%') OR ?6 IS NULL) AND " +
+            "(tcb.creat_time BETWEEN ?7 AND ?8 OR ?7 IS NULL OR ?8 IS NULL) ",
+            nativeQuery = true)
+    CalcTotalCallDto calcTotalCallFreeCard(String callDigitId, String callNick,
+                               String acceptDigitId, String acceptNick,
+                               Integer type, Integer durationType,
+                               Date startTime, Date endTime);
+
     // 通话列表
     @Query(value = "SELECT * FROM ( " +
             "SELECT tc.id AS callId, " +
@@ -86,12 +113,13 @@ public interface CallRepository extends JpaRepository<Call, Long> {
             "IF(tc.call_mode=1,tu.digit_id,tu2.digit_id) AS acceptDigitId, " +
             "IF(tc.call_mode=1,tu.nick,tu2.nick) AS acceptNick, " +
             "tc.type AS type, tc.call_mode AS mode, IF(tc.duration>0,1,0) AS connected, " +
-            "tc.duration AS duration, tc.created_time AS startTime, tc.finish_time AS endTime, " +
-            "COUNT(IF(tcb.source>0,TRUE,NULL)) AS freeCard " +
+            "tc.duration AS duration, tc.created_time AS startTime, tc.finish_time AS endTime," +
+            "(SELECT COUNT(IF(tcb.source>0,TRUE,NULL)) FROM t_call_bill tcb WHERE tcb.call_id = tc.id) AS freeCard " +
+//            "COUNT(IF(tcb.source>0,TRUE,NULL)) AS freeCard " +
             "FROM t_call tc " +
             "INNER JOIN t_user tu ON tc.user_id_from = tu.id " +
             "INNER JOIN t_user tu2 ON tc.user_id_to = tu2.id " +
-            "LEFT JOIN t_call_bill tcb ON tcb.call_id = tc.id " +
+//            "LEFT JOIN t_call_bill tcb ON tcb.call_id = tc.id AND tcb.source > 0 " +
             "WHERE " +
             "(IF(tc.call_mode=1,tu2.digit_id,tu.digit_id) LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
             "(IF(tc.call_mode=1,tu2.nick,tu.nick) LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +

@@ -12,6 +12,7 @@ import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.mq.GreetDelayedBinding;
 import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -73,43 +75,7 @@ public class UserServiceImpl implements UserService {
 
     private final OssService ossService;
 
-    public UserServiceImpl(UserRepository userRepository,
-//                           MinioUtils minioUtils,
-                           LabelRepository labelRepository,
-                           OssConfProp ossConfProp,
-                           IdentityAuditService identityAuditService,
-                           AssetRepository assetRepository,
-                           BlockRepository blockRepository,
-                           FollowRepository followRepository,
-                           InviteRepository inviteRepository,
-                           CouponService couponService,
-                           SystemTips systemTips,
-                           GreetDelayedBinding greetDelayedBinding,
-                           SysConfigService sysConfigService,
-//                           ImFeign imFeign,
-//                           ImConfProp imConfProp
-                           ImService imService,
-                           IdentityAuditRepository identityAuditRepository,
-                           OssService ossService) {
-        this.userRepository = userRepository;
-//        this.minioUtils = minioUtils;
-        this.labelRepository = labelRepository;
-        this.ossConfProp = ossConfProp;
-        this.identityAuditService = identityAuditService;
-        this.assetRepository = assetRepository;
-        this.blockRepository = blockRepository;
-        this.followRepository = followRepository;
-        this.inviteRepository = inviteRepository;
-        this.couponService = couponService;
-        this.systemTips = systemTips;
-        this.greetDelayedBinding = greetDelayedBinding;
-        this.sysConfigService = sysConfigService;
-//        this.imFeign = imFeign;
-//        this.imConfProp = imConfProp;
-        this.imService = imService;
-        this.identityAuditRepository = identityAuditRepository;
-        this.ossService = ossService;
-    }
+    private final AsyncService asyncService;
 
     @Transactional
     @Override
@@ -208,6 +174,11 @@ public class UserServiceImpl implements UserService {
         if (!ret) {
             // TODO: 2021/1/25 处理发送失败
         }
+
+        // FIXME: 2021/5/22 腾讯端设置昵称（用户推送设定）,
+        //  第一次可能腾讯那边还没有生效，这里延迟5s执行,
+        //  更好的办法是客户端登录腾讯im或调用服务端，然后服务端再执行此操作
+        asyncService.setProfileAsync(user, 5000L);
 
         return _prepareResponse(user);
     }
@@ -529,6 +500,9 @@ public class UserServiceImpl implements UserService {
 
         if (optionType == 1) {
             user = userRepository.save(user);
+
+            asyncService.setProfileAsync(user, 0L);
+
             return _prepareResponse(user);
         } else {
             identityAuditRepository.save(audit);

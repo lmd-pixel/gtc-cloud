@@ -1,10 +1,7 @@
 package com.fmisser.gtc.social.feign;
 
 
-import com.fmisser.gtc.base.dto.im.ImQueryStateDto;
-import com.fmisser.gtc.base.dto.im.ImQueryStateResp;
-import com.fmisser.gtc.base.dto.im.ImSendMsgCbResp;
-import com.fmisser.gtc.base.dto.im.ImSendMsgDto;
+import com.fmisser.gtc.base.dto.im.*;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -34,4 +31,13 @@ public interface ImFeign {
                                 @RequestParam("random") int random,
                                 @RequestParam("contenttype") String contenttype,
                                 @RequestBody ImQueryStateDto imQueryStateDto);
+
+    // 设置用户资料
+    @PostMapping(value = "/v4/profile/portrait_set", produces = MediaType.APPLICATION_JSON_VALUE)
+    ImProfileSetResp setProfile(@RequestParam("sdkappid") long sdkappid,
+                                @RequestParam("identifier") String identifier,
+                                @RequestParam("usersig") String usersig,
+                                @RequestParam("random") int random,
+                                @RequestParam("contenttype") String contenttype,
+                                @RequestBody ImProfileSetReq imProfileSetReq);
 }

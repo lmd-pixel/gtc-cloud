@@ -1470,6 +1470,27 @@ public class TencentImService implements ImService {
         return queryStateResp;
     }
 
+    @Override
+    public int setProfile(User user) throws ApiException {
+        ImProfileSetReq req = new ImProfileSetReq();
+        req.setFromAccount(user.getDigitId());
+        ImProfileSetReq.ProfileItem profileItem =
+                new ImProfileSetReq.ProfileItem("Tag_Profile_IM_Nick", user.getNick());
+        req.setProfileItems(Collections.singletonList(profileItem));
+
+        String admin = imConfProp.getAdmin();
+        String adminSig = genAdminSig(admin);
+
+        ImProfileSetResp resp = imFeign.setProfile(imConfProp.getSdkAppId(), admin, adminSig,
+                new Random().nextInt(), "json", req);
+
+        if (!resp.getActionStatus().equals("OK")) {
+            throw new ApiException(-1, resp.getErrorInfo());
+        }
+
+        return 1;
+    }
+
     @SneakyThrows
     @Override
     public int trtcDismissRoom(Long roomId) throws ApiException {
