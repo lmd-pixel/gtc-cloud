@@ -11,8 +11,8 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>com.fmisser.fpp</groupId>
-    <artifactId>fpp-oss</artifactId>
+    <groupId>com.fmisser.push</groupId>
+    <artifactId>fpp-push</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
@@ -20,7 +20,7 @@
         <java.version>1.8</java.version>
         <spring-cloud.version>Hoxton.SR8</spring-cloud.version>
     </properties>
-    
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -32,10 +32,5 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <modules>
-        <module>fpp-oss-abstract-layer</module>
-        <module>fpp-oss-minio</module>
-    </modules>
 
 </project>

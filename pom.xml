@@ -40,13 +40,14 @@
         <module>fpp-log</module>
         <module>fpp-cache</module>
         <module>fpp-thirdparty</module>
+        <module>fpp-push</module>
 
         <module>base</module>
 
         <module>auth_service</module>
         <module>social_service</module>
 
-<!--        <module>registry</module>-->
+        <!--        <module>registry</module>-->
 <!--        <module>gateway</module>-->
 <!--        <module>monitor</module>-->
 <!--        <module>notice_service</module>-->
