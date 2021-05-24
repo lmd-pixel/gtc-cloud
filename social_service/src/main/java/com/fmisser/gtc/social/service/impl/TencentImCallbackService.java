@@ -157,9 +157,13 @@ public class TencentImCallbackService implements ImCallbackService {
         }
 
         // 判断是否是需要过滤的内容
+//        Optional<ImMsgBody> msgBody = imBeforeSendMsgDto.getMsgBody().stream()
+//                .filter(imMsgBody -> imMsgBody.getMsgType().equals("TIMTextElem") &&
+//                        textNoPrice(imMsgBody.getMsgContent().getText()))
+//                .findAny();
+
         Optional<ImMsgBody> msgBody = imBeforeSendMsgDto.getMsgBody().stream()
-                .filter(imMsgBody -> imMsgBody.getMsgType().equals("TIMTextElem") &&
-                        textNoPrice(imMsgBody.getMsgContent().getText()))
+                .filter(imMsgBody -> imMsgBody.getMsgType().equals("TIMCustomElem"))
                 .findAny();
 
         if (msgBody.isPresent()) {
@@ -271,9 +275,13 @@ public class TencentImCallbackService implements ImCallbackService {
 
 
         // 判断是否是需要过滤的内容
+//        Optional<ImMsgBody> msgBody = imAfterSendMsgDto.getMsgBody().stream()
+//                .filter(imMsgBody -> imMsgBody.getMsgType().equals("TIMTextElem") &&
+//                        textNoPrice(imMsgBody.getMsgContent().getText()))
+//                .findAny();
+
         Optional<ImMsgBody> msgBody = imAfterSendMsgDto.getMsgBody().stream()
-                .filter(imMsgBody -> imMsgBody.getMsgType().equals("TIMTextElem") &&
-                        textNoPrice(imMsgBody.getMsgContent().getText()))
+                .filter(imMsgBody -> imMsgBody.getMsgType().equals("TIMCustomElem"))
                 .findAny();
 
         if (msgBody.isPresent()) {
