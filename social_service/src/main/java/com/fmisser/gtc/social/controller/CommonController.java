@@ -153,7 +153,8 @@ public class CommonController {
     @GetMapping(value = "/profit-price")
     public ApiResp<Object> getProfitPrice() {
         Map<String, List<BigDecimal>> resultMap = new HashMap<>();
-        List<BigDecimal> msgPrice = Arrays.asList(BigDecimal.ZERO, BigDecimal.ONE);
+//        List<BigDecimal> msgPrice = Arrays.asList(BigDecimal.ZERO, BigDecimal.ONE);
+        List<BigDecimal> msgPrice = Arrays.asList(BigDecimal.valueOf(5), BigDecimal.valueOf(10));
         List<BigDecimal> callPrice = Arrays.asList(
                 BigDecimal.valueOf(100),
                 BigDecimal.valueOf(150),
