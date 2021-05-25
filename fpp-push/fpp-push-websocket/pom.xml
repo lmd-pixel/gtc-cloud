@@ -6,18 +6,35 @@
 
     <parent>
         <artifactId>fpp-push</artifactId>
-        <groupId>com.fmisser.fpp</groupId>
+        <groupId>com.fmisser.push</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>fpp-push-ws</artifactId>
+    <artifactId>fpp-push-websocket</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
     </dependencies>
+
 </project>
