@@ -46,6 +46,7 @@
 
         <module>auth_service</module>
         <module>social_service</module>
+        <module>push_service</module>
 
         <!--        <module>registry</module>-->
 <!--        <module>gateway</module>-->
