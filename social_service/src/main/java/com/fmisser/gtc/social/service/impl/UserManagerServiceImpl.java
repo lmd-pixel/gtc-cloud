@@ -9,6 +9,7 @@ import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.*;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,7 @@ import org.springframework.util.StringUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class UserManagerServiceImpl implements UserManagerService {
@@ -33,6 +35,7 @@ public class UserManagerServiceImpl implements UserManagerService {
     private final IdentityAuditService identityAuditService;
     private final ImService imService;
     private final AsyncService asyncService;
+    private final UserMaterialService userMaterialService;
 
     @Override
     public Pair<List<AnchorDto>,Map<String, Object>> getAnchorList(String digitId, String nick, String phone, Integer gender,
@@ -241,9 +244,16 @@ public class UserManagerServiceImpl implements UserManagerService {
             }
         });
 
+//        userPhotosAudit.ifPresent(identityAudit -> {
+//            if (Objects.nonNull(identityAudit.getPhotos())) {
+//                user.setPhotos(identityAudit.getPhotos());
+//            }
+//        });
+        // 守护版本审核功能替换
         userPhotosAudit.ifPresent(identityAudit -> {
-            if (Objects.nonNull(identityAudit.getPhotos())) {
-                user.setPhotos(identityAudit.getPhotos());
+            List<UserMaterial> photos = userMaterialService.getAuditPhotos(user);
+            if (photos.size() > 0) {
+                user.setOriginPhotos(photos);
             }
         });
 
@@ -414,6 +424,18 @@ public class UserManagerServiceImpl implements UserManagerService {
                 identityAuditRepository.save(identityAuditPrepare);
             }
 
+            if (type == 2) {
+                // 守护版本， 处理照片逻辑，删除审核准备的照片，把审核中照片转化成正常照片
+                List<UserMaterial> auditPreparePhotos = userMaterialService.getAuditPreparePhotos(user);
+                userMaterialService.deleteList(auditPreparePhotos);
+
+                List<UserMaterial> auditPhotos = userMaterialService.getAuditPhotos(user);
+                auditPhotos.forEach(userMaterial -> {
+                    userMaterial.setType(0);
+                });
+                userMaterialService.updateList(auditPhotos);
+            }
+
             switch (type) {
                 case 1:
                     imService.sendToUser(null, user, "您提交的个人资料已审核通过");
@@ -551,6 +573,20 @@ public class UserManagerServiceImpl implements UserManagerService {
     @Override
     public Pair<List<CalcTotalProfitDto>, Map<String, Object>> getCalcTotalProfit(Date startTime, Date endTime, int pageIndex, int pageSize) throws ApiException {
         return null;
+    }
+
+    @Override
+    public int anchorVideoAudit(String digitId, int operate, String message) throws ApiException {
+        log.info("[user manager] anchor video audit with digit id: {}, operate: {}, message: {}.",
+                digitId, operate, message);
+
+        if (operate == 1) {
+            User user = userService.getUserByDigitId(digitId);
+            user.setVideoAudit(1);
+            userRepository.save(user);
+        }
+
+        return 1;
     }
 
     // 创建标签

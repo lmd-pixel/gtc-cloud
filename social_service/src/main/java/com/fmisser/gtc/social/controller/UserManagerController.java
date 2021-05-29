@@ -342,4 +342,19 @@ public class UserManagerController {
         return ApiResp.succeed(userManagerService.getUserProfile(digitId));
     }
 
+    @ApiOperation(value = "主播视频认证审核")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header"),
+            @ApiImplicitParam(name = "serialNumber", value = "申请编号", paramType = "query", required = true),
+            @ApiImplicitParam(name = "operate", value = "审核操作： 0: 审核不通过 1：审核通过", paramType = "query", defaultValue = "0", dataType = "Integer"),
+            @ApiImplicitParam(name = "message", value = "审核备注信息", paramType = "query")
+    })
+    @PostMapping(value = "/anchor-video-audit")
+    ApiResp<Integer> anchorVideoAudit(@RequestParam(value = "digitId") String digitId,
+                                      @RequestParam(value = "operate") @Range(min = 0, max = 1) int operate,
+                                      @RequestParam(value = "message", required = false) String message) {
+        int ret = userManagerService.anchorVideoAudit(digitId, operate, message);
+        return ApiResp.succeed(ret, "设置成功");
+    }
+
 }

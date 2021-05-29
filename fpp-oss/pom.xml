@@ -8,7 +8,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>2.3.4.RELEASE</version>
-<!--        <relativePath/> &lt;!&ndash; lookup parent from repository &ndash;&gt;-->
+        <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
     <groupId>com.fmisser.fpp</groupId>
@@ -36,6 +36,7 @@
     <modules>
         <module>fpp-oss-abstract-layer</module>
         <module>fpp-oss-minio</module>
+        <module>fpp-oss-cos</module>
     </modules>
 
 </project>

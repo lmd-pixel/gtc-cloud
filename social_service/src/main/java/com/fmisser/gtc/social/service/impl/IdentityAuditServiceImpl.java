@@ -5,9 +5,13 @@ import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.IdentityAudit;
 import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.social.domain.UserMaterial;
 import com.fmisser.gtc.social.repository.IdentityAuditRepository;
 import com.fmisser.gtc.social.repository.UserRepository;
 import com.fmisser.gtc.social.service.IdentityAuditService;
+import com.fmisser.gtc.social.service.UserMaterialService;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.retry.annotation.Retryable;
@@ -17,19 +21,16 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@AllArgsConstructor
 public class IdentityAuditServiceImpl implements IdentityAuditService {
 
     private final UserRepository userRepository;
-
     private final IdentityAuditRepository identityAuditRepository;
-
-    public IdentityAuditServiceImpl(UserRepository userRepository,
-                                    IdentityAuditRepository identityAuditRepository) {
-        this.userRepository = userRepository;
-        this.identityAuditRepository = identityAuditRepository;
-    }
+    private final UserMaterialService userMaterialService;
 
     @Override
     public Optional<IdentityAudit> getLastProfileAudit(User user) throws ApiException {
@@ -80,6 +81,81 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
             }
         }
 
+
+        if (mode == 0 || mode == 2) {
+            // 照片审核
+            Optional<IdentityAudit> optionalIdentityAudit = getLastPhotosAudit(user);
+            if (optionalIdentityAudit.isPresent() &&
+                    optionalIdentityAudit.get().getStatus() == 10) {
+                throw new ApiException(-1, "用户照片仍在审核中，无法再次提交");
+            } else {
+//            IdentityAudit identityAudit = _createIdentityAudit(user, 2);
+//            identityAuditRepository.save(identityAudit);
+
+                IdentityAudit identityAudit = _createPhotosAuditFromPrepare(user, 2);
+                if (Objects.nonNull(identityAudit)) {
+                    identityAuditRepository.save(identityAudit);
+                }
+            }
+        }
+
+        if (mode == 0 || mode == 3) {
+            // 视频审核
+            Optional<IdentityAudit> optionalIdentityAudit = getLastVideoAudit(user);
+            if (optionalIdentityAudit.isPresent() &&
+                    optionalIdentityAudit.get().getStatus() == 10) {
+                throw new ApiException(-1, "用户视频仍在审核中，无法再次提交");
+            } else {
+//            IdentityAudit identityAudit = _createIdentityAudit(user, 3);
+//            identityAuditRepository.save(identityAudit);
+
+                IdentityAudit identityAudit = _createVideoAuditFromPrepare(user, 3);
+                if (Objects.nonNull(identityAudit)) {
+                    identityAuditRepository.save(identityAudit);
+                }
+            }
+        }
+
+        return 1;
+    }
+
+    @Override
+    public int requestIdentityAuditEx(User user, int type, int mode) throws ApiException {
+        if (type == 1) {
+            if (!_checkProfileCompleted(user) ||
+                    !_checkPhotosCompleted(user) ||
+                    !_checkVideoCompleted(user)) {
+                throw new ApiException(-1, "资料尚未完善，请先完善资料再提交审核");
+            }
+        }
+
+//        if (user.getIdentity() == 1) {
+//            throw new ApiException(-1, "已完成了所有认证，无需再次认证");
+//        }
+
+        // 资料审核
+        if (mode == 0 || mode == 1) {
+            Optional<IdentityAudit> optionalIdentityAudit = getLastProfileAudit(user);
+            if (optionalIdentityAudit.isPresent() &&
+                    optionalIdentityAudit.get().getStatus() == 10) {
+                throw new ApiException(-1, "用户资料仍在审核中，无法再次提交");
+            } else {
+//            IdentityAudit identityAudit = _createIdentityAudit(user, 1);
+//            identityAuditRepository.save(identityAudit);
+
+                IdentityAudit identityAudit = _createProfileAuditFromPrepare(user, 1);
+                if (Objects.nonNull(identityAudit)) {
+                    identityAuditRepository.save(identityAudit);
+
+                    // 守护版本 创建照片审核
+                    List<UserMaterial> auditPreparePhotos = userMaterialService.getAuditPreparePhotos(user);
+                    List<UserMaterial> auditPhotos = auditPreparePhotos.stream()
+                            .peek(userMaterial -> userMaterial.setType(12))
+                            .collect(Collectors.toList());
+                    userMaterialService.updateList(auditPhotos);
+                }
+            }
+        }
 
         if (mode == 0 || mode == 2) {
             // 照片审核

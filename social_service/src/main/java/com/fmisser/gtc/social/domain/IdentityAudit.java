@@ -87,8 +87,13 @@ public class IdentityAudit {
     @Column
     private String head;
 
+    // 老版本的photos数据
     @Column(length = 4096)
     private String photos;
+
+    // 守护版本后的photos数据 已经放到 UserMaterial里面
+    @Column
+    private Integer materialPhoto;
 
     @Column
     private String video;

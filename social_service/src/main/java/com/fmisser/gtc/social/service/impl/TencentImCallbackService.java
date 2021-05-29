@@ -206,6 +206,14 @@ public class TencentImCallbackService implements ImCallbackService {
             return resp;
         }
 
+        if (userFrom.getIdentity() == 1 && userTo.getIdentity() == 1) {
+            // 不允许主播和主播聊天
+            resp.setActionStatus("FAIL");
+            resp.setErrorCode(-1);
+            resp.setErrorInfo("非法关系");
+            return resp;
+        }
+
         BigDecimal messagePrice = userTo.getMessagePrice();
         if (Objects.isNull(messagePrice) || messagePrice.equals(BigDecimal.ZERO)) {
             // 没有设定价格 或者是0

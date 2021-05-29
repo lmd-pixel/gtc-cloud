@@ -81,7 +81,7 @@ public class DynamicController {
     @PostMapping(value = "/heart")
     @PreAuthorize("hasAnyRole('USER')")
     ApiResp<Integer> heart(@RequestParam("dynamicId") Long dynamicId,
-                                @RequestParam("isCancel") int isCancel) {
+                           @RequestParam("isCancel") int isCancel) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);

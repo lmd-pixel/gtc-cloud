@@ -25,6 +25,9 @@ public interface IdentityAuditService {
     // mode 是 0表示有待审核的都提交 1 2 3分别表示单独提交资料 照片 视频
     int requestIdentityAudit(User user, int type, int mode) throws ApiException;
 
+    // 守护版本新的审核
+    int requestIdentityAuditEx(User user, int type, int mode) throws ApiException;
+
     // 一次性获得最近的一次审核数据
     List<IdentityAudit> getLatestAuditAllType(User user) throws ApiException;
 

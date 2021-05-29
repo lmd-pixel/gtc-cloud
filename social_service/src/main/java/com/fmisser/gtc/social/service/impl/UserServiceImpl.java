@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.service.impl;
 
+import brave.internal.collect.Lists;
 import com.fmisser.fpp.oss.abs.service.OssService;
 import com.fmisser.gtc.base.dto.im.ImQueryStateResp;
 import com.fmisser.gtc.base.dto.social.ProfitConsumeDetail;
@@ -40,42 +41,26 @@ import java.util.stream.Stream;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-
 //    private final MinioUtils minioUtils;
-
     private final LabelRepository labelRepository;
-
     private final OssConfProp ossConfProp;
-
     private final IdentityAuditService identityAuditService;
-
     private final AssetRepository assetRepository;
-
     private final BlockRepository blockRepository;
-
     private final FollowRepository followRepository;
-
     private final InviteRepository inviteRepository;
-
     private final CouponService couponService;
-
     private final SystemTips systemTips;
-
     private final GreetDelayedBinding greetDelayedBinding;
-
     private final SysConfigService sysConfigService;
-
     private final IdentityAuditRepository identityAuditRepository;
-
 //    private final ImFeign imFeign;
-//
 //    private final ImConfProp imConfProp;
-
     private final ImService imService;
-
     private final OssService ossService;
-
     private final AsyncService asyncService;
+    private final UserMaterialService userMaterialService;
+    private final GuardService guardService;
 
     @Transactional
     @Override
@@ -235,6 +220,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User profile(User user) throws ApiException {
+
+        // 守护版本 照片单独存储
+//        user.setOriginPhotos(userMaterialService.getPhotos(user));
+
         return _prepareResponse(user);
     }
 
@@ -243,20 +232,12 @@ public class UserServiceImpl implements UserService {
         // 判断是否在审核中
         // 如果在审核中，则用审核中的数据覆盖当前的
         Optional<IdentityAudit> userProfileAudit = identityAuditService.getLastProfileAudit(user);
-        if (!userProfileAudit.isPresent() ||
-                (userProfileAudit.isPresent() && userProfileAudit.get().getStatus() != 10)) {
+        if (!userProfileAudit.isPresent() || userProfileAudit.get().getStatus() != 10) {
             userProfileAudit = identityAuditService.getLastProfilePrepare(user);
         }
 
-        Optional<IdentityAudit> userPhotosAudit = identityAuditService.getLastPhotosAudit(user);
-        if (!userPhotosAudit.isPresent() ||
-                (userPhotosAudit.isPresent() && userPhotosAudit.get().getStatus() != 10)) {
-            userPhotosAudit = identityAuditService.getLastPhotosPrepare(user);
-        }
-
         Optional<IdentityAudit> userVideoAudit = identityAuditService.getLastVideoAudit(user);
-        if (!userVideoAudit.isPresent() ||
-                (userVideoAudit.isPresent() && userVideoAudit.get().getStatus() != 10)) {
+        if (!userVideoAudit.isPresent() || userVideoAudit.get().getStatus() != 10) {
             userVideoAudit = identityAuditService.getLastVideoPrepare(user);
         }
 
@@ -300,17 +281,35 @@ public class UserServiceImpl implements UserService {
             }
         });
 
-        userPhotosAudit.ifPresent(identityAudit -> {
-            if (Objects.nonNull(identityAudit.getPhotos())) {
-                user.setPhotos(identityAudit.getPhotos());
-            }
-        });
-
         userVideoAudit.ifPresent(identityAudit -> {
             if (Objects.nonNull(identityAudit.getVideo())) {
                 user.setVideo(identityAudit.getVideo());
             }
         });
+
+        // 守护版本照片处理
+        List<UserMaterial> photos;
+        Optional<IdentityAudit> userPhotosAudit = identityAuditService.getLastPhotosPrepare(user);
+        if (userPhotosAudit.isPresent()) {
+            // 如有审核准备数据，使用该数据
+            photos = userMaterialService.getAuditPreparePhotos(user);
+        } else {
+            userPhotosAudit = identityAuditService.getLastPhotosAudit(user);
+            if (userPhotosAudit.isPresent() && userPhotosAudit.get().getStatus() == 10) {
+                // 有正在审核的数据， 使用审核数据
+                photos = userMaterialService.getAuditPhotos(user);
+            } else {
+                // 使用正常数据
+                photos = userMaterialService.getPhotos(user);
+            }
+        }
+        user.setOriginPhotos(photos);
+
+        // 守护版本认证视频处理
+        UserMaterial auditVideoMaterial = userMaterialService.getAuditVideo(user);
+        if (Objects.nonNull(auditVideoMaterial)) {
+            user.setVideoAuditUrl(auditVideoMaterial.getName());
+        }
 
         return _prepareResponse(user);
     }
@@ -953,11 +952,21 @@ public class UserServiceImpl implements UserService {
             }
         });
 
+        // 获取关注相关信息
         Follow follow = followRepository.findByUserIdFromAndUserIdTo(selfUserId, finalUser.getId());
         if (Objects.nonNull(follow) && follow.getStatus() == 1) {
             finalUser.setIsFollow(1);
         } else {
             finalUser.setIsFollow(0);
+        }
+
+        // 获取守护相关信息
+        finalUser.setIsGuard(0);
+        if (Objects.nonNull(selfUser)) {
+            boolean isGuard = guardService.isGuard(selfUser, user);
+            if (isGuard) {
+                finalUser.setIsGuard(1);
+            }
         }
 
         return finalUser;
@@ -1051,6 +1060,202 @@ public class UserServiceImpl implements UserService {
         } else {
             return userRepository.getUserConsumeList(user.getId(), limitDay, pageable).getContent();
         }
+    }
+
+    @SneakyThrows
+    @Override
+    public User updatePhotosEx(User user, Integer updateType,
+                             String existsNames, String guardNames, String coverName,
+                             Map<String, MultipartFile> multipartFileMap) throws ApiException {
+        // 操作模式， 1: 普通资料更新，2: 待审核资料更新
+        IdentityAudit audit = null;
+
+        if (updateType == 1) {
+            // 认证资料的修改
+
+            // 如果已经有资料在审核
+            Optional<IdentityAudit> identityAudit = identityAuditService.getLastPhotosAudit(user);
+
+            if (identityAudit.isPresent() &&
+                    identityAudit.get().getStatus() == 10) {
+                // 资料审核中不能修改
+                throw new ApiException(-1, "资料在认证审核中，暂时无法修改");
+            }
+
+            // 创建或者获取最近的一次待审核资料
+            audit = identityAuditService.createAuditPrepare(user, 12);
+        }
+
+        Map<String, UserMaterial> photoMap = new HashMap<>();
+        Long userId = user.getId();
+        for (MultipartFile file: multipartFileMap.values()) {
+            if (file.isEmpty()) {
+                continue;
+            }
+
+            String randomUUID = UUID.randomUUID().toString();
+            InputStream inputStream = file.getInputStream();
+            String filename = file.getOriginalFilename();
+            String suffixName = filename.substring(filename.lastIndexOf("."));
+
+            if (!isPictureSupported(suffixName)) {
+                throw new ApiException(-1, "图片格式不支持!");
+            }
+
+            String objectName = String.format("%s%s_%s_%s%s",
+                    ossConfProp.getUserProfilePhotoPrefix(),
+                    CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
+                    new Date().getTime(),
+                    randomUUID,
+                    suffixName);
+
+            String response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
+                    objectName,
+                    inputStream,
+                    file.getSize(),
+                    "image/png",
+                    ossService);
+
+            if (!StringUtils.isEmpty(response)) {
+                // 创建新的
+                UserMaterial userMaterial = new UserMaterial();
+                userMaterial.setUserId(userId);
+                if (updateType == 1) {
+                    userMaterial.setType(11);
+                } else {
+                    userMaterial.setType(0);
+                }
+                photoMap.put(filename, userMaterial);
+            }
+        }
+
+        // 设定守护照片以及封面照片
+        if (!StringUtils.isEmpty(guardNames)) {
+            List<String> guardNameList = changePhotosToList(guardNames);
+            guardNameList.forEach(s -> {
+                if (photoMap.containsKey(s)) {
+                    photoMap.get(s).setPurpose(1);
+                }
+            });
+        }
+        if (!StringUtils.isEmpty(coverName)) {
+            if (photoMap.containsKey(coverName)) {
+                photoMap.get(coverName).setPurpose(2);
+            }
+        }
+
+        // 存储新生成的
+        userMaterialService.addList(photoMap.values());
+
+        // 处理已经存在的
+        List<UserMaterial> photoMaterialList;
+        if (updateType == 1) {
+            photoMaterialList = userMaterialService.getAuditPreparePhotos(user);
+        } else {
+            photoMaterialList = userMaterialService.getPhotos(user);
+        }
+
+        if (photoMaterialList.size() > 0 && !StringUtils.isEmpty(existsNames)) {
+            // 过滤掉不存在的
+            List<String> existPhotos = changePhotosToList(existsNames);
+            List<UserMaterial> needRemovePhotos = photoMaterialList.stream()
+                    .filter(userMaterial -> !existPhotos.contains(userMaterial.getName()))
+                    .collect(Collectors.toList());
+
+            photoMaterialList.removeAll(needRemovePhotos);
+
+            // 删除无用的
+            userMaterialService.deleteList(needRemovePhotos);
+
+            // 已经存在的也需要再判断一次是否匹配守护和封面
+            if (!StringUtils.isEmpty(guardNames)) {
+                List<String> guardNameList = changePhotosToList(guardNames);
+                guardNameList.forEach(s -> {
+                    photoMaterialList.stream()
+                            .filter(userMaterial -> userMaterial.getName().equals(s))
+                            .findFirst()
+                            .ifPresent(userMaterial -> {
+                                userMaterial.setPurpose(1);
+                                userMaterialService.updateList(Collections.singletonList(userMaterial));
+                            });
+                });
+            }
+            if (!StringUtils.isEmpty(coverName)) {
+                photoMaterialList.stream()
+                        .filter(userMaterial -> userMaterial.getName().equals(coverName))
+                        .findFirst()
+                        .ifPresent(userMaterial -> {
+                            userMaterial.setPurpose(2);
+                            userMaterialService.updateList(Collections.singletonList(userMaterial));
+                        });
+            }
+        }
+        
+        if (updateType == 1) {
+            audit.setMaterialPhoto(1);
+            identityAuditRepository.save(audit);
+
+            return getSelfProfile(user);
+        } else {
+//            user = userRepository.save(user);
+
+            user.setOriginPhotos(userMaterialService.getPhotos(user));
+            return _prepareResponse(user);
+        }
+    }
+
+    @SneakyThrows
+    @Override
+    public User updateVerifyVideo(User user, Integer code,
+                                  Map<String, MultipartFile> multipartFileMap) throws ApiException {
+
+        if (user.getVideoAudit() == 1) {
+            throw new ApiException(-1, "视频认证已经完成，无需重复提交");
+        }
+
+        for (MultipartFile file: multipartFileMap.values()) {
+            if (file.isEmpty()) {
+                continue;
+            }
+
+            String randomUUID = UUID.randomUUID().toString();
+
+            InputStream inputStream = file.getInputStream();
+            String filename = file.getOriginalFilename();
+            String suffixName = filename.substring(filename.lastIndexOf("."));
+
+            if (!isVideoSupported(suffixName)) {
+                throw new ApiException(-1, "视频格式不支持!");
+            }
+
+            // 视频暂不提供压缩
+            String objectName = String.format("%s%s_%s_%s%s",
+                    ossConfProp.getUserProfileVideoPrefix(),
+                    CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
+                    new Date().getTime(),
+                    randomUUID,
+                    suffixName);
+
+            String response = ossService.putObject(ossConfProp.getUserProfileBucket(), objectName,
+                    inputStream, file.getSize(), "video/mp4");
+
+            // 删除老的
+            UserMaterial userMaterial = userMaterialService.getAuditVideo(user);
+            if (Objects.nonNull(userMaterial)) {
+                userMaterialService.deleteList(Collections.singletonList(userMaterial));
+            }
+
+            userMaterial = new UserMaterial();
+            userMaterial.setUserId(user.getId());
+            userMaterial.setType(2);
+            userMaterial.setPurpose(code);
+            userMaterialService.addList(Collections.singletonList(userMaterial));
+
+            // 只处理第一个能处理的视频
+            return getSelfProfile(user);
+        }
+
+        throw new ApiException(-1, "缺少视频数据");
     }
 
     // TODO: 2020/12/30 整理到其他地方
@@ -1198,6 +1403,49 @@ public class UserServiceImpl implements UserService {
                 // 在排班时间内
                 user.setCurrRest(1);
             }
+        }
+
+        // 守护版本照片判断
+        List<UserMaterial> lastPhotos;
+        if (Objects.nonNull(user.getOriginPhotos())) {
+            // 已经有其他地方已经填入了该参数，优先使用这个
+            lastPhotos = user.getOriginPhotos();
+        } else {
+            // 尝试获取守护版本存在的照片
+            lastPhotos = userMaterialService.getPhotos(user);
+            if (lastPhotos.size() == 0) {
+                // 如果不存在，则可能是老版本，尝试兼容老版本的照片, 这里的兼容是针对新版本，上面老的是用在旧版本，不冲突
+                if (Objects.nonNull(user.getPhotos())) {
+                    List<String> photosNameList = changePhotosToList(user.getPhotos());
+                    photosNameList.forEach(s -> {
+                        UserMaterial userMaterial = new UserMaterial();
+                        userMaterial.setUserId(user.getId());
+                        userMaterial.setName(s);
+                        lastPhotos.add(userMaterial);
+                    });
+                }
+            }
+        }
+
+        if (lastPhotos.size() > 0) {
+            List<UserMaterial> originPhotos = lastPhotos.stream()
+                    .peek(userMaterial -> userMaterial.setName(String.format("%s/%s/%s",
+                            ossConfProp.getMinioVisitUrl(), ossConfProp.getUserProfileBucket(), userMaterial.getName())))
+                    .collect(Collectors.toList());
+
+            List<UserMaterial> thumbnailPhotos = lastPhotos.stream()
+                    .peek(userMaterial -> userMaterial.setName(String.format("%s/%s/thumbnail_%s",
+                            ossConfProp.getMinioVisitUrl(), ossConfProp.getUserProfileBucket(), userMaterial.getName())))
+                    .collect(Collectors.toList());
+
+            user.setOriginPhotos(originPhotos);
+            user.setThumbnailPhotos(thumbnailPhotos);
+        }
+
+        if (Objects.nonNull(user.getVideoAuditUrl())) {
+            String completeUrl = String.format("%s/%s/%s",
+                    ossConfProp.getMinioVisitUrl(), ossConfProp.getUserProfileBucket(), user.getVideoAuditUrl());
+            user.setVideoAuditUrl(completeUrl);
         }
 
         return user;
