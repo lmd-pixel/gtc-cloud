@@ -80,6 +80,7 @@ sudo docker run -p 9411:9411 --name gtc_cloud_zipkin -e STORAGE_TYPE=elasticsear
 sudo docker run -p 8001:8001 --name gtc_registry -d registry
 sudo docker run -p 8002:8002 --name gtc_auth -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/auth/:/ROOT/logs/ -d auth
 sudo docker run -p 8003:8003 --name gtc_social -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/social/:/ROOT/logs/ -d social
+sudo docker run -p 8005:8005 --name gtc_push -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/push/:/ROOT/logs/ -d push
 sudo docker run -p 8088:8088 --name gtc_gateway -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -d gateway
 sudo docker run -p 8089:8089 --name gtc_monitor -d monitor
 

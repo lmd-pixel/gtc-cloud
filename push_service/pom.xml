@@ -10,7 +10,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>push_service</artifactId>
+    <artifactId>push</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>push</name>
     <description>Demo project for Spring Boot</description>
@@ -58,7 +58,7 @@
                     <imageName>${project.artifactId}</imageName>
                     <baseImage>java</baseImage>
                     <workdir>ROOT</workdir>
-                    <exposes>8003</exposes>
+                    <exposes>8005</exposes>
                     <entryPoint>["java", "-jar", "${project.build.finalName}.jar"]</entryPoint>
                     <!--                    <dockerDirectory>docker</dockerDirectory>-->
                     <resources>
