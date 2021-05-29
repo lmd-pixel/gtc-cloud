@@ -15,13 +15,12 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 public class GuardDto {
-    public GuardDto(String digitId, String nick, int gender, Date birth, String head, long isGuard) {
+    public GuardDto(String digitId, String nick, int gender, Date birth, String head) {
         this.digitId = digitId;
         this.nick = nick;
         this.gender = gender;
         this.birth = birth;
         this.head = head;
-        this.isGuard = isGuard;
     }
 
 
@@ -32,7 +31,7 @@ public class GuardDto {
     Date birth;
     @JsonIgnore
     String head;
-    long isGuard;
+//    long isGuard;
 
     int age;
     private String headUrl;

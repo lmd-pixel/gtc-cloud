@@ -12,6 +12,7 @@ import com.tencentcloudapi.tms.v20201229.TmsClient;
 import com.tencentcloudapi.tms.v20201229.models.DetailResults;
 import com.tencentcloudapi.tms.v20201229.models.TextModerationRequest;
 import com.tencentcloudapi.tms.v20201229.models.TextModerationResponse;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,61 +23,22 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
+@AllArgsConstructor
 public class TencentImCallbackService implements ImCallbackService {
 
     private final AssetRepository assetRepository;
-
     private final UserRepository userRepository;
-
     private final MessageBillRepository messageBillRepository;
-
     private final CouponService couponService;
-
     private final CouponRepository couponRepository;
-
     private final ActiveRepository activeRepository;
-
     private final GreetService greetService;
-
-    private final ImService imService;
-
+//    private final ImService imService;
     private final SysConfigService sysConfigService;
-
     private final ForbiddenService forbiddenService;
-
     private final ImConfProp imConfProp;
-
     private final ModerationService moderationService;
-
     private final UserMessageRepository userMessageRepository;
-
-    public TencentImCallbackService(AssetRepository assetRepository,
-                                    UserRepository userRepository,
-                                    MessageBillRepository messageBillRepository,
-                                    CouponService couponService,
-                                    CouponRepository couponRepository,
-                                    ActiveRepository activeRepository,
-                                    GreetService greetService,
-                                    ImService imService,
-                                    SysConfigService sysConfigService,
-                                    ForbiddenService forbiddenService,
-                                    ImConfProp imConfProp,
-                                    ModerationService moderationService,
-                                    UserMessageRepository userMessageRepository) {
-        this.assetRepository = assetRepository;
-        this.userRepository = userRepository;
-        this.messageBillRepository = messageBillRepository;
-        this.couponService = couponService;
-        this.couponRepository = couponRepository;
-        this.activeRepository = activeRepository;
-        this.greetService = greetService;
-        this.imService = imService;
-        this.sysConfigService = sysConfigService;
-        this.forbiddenService = forbiddenService;
-        this.imConfProp = imConfProp;
-        this.moderationService = moderationService;
-        this.userMessageRepository = userMessageRepository;
-    }
 
     @Override
     public ImCbResp stateChangeCallback(ImStateChangeDto imStateChangeDto) {
