@@ -20,9 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class PushController {
     private final PushService pushService;
 
-    @GetMapping("/test-push")
-    public ApiResp<Integer> testPushMessage() {
-        pushService.broadcastGiftPresentMsg("hello world");
+    @GetMapping("/broadcast")
+    public ApiResp<Integer> broadcast(@RequestParam("content") String content) {
+        pushService.broadcastMsg(content);
         return ApiResp.succeed(1);
     }
 }

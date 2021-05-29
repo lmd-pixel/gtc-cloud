@@ -8,6 +8,6 @@ import com.fmisser.gtc.base.exception.ApiException;
  * @description TODO
  */
 public interface PushService {
-    // 广播礼物赠送消息
-    void broadcastGiftPresentMsg(String content) throws ApiException;
+    // 广播消息
+    void broadcastMsg(String content) throws ApiException;
 }

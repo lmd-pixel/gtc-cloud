@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.controller;
 
+import com.fmisser.gtc.base.dto.social.GuardDto;
 import com.fmisser.gtc.base.dto.social.RecvGiftDto;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.*;
@@ -7,6 +8,7 @@ import com.fmisser.gtc.social.service.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +23,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/comm")
 @Validated
+@AllArgsConstructor
 public class CommonController {
     private final UserService userService;
     private final ProductService productService;
@@ -28,20 +31,7 @@ public class CommonController {
     private final LabelService labelService;
     private final GiftService giftService;
     private final SysConfigService sysConfigService;
-
-    public CommonController(UserService userService,
-                            ProductService productService,
-                            DistrictService districtService,
-                            LabelService labelService,
-                            GiftService giftService,
-                            SysConfigService sysConfigService) {
-        this.userService = userService;
-        this.productService = productService;
-        this.districtService = districtService;
-        this.labelService = labelService;
-        this.giftService = giftService;
-        this.sysConfigService = sysConfigService;
-    }
+    private final GuardService guardService;
 
     @ApiOperation(value = "获取主播列表")
     @GetMapping(value = "/list-anchor")
@@ -210,5 +200,16 @@ public class CommonController {
         objectMap.put("url", "");
 
         return ApiResp.succeed(objectMap);
+    }
+
+    @ApiOperation(value = "获取主播的守护列表")
+    @GetMapping("anchor-guard-list")
+    ApiResp<List<GuardDto>> getAnchorGuardList(@RequestParam("digitId") String digitId) {
+        User user = userService.getUserByDigitId(digitId);
+
+        List<GuardDto> guardList = guardService.getAnchorGuardList(user);
+        Map<String, Object> extraMap = new HashMap<>();
+        extraMap.put("totalGuard", guardList.size());
+        return ApiResp.succeed(guardList.subList(0, 10), extraMap);
     }
 }

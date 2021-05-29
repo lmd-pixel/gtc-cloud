@@ -20,7 +20,7 @@ public class PushServiceImpl implements PushService {
     private final WebsocketHandler websocketHandler;
 
     @Override
-    public void broadcastGiftPresentMsg(String content) throws ApiException {
+    public void broadcastMsg(String content) throws ApiException {
         websocketHandler.broadcastMessage(content);
     }
 }

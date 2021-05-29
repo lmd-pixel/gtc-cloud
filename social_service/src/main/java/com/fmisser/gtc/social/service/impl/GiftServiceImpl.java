@@ -8,7 +8,10 @@ import com.fmisser.gtc.social.repository.AssetRepository;
 import com.fmisser.gtc.social.repository.GiftBillRepository;
 import com.fmisser.gtc.social.repository.GiftRepository;
 import com.fmisser.gtc.social.service.GiftService;
+import com.fmisser.gtc.social.service.GuardService;
 import com.fmisser.gtc.social.service.ImService;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -21,30 +24,17 @@ import java.util.UUID;
 
 import static com.fmisser.gtc.social.service.impl.TencentImCallbackService.createBillSerialNumber;
 
+@Slf4j
 @Service
+@AllArgsConstructor
 public class GiftServiceImpl implements GiftService {
 
     private final GiftRepository giftRepository;
-
     private final GiftBillRepository giftBillRepository;
-
     private final AssetRepository assetRepository;
-
     private final ImService imService;
-
     private final OssConfProp ossConfProp;
-
-    public GiftServiceImpl(GiftRepository giftRepository,
-                           GiftBillRepository giftBillRepository,
-                           AssetRepository assetRepository,
-                           ImService imService,
-                           OssConfProp ossConfProp) {
-        this.giftRepository = giftRepository;
-        this.giftBillRepository = giftBillRepository;
-        this.assetRepository = assetRepository;
-        this.imService = imService;
-        this.ossConfProp = ossConfProp;
-    }
+    private final GuardService guardService;
 
     @Override
     public List<Gift> getGiftList() throws ApiException {
@@ -104,6 +94,11 @@ public class GiftServiceImpl implements GiftService {
 
         giftBillRepository.save(giftBill);
 
+        // 守护判断
+        if (fromUser.getIdentity() == 0 && toUser.getIdentity() == 1 && isGuardGift(gift)) {
+            guardService.becomeGuard(fromUser, toUser);
+        }
+
         // 发送通知消息
         // TODO: 2021/1/4 通过mq放到 notice service 去做
         imService.sendGiftMsg(fromUser, toUser, gift, count);
@@ -115,6 +110,11 @@ public class GiftServiceImpl implements GiftService {
     public List<RecvGiftDto> getRecvGiftList(User user, int pageIndex, int pageSize) throws ApiException {
         List<RecvGiftDto> recvGiftDtoList = giftBillRepository.getRecvGiftList(user.getId());
         return _prepareRecvGiftResponse(recvGiftDtoList);
+    }
+
+    @Override
+    public boolean isGuardGift(Gift gift) throws ApiException {
+        return gift.getName().equals("女神");
     }
 
     private List<Gift> _prepareGiftResponse(List<Gift> giftList) {

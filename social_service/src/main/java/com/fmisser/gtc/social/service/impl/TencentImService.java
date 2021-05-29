@@ -20,6 +20,7 @@ import com.tencentcloudapi.trtc.v20190722.models.DismissRoomRequest;
 import com.tencentcloudapi.trtc.v20190722.models.DismissRoomResponse;
 import lombok.Data;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
@@ -46,6 +47,7 @@ import static com.fmisser.gtc.social.service.impl.TencentImCallbackService.creat
  * 腾讯im 实现
  */
 
+@Slf4j
 @Service
 public class TencentImService implements ImService {
 
@@ -145,6 +147,10 @@ public class TencentImService implements ImService {
         call.setCommId(UUID.randomUUID().toString());
 
         call = callRepository.save(call);
+
+        log.info("[call] user: {} dial user: {} with call id: {}, room id: {}, type: {}",
+                userFrom.getDigitId(), userTo.getDigitId(),  call.getId(), call.getRoomId(), type);
+
         return call.getRoomId();
     }
 
@@ -160,8 +166,17 @@ public class TencentImService implements ImService {
 //            return -1;
 //        }
 
+
         Call call = callRepository.findByRoomId(roomId);
+
+        log.info("[call] user: {} accept with call id: {}, room id: {}, type: {}",
+                userFrom.getDigitId(), call.getId(), call.getRoomId(), call.getType());
+
         if (call.getIsFinished() == 1) {
+
+            log.info("[call] user: {} accept with call id: {}, room id: {}, type: {} failed, this call is finished.",
+                    userFrom.getDigitId(), call.getId(), call.getRoomId(), call.getType());
+
             return -2;
         }
 
@@ -182,6 +197,10 @@ public class TencentImService implements ImService {
 
         // 根据用户不同返回不同类型数据
         Call call = callRepository.findByRoomId(roomId);
+
+        log.info("[call] user: {} hangup with call id: {}, room id: {}, type: {}.",
+                user.getDigitId(), call.getId(), call.getRoomId(), call.getType());
+
         if (call.getIsFinished() == 0) {
             // 生成结束信息
             Date now = new Date();

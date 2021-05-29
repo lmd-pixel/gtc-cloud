@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.controller;
 
 import com.fmisser.fpp.cache.redis.service.RedisService;
+import com.fmisser.gtc.base.dto.social.GuardDto;
 import com.fmisser.gtc.base.dto.social.ProfitConsumeDetail;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.response.ApiResp;
@@ -38,6 +39,7 @@ public class UserController {
     private final SysConfigService sysConfigService;
     private final UserDeviceService userDeviceService;
     private final AssistService assistService;
+    private final GuardService guardService;
 
     @ApiOperation(value = "创建用户")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
@@ -142,6 +144,55 @@ public class UserController {
         //
         // TODO: 2020/11/10 check params
         User user = userService.updateVideo(userDo, updateType, request.getFileMap());
+
+        // 针对版本审核
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
+            user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+        }
+
+        return ApiResp.succeed(user);
+    }
+
+    @ApiOperation(value = "更新用户照片(守护版本)")
+    @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
+    @PostMapping(value = "/update-photos-ex")
+    ApiResp<User> uploadPhotosEx(MultipartHttpServletRequest request,
+                               @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+                               @RequestParam(value = "update_type", required = false, defaultValue = "1") Integer updateType,
+                               @RequestParam(value = "existsNames", required = false) String existsNames,
+                               @RequestParam(value = "guardNames", required = false) String guardNames,
+                               @RequestParam(value = "coverName", required = false) String coverName) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+        //
+        // TODO: 2020/11/10 check params
+        User user = userService.updatePhotosEx(userDo, updateType, existsNames, guardNames, coverName, request.getFileMap());
+
+        // 针对版本审核
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
+            user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+        }
+
+        return ApiResp.succeed(user);
+    }
+
+    @ApiOperation(value = "更新认证视频（守护版本）")
+    @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
+    @PostMapping(value = "/update-audit-video")
+    ApiResp<User> uploadAuditVideo(MultipartHttpServletRequest request,
+                              @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+                              @RequestParam(value = "code", required = false, defaultValue = "1") Integer code) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+        //
+        // TODO: 2020/11/10 check params
+        User user = userService.updateVerifyVideo(userDo, code, request.getFileMap());
 
         // 针对版本审核
         if (sysConfigService.getAppAuditVersion().equals(version)) {
@@ -263,6 +314,34 @@ public class UserController {
         return ApiResp.succeed(ret);
     }
 
+    @ApiOperation(value = "请求身份审核(守护版本)")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @PostMapping(value = "/request-identity-ex")
+    ApiResp<Integer> requestIdentityEx(
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+            @RequestParam(value = "type", required = false, defaultValue = "1") Integer type,
+            @RequestParam(value = "mode", required = false, defaultValue = "0") Integer mode) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        // 针对版本审核
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
+            // 这里只是审核判断，实际值并没有写入用户信息
+            if (Objects.isNull(userDo.getMessagePrice())) {
+                userDo.setMessagePrice(BigDecimal.valueOf(1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            }
+            if (Objects.isNull(userDo.getCallPrice())) {
+                userDo.setCallPrice(BigDecimal.valueOf(450).setScale(2, BigDecimal.ROUND_HALF_UP));
+            }
+            if (Objects.isNull(userDo.getVideoPrice())) {
+                userDo.setVideoPrice(BigDecimal.valueOf(450).setScale(2, BigDecimal.ROUND_HALF_UP));
+            }
+        }
+        int ret = identityAuditService.requestIdentityAuditEx(userDo, type, mode);
+        return ApiResp.succeed(ret);
+    }
+
     @ApiOperation(value = "获取最新的身份审核信息")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @GetMapping(value = "/get-identity-info")
@@ -336,5 +415,17 @@ public class UserController {
     @GetMapping("profit-consume-list")
     ApiResp<List<ProfitConsumeDetail>> getProfitConsumeList() {
         return ApiResp.succeed(new ArrayList<ProfitConsumeDetail>());
+    }
+
+    @ApiOperation(value = "获取用户的守护列表")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @GetMapping("user-guard-list")
+    ApiResp<List<GuardDto>> getUserGuardList() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+
+        List<GuardDto> guardList = guardService.getUserGuardList(userDo);
+        return ApiResp.succeed(guardList);
     }
 }

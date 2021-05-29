@@ -134,6 +134,10 @@ public class User implements Serializable {
     @Column
     private Date restEndDate;
 
+    // 是否已经真人视频认证
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private int videoAudit = 0;
+
     // 关注数量
     @Column(nullable = false, columnDefinition = "int default 0")
     private int follows = 0;
@@ -236,4 +240,20 @@ public class User implements Serializable {
     // 当前时间是否休息
     @Transient
     private int currRest;
+
+    // 守护版本 照片
+    @Transient
+    private List<UserMaterial> originPhotos;
+
+    // 守护版本
+    @Transient
+    private List<UserMaterial> thumbnailPhotos;
+
+    // 守护版本 视频认证url
+    @Transient
+    private String videoAuditUrl;
+
+    // 守护版本 是否是我守护的主播
+    @Transient
+    private int isGuard;
 }

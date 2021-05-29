@@ -36,6 +36,7 @@
     <modules>
         <module>fpp-oss-abstract-layer</module>
         <module>fpp-oss-minio</module>
+        <module>fpp-oss-cos</module>
     </modules>
 
 </project>

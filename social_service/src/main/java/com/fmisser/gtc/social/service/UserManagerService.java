@@ -62,4 +62,7 @@ public interface UserManagerService {
     // 获取统计收益数据
     Pair<List<CalcTotalProfitDto>, Map<String, Object>> getCalcTotalProfit(Date startTime, Date endTime,
                                                                            int pageIndex, int pageSize) throws ApiException;
+
+    // 审核主播视频认证
+    int anchorVideoAudit(String digitId, int operate, String message) throws ApiException;
 }
