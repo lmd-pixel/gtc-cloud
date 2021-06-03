@@ -533,6 +533,9 @@ public class DynamicServiceImpl implements DynamicService {
                                 isGuard.set(true);
                                 dynamicDto.setSelfIsGuard(1L);
                             });
+                } else {
+                    // 不是守护动态则当成是守护的可见
+                    isGuard.set(true);
                 }
 
                 // cos 通过设定后缀返回不同作用的图（比如缩略图、模糊效果等）
@@ -541,12 +544,12 @@ public class DynamicServiceImpl implements DynamicService {
                 if (isGuard.get()) {
 //                    thumbnail_tail = "?imageMogr2/thumbnail/480x";
                     thumbnail_tail = "/gsv";
-                    origin_tail = "";
+                    origin_tail = "/0";
                 } else {
 //                    thumbnail_tail = "?imageMogr2/thumbnail/480x|imageMogr2/blur/8x10";
                     thumbnail_tail = "/ngsv";
 //                    origin_tail = "?imageMogr2/blur/8x10";
-                    origin_tail = "/ng";
+                    origin_tail = "/n";
                 }
 
                 // 提供完整的图片url
