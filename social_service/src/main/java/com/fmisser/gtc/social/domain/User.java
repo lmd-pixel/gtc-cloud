@@ -88,6 +88,12 @@ public class User implements Serializable {
     @Column(length = 4096)
     private String photos;
 
+    /**
+     * 上传的守护照片，多张照片逗号隔开
+     */
+    @Column(length = 4096)
+    private String guardPhotos;
+
     @JsonIgnore
     // 自拍认证图片
     @Column
@@ -97,6 +103,11 @@ public class User implements Serializable {
     // 视频资料
     @Column
     private String video;
+
+    @JsonIgnore
+    // 真人认证视频
+    @Column
+    private String auditVideo;
 
     // 语音呼叫价格
     @Column
@@ -242,16 +253,27 @@ public class User implements Serializable {
     private int currRest;
 
     // 守护版本 照片
+    @Deprecated
     @Transient
     private List<UserMaterial> originPhotos;
 
     // 守护版本
+    @Deprecated
     @Transient
     private List<UserMaterial> thumbnailPhotos;
+
+    @Transient
+    private List<String> guardPhotosUrlList;
+
+    @Transient
+    private List<String> thumbnailGuardPhotosUrlList;
 
     // 守护版本 视频认证url
     @Transient
     private String videoAuditUrl;
+
+    @Transient
+    private Integer videoAuditCode;
 
     // 守护版本 是否是我守护的主播
     @Transient

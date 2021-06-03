@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.service.impl;
 
+import com.fmisser.fpp.cache.redis.service.RedisService;
 import com.fmisser.gtc.base.dto.im.*;
 import com.fmisser.gtc.base.prop.ImConfProp;
 import com.fmisser.gtc.social.domain.*;
@@ -39,6 +40,7 @@ public class TencentImCallbackService implements ImCallbackService {
     private final ImConfProp imConfProp;
     private final ModerationService moderationService;
     private final UserMessageRepository userMessageRepository;
+    private final RedisService redisService;
 
     @Override
     public ImCbResp stateChangeCallback(ImStateChangeDto imStateChangeDto) {
@@ -68,10 +70,14 @@ public class TencentImCallbackService implements ImCallbackService {
     }
 
     @Override
-    public ImCbResp beforeSendMsg(ImBeforeSendMsgDto imBeforeSendMsgDto) {
+    public ImCbResp beforeSendMsg(ImBeforeSendMsgDto imBeforeSendMsgDto, String originContent) {
         ImCbResp resp = new ImCbResp();
         resp.setActionStatus("OK");
         resp.setErrorCode(0);
+
+        // 存储到redis
+        String redisKey = String.format("social:im:before:touser:%s", imBeforeSendMsgDto.getFrom_Account());
+        redisService.set(redisKey, originContent, 7 * 24 * 3600);
 
         // 安全打击
         if (imBeforeSendMsgDto.getMsgBody().size() > 0) {
@@ -97,10 +103,18 @@ public class TencentImCallbackService implements ImCallbackService {
                     userMessageRepository.save(userMessage);
 
                     if (ret == 0) {
-                        resp.setActionStatus("FAIL");
-                        resp.setErrorCode(121003);
-                        resp.setErrorInfo("发送失败");
-                        return resp;
+                        // 设置转化后的数据
+                        ImTransferMsgCb transferMsgCb = new ImTransferMsgCb();
+                        transferMsgCb.setActionStatus("OK");
+                        transferMsgCb.setErrorCode(0);
+                        transferMsgCb.setErrorInfo("");
+                        ImMsgBody imMsgBody = new ImMsgBody();
+                        imMsgBody.setMsgType("TIMTextElem");
+                        ImMsgBody.ImMsgContent msgContent = new ImMsgBody.ImMsgContent();
+                        msgContent.setText("");
+                        imMsgBody.setMsgContent(msgContent);
+                        transferMsgCb.setMsgBody(imMsgBody);
+                        return transferMsgCb;
                     }
                 } else {
                     userMessage.setMsgType(msgbody.getMsgType());
@@ -176,6 +190,14 @@ public class TencentImCallbackService implements ImCallbackService {
             return resp;
         }
 
+        if (userFrom.getIdentity() == 0 && userTo.getIdentity() == 0) {
+            // 不允许用户和用户聊天
+            resp.setActionStatus("FAIL");
+            resp.setErrorCode(-1);
+            resp.setErrorInfo("非法关系");
+            return resp;
+        }
+
         BigDecimal messagePrice = userTo.getMessagePrice();
         if (Objects.isNull(messagePrice) || messagePrice.equals(BigDecimal.ZERO)) {
             // 没有设定价格 或者是0
@@ -206,10 +228,14 @@ public class TencentImCallbackService implements ImCallbackService {
     @Transactional
 //    @Retryable
     @Override
-    public ImCbResp afterSendMsg(ImAfterSendMsgDto imAfterSendMsgDto) {
+    public ImCbResp afterSendMsg(ImAfterSendMsgDto imAfterSendMsgDto, String originContent) {
         ImCbResp resp = new ImCbResp();
         resp.setActionStatus("OK");
         resp.setErrorCode(0);
+
+        // 存储到redis
+        String redisKey = String.format("social:im:after:touser:%s", imAfterSendMsgDto.getFrom_Account());
+        redisService.set(redisKey, originContent, 7 * 24 * 3600);
 
         if (sysConfigService.isAppAudit()) {
             // 审核中消息聊天不扣费

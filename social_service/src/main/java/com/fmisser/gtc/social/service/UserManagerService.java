@@ -52,7 +52,7 @@ public interface UserManagerService {
 
     List<IdentityAudit> getAnchorAudit(String digitId) throws ApiException;
 
-    // 审核主播资料/相册/视频
+    // 审核主播资料/相册/视频/守护照片/守护视频/认证视频
     int anchorAudit(String serialNumber, int operate, String message) throws ApiException;
 
     // 获取统计用户数据

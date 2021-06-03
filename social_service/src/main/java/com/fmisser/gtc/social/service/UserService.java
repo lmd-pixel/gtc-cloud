@@ -70,10 +70,21 @@ public interface UserService {
     List<ProfitConsumeDetail> getProfitConsumeList(User user, int pageIndex, int pageSize) throws ApiException;
 
     // 更新用户照片（ 守护功能新版本0.2.1）
-    User updatePhotosEx(User user, Integer updateType,
-                      String existsNames, String guardNames, String coverName,
-                      Map<String, MultipartFile> multipartFileMap) throws ApiException;
+    @Deprecated
+    User updatePhotosEx(User user, Integer updateType, String existsNames, String coverName,
+                        String existsGuards, String guardNames,
+                        Map<String, MultipartFile> multipartFileMap) throws ApiException;
 
+    User updatePhotosEx(User user, Integer updateType, String existsPhotos, String coverName,
+                        Map<String, MultipartFile> multipartFileMap) throws ApiException;
+
+    User updateGuardPhotos(User user, Integer updateType, String existsGuards,
+                           Map<String, MultipartFile> multipartFileMap) throws ApiException;
+
+    @Deprecated
     // 更新认证视频（ 守护功能新版本0.2.1 ）
     User updateVerifyVideo(User user, Integer code, Map<String, MultipartFile> multipartFileMap) throws ApiException;
+
+    User updateAuditVideo(User user, Integer updateType, Integer code,
+                          Map<String, MultipartFile> multipartFileMap) throws ApiException;
 }

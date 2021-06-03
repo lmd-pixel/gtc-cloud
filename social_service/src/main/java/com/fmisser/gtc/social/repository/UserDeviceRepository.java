@@ -11,4 +11,5 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface UserDeviceRepository extends JpaRepository<UserDevice, Long> {
+    UserDevice getTopByUserIdOrderByCreateTimeDesc(Long userId);
 }

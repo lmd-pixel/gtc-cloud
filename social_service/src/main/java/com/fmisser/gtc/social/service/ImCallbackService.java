@@ -14,9 +14,9 @@ public interface ImCallbackService {
     // 状态改变
     ImCbResp stateChangeCallback(ImStateChangeDto imStateChangeDto);
 
-    ImCbResp beforeSendMsg(ImBeforeSendMsgDto imBeforeSendMsgDto);
+    ImCbResp beforeSendMsg(ImBeforeSendMsgDto imBeforeSendMsgDto, String originContent);
 
-    ImCbResp afterSendMsg(ImAfterSendMsgDto imAfterSendMsgDto);
+    ImCbResp afterSendMsg(ImAfterSendMsgDto imAfterSendMsgDto, String originContent);
 
     int textModeration(String userId, String text);
 

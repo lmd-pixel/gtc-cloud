@@ -49,4 +49,9 @@ public class UserDeviceServiceImpl implements UserDeviceService {
 
         return 1;
     }
+
+    @Override
+    public UserDevice getRecentUserDevice(User user) throws ApiException {
+        return userDeviceRepository.getTopByUserIdOrderByCreateTimeDesc(user.getId());
+    }
 }

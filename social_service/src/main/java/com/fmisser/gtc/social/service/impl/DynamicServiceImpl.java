@@ -1,23 +1,24 @@
 package com.fmisser.gtc.social.service.impl;
 
-import com.fmisser.fpp.oss.abs.service.OssService;
+import com.fmisser.fpp.oss.cos.service.CosService;
+import com.fmisser.fpp.oss.minio.service.MinioService;
 import com.fmisser.gtc.base.aop.ReTry;
 import com.fmisser.gtc.base.dto.social.DynamicCommentDto;
 import com.fmisser.gtc.base.dto.social.DynamicDto;
+import com.fmisser.gtc.base.dto.social.GuardDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.OssConfProp;
 import com.fmisser.gtc.base.utils.CryptoUtils;
 import com.fmisser.gtc.base.utils.DateUtils;
-import com.fmisser.gtc.social.domain.Dynamic;
-import com.fmisser.gtc.social.domain.DynamicComment;
-import com.fmisser.gtc.social.domain.DynamicHeart;
-import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.repository.DynamicCommentRepository;
 import com.fmisser.gtc.social.repository.DynamicHeartRepository;
 import com.fmisser.gtc.social.repository.DynamicRepository;
 import com.fmisser.gtc.social.service.DynamicService;
+import com.fmisser.gtc.social.service.GuardService;
 import com.fmisser.gtc.social.service.ImCallbackService;
 import com.fmisser.gtc.social.service.SysConfigService;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
@@ -31,37 +32,24 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static com.fmisser.gtc.social.service.impl.UserServiceImpl.*;
 
 @Service
+@AllArgsConstructor
 public class DynamicServiceImpl implements DynamicService {
     private final DynamicRepository dynamicRepository;
     private final DynamicHeartRepository dynamicHeartRepository;
     private final DynamicCommentRepository dynamicCommentRepository;
     private final OssConfProp ossConfProp;
-//    private final MinioUtils minioUtils;
     private final ImCallbackService imCallbackService;
     private final SysConfigService sysConfigService;
-    private final OssService ossService;
-
-    public DynamicServiceImpl(DynamicRepository dynamicRepository,
-                              DynamicCommentRepository dynamicCommentRepository,
-                              DynamicHeartRepository dynamicHeartRepository,
-                              OssConfProp ossConfProp,
-//                              MinioUtils minioUtils,
-                              ImCallbackService imCallbackService,
-                              SysConfigService sysConfigService, OssService ossService) {
-        this.dynamicRepository = dynamicRepository;
-        this.dynamicHeartRepository = dynamicHeartRepository;
-        this.dynamicCommentRepository = dynamicCommentRepository;
-        this.ossConfProp = ossConfProp;
-//        this.minioUtils = minioUtils;
-        this.imCallbackService = imCallbackService;
-        this.sysConfigService = sysConfigService;
-        this.ossService = ossService;
-    }
+//    private final OssService ossService;
+    private final MinioService minioService;
+    private final CosService cosService;
+    private final GuardService guardService;
 
     @Override
     @SneakyThrows
@@ -74,22 +62,19 @@ public class DynamicServiceImpl implements DynamicService {
             throw new ApiException(-1, "发现违规内容，发表失败");
         }
 
+        Date todayStart = DateUtils.getDayStart(new Date());
+        Date todayEnd = DateUtils.getDayEnd(new Date());
+        long count = dynamicRepository.countTodayDynamic(user.getId(), todayStart, todayEnd);
+        if (count >= sysConfigService.getDynamicDailyCountLimit()) {
+            throw new ApiException(-1, "今日发动态次数已达上限");
+        }
+
         Dynamic dynamic = new Dynamic();
         dynamic.setUserId(user.getId());
         dynamic.setType(type);
         dynamic.setContent(content);
         // 直接设置通过
         dynamic.setStatus(10);
-
-//        int ret = imCallbackService.textModeration(user.getDigitId(), content);
-//        if (ret == 0) {
-//            // 机审失败
-//            dynamic.setStatus(1);
-//            dynamic.setMessage("机审不通过");
-//        } else {
-//            // 通过
-//            dynamic.setStatus(10);
-//        }
 
         if (Objects.nonNull(city)) {
             dynamic.setCity(city);
@@ -116,7 +101,7 @@ public class DynamicServiceImpl implements DynamicService {
             String filename = file.getOriginalFilename();
             String suffixName = filename.substring(filename.lastIndexOf("."));
 
-            if (type == 1) {
+            if (type == 1 || type == 11 || type == 21) {
                 // 图片
                 if (!isPictureSupported(suffixName)) {
                     throw new ApiException(-1, "图片格式不支持!");
@@ -129,18 +114,20 @@ public class DynamicServiceImpl implements DynamicService {
                         randomUUID,
                         suffixName);
 
-                String response = minioPutImageAndThumbnail(ossConfProp.getUserDynamicBucket(),
-                        objectName,
-                        inputStream,
-                        file.getSize(),
-                        "image/png",
-                        ossService);
+//                String response = minioPutImageAndThumbnail(ossConfProp.getUserDynamicBucket(),
+//                        objectName,
+//                        inputStream,
+//                        file.getSize(),
+//                        "image/png",
+//                        minioService);
+                String response = cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
+                        objectName, inputStream, file.getSize(), "image/png");
 
                 if (!StringUtils.isEmpty(response)) {
                     photoList.add(response);
                 }
 
-            } else if (type == 2) {
+            } else if (type == 2 || type == 12 || type == 22) {
                 // 视频
                 if (!isVideoSupported(suffixName)) {
                     throw new ApiException(-1, "视频格式不支持!");
@@ -154,7 +141,9 @@ public class DynamicServiceImpl implements DynamicService {
                         randomUUID,
                         suffixName);
 
-                String response = ossService.putObject(ossConfProp.getUserDynamicBucket(), objectName,
+//                String response = minioService.putObject(ossConfProp.getUserDynamicBucket(), objectName,
+//                        inputStream, file.getSize(), "video/mp4");
+                String response = cosService.putObject(ossConfProp.getUserDynamicCosBucket(), objectName,
                         inputStream, file.getSize(), "video/mp4");
 
                 dynamic.setVideo(response);
@@ -164,14 +153,14 @@ public class DynamicServiceImpl implements DynamicService {
             }
         }
 
-        if (type == 1) {
+        if (type == 1 || type == 11 || type == 21) {
             // 图片
             if (photoList.size() == 0 ) {
                 throw new ApiException(-1, "上传信息出错,请稍后重试");
             }
 
             dynamic.setPictures(photoList.toString());
-        } else if (type == 2) {
+        } else if (type == 2 || type == 12 || type == 22) {
             if (StringUtils.isEmpty(dynamic.getVideo())) {
                 throw new ApiException(-1, "上传信息不正确");
             }
@@ -209,7 +198,15 @@ public class DynamicServiceImpl implements DynamicService {
 //        long totalPage = dynamicDtos.getTotalPages();
 //        System.out.println(totalPage);
 
-        return _prepareDynamicDtoResponse(dynamicDtos.getContent());
+
+        List<GuardDto> guardDtoList;
+        if (Objects.nonNull(selfUser)) {
+            guardDtoList = guardService.getUserGuardList(selfUser);
+        } else {
+            guardDtoList = new ArrayList<>();
+        }
+
+        return _prepareDynamicDtoResponse(dynamicDtos.getContent(), guardDtoList);
     }
 
     @Override
@@ -333,7 +330,14 @@ public class DynamicServiceImpl implements DynamicService {
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
         List<DynamicDto> dynamicDtos = dynamicRepository
                 .getLatestDynamicList(selfUserId, dateLimit, pageable).getContent();
-        return _prepareDynamicDtoResponse(dynamicDtos);
+
+        List<GuardDto> guardDtoList;
+        if (Objects.nonNull(selfUser)) {
+            guardDtoList = guardService.getUserGuardList(selfUser);
+        } else {
+            guardDtoList = new ArrayList<>();
+        }
+        return _prepareDynamicDtoResponse(dynamicDtos, guardDtoList);
     }
 
     @Override
@@ -345,7 +349,9 @@ public class DynamicServiceImpl implements DynamicService {
 
         List<DynamicDto> dynamicDtos = dynamicRepository
                 .getDynamicListByFollow(selfUser.getId(), dateLimit, pageable).getContent();
-        return _prepareDynamicDtoResponse(dynamicDtos);
+
+        List<GuardDto> guardDtoList = guardService.getUserGuardList(selfUser);
+        return _prepareDynamicDtoResponse(dynamicDtos, guardDtoList);
     }
 
     @Override
@@ -377,6 +383,22 @@ public class DynamicServiceImpl implements DynamicService {
         Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
         Page<DynamicDto> dynamicDtoPage =
                 dynamicRepository.getManagerDynamicList(digitId, nick, content, startTime, endTime, pageable);
+
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("totalPage", dynamicDtoPage.getTotalPages());
+        extra.put("totalEle", dynamicDtoPage.getTotalElements());
+        extra.put("currPage", pageIndex);
+
+        return Pair.of(dynamicDtoPage.getContent(), extra);
+    }
+
+    @Override
+    public Pair<List<DynamicDto>, Map<String, Object>> managerGuardListDynamic(String digitId, String nick, String content,
+                                                                               Date startTime, Date endTime,
+                                                                               int pageIndex, int pageSize) throws ApiException {
+        Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
+        Page<DynamicDto> dynamicDtoPage =
+                dynamicRepository.getManagerGuardDynamicList(digitId, nick, content, startTime, endTime, pageable);
 
         Map<String, Object> extra = new HashMap<>();
         extra.put("totalPage", dynamicDtoPage.getTotalPages());
@@ -469,32 +491,94 @@ public class DynamicServiceImpl implements DynamicService {
         return dynamicCommentDtos;
     }
 
-    private List<DynamicDto> _prepareDynamicDtoResponse(List<DynamicDto> dynamicDtos) {
+    private List<DynamicDto> _prepareDynamicDtoResponse(List<DynamicDto> dynamicDtos, List<GuardDto> guardList) {
         for (DynamicDto dynamicDto:
                 dynamicDtos) {
 
-            // 提供完整的图片url
-            if (!StringUtils.isEmpty(dynamicDto.getPictures())) {
-                List<String> pictureNameList = changePhotosToList(dynamicDto.getPictures());
-                List<String> pictureUrlList = pictureNameList.stream()
-                        .map( name -> String.format("%s/%s/%s",
-                                ossConfProp.getMinioVisitUrl(), ossConfProp.getUserDynamicBucket(), name))
-                        .collect(Collectors.toList());
-                List<String> pictureThumbnailUrlList = pictureNameList.stream()
-                        .map( name -> String.format("%s/%s/thumbnail_%s",
-                                ossConfProp.getMinioVisitUrl(), ossConfProp.getUserDynamicBucket(), name))
-                        .collect(Collectors.toList());
-                dynamicDto.setPictureUrlList(pictureUrlList);
-                dynamicDto.setPictureThumbnailUrlList(pictureThumbnailUrlList);
-            }
+            if (dynamicDto.getType() < 10) {
+                // 老版本存储机制 走的 minio
+                // 提供完整的图片url
+                if (!StringUtils.isEmpty(dynamicDto.getPictures())) {
+                    List<String> pictureNameList = changePhotosToList(dynamicDto.getPictures());
+                    List<String> pictureUrlList = pictureNameList.stream()
+                            .map( name -> String.format("%s/%s/%s",
+                                    ossConfProp.getMinioVisitUrl(), ossConfProp.getUserDynamicBucket(), name))
+                            .collect(Collectors.toList());
+                    List<String> pictureThumbnailUrlList = pictureNameList.stream()
+                            .map( name -> String.format("%s/%s/thumbnail_%s",
+                                    ossConfProp.getMinioVisitUrl(), ossConfProp.getUserDynamicBucket(), name))
+                            .collect(Collectors.toList());
+                    dynamicDto.setPictureUrlList(pictureUrlList);
+                    dynamicDto.setPictureThumbnailUrlList(pictureThumbnailUrlList);
+                }
 
-            // 提供完整的视频链接
-            if (!StringUtils.isEmpty(dynamicDto.getVideo())) {
-                String videoUrl = String.format("%s/%s/%s",
-                        ossConfProp.getMinioVisitUrl(),
-                        ossConfProp.getUserDynamicBucket(),
-                        dynamicDto.getVideo());
-                dynamicDto.setVideoUrl(videoUrl);
+                // 提供完整的视频链接
+                if (!StringUtils.isEmpty(dynamicDto.getVideo())) {
+                    String videoUrl = String.format("%s/%s/%s",
+                            ossConfProp.getMinioVisitUrl(),
+                            ossConfProp.getUserDynamicBucket(),
+                            dynamicDto.getVideo());
+                    dynamicDto.setVideoUrl(videoUrl);
+                }
+            } else {
+
+                // 判断是否是守护者
+                AtomicBoolean isGuard = new AtomicBoolean(false);
+                if (dynamicDto.getType() >= 20) {
+                    // 守护动态
+                    guardList.stream()
+                            .filter(guardDto -> guardDto.getDigitId().equals(dynamicDto.getDigitId()))
+                            .findFirst()
+                            .ifPresent(guardDto -> {
+                                isGuard.set(true);
+                                dynamicDto.setSelfIsGuard(1L);
+                            });
+                }
+
+                // cos 通过设定后缀返回不同作用的图（比如缩略图、模糊效果等）
+                final String thumbnail_tail;
+                final String origin_tail;
+                if (isGuard.get()) {
+//                    thumbnail_tail = "?imageMogr2/thumbnail/480x";
+                    thumbnail_tail = "/gsv";
+                    origin_tail = "";
+                } else {
+//                    thumbnail_tail = "?imageMogr2/thumbnail/480x|imageMogr2/blur/8x10";
+                    thumbnail_tail = "/ngsv";
+//                    origin_tail = "?imageMogr2/blur/8x10";
+                    origin_tail = "/ng";
+                }
+
+                // 提供完整的图片url
+                if (!StringUtils.isEmpty(dynamicDto.getPictures())) {
+                    List<String> pictureNameList = changePhotosToList(dynamicDto.getPictures());
+                    List<String> pictureUrlList = pictureNameList.stream()
+                            .map( name -> String.format("%s/%s%s",
+                                    cosService.getDomainName(ossConfProp.getCosCdn(), ossConfProp.getUserDynamicCosBucket()), name, origin_tail))
+                            .collect(Collectors.toList());
+
+                    List<String> pictureThumbnailUrlList = pictureNameList.stream()
+                            .map( name -> String.format("%s/%s%s",
+                                    cosService.getDomainName(ossConfProp.getCosCdn(), ossConfProp.getUserDynamicCosBucket()), name, thumbnail_tail))
+                            .collect(Collectors.toList());
+
+                    dynamicDto.setPictureUrlList(pictureUrlList);
+                    dynamicDto.setPictureThumbnailUrlList(pictureThumbnailUrlList);
+                }
+
+                // 提供完整的视频链接
+                if (!StringUtils.isEmpty(dynamicDto.getVideo())) {
+                    String videoUrl = String.format("%s/%s",
+                            cosService.getDomainName(ossConfProp.getCosCdn(), ossConfProp.getUserDynamicCosBucket()),
+                            dynamicDto.getVideo());
+                    dynamicDto.setVideoUrl(videoUrl);
+
+                    String webpVideo = dynamicDto.getVideo().substring(0, dynamicDto.getVideo().lastIndexOf('.'));
+                    String videoThumbnailUrl =  String.format("%s/%s.webp%s",
+                            cosService.getDomainName(ossConfProp.getCosCdn(), ossConfProp.getUserDynamicCosBucket()),
+                            webpVideo, thumbnail_tail);
+                    dynamicDto.setVideoThumbnailUrl(videoThumbnailUrl);
+                }
             }
 
             // 完善个人信息数据
@@ -531,9 +615,8 @@ public class DynamicServiceImpl implements DynamicService {
                 dynamic.getLongitude(), dynamic.getLatitude(),
                 0L, 0L, 0L,
                 user.getNick(), user.getBirth(), user.getGender(), user.getHead());
-        List<DynamicDto> dynamicDtos = new ArrayList<>(1);
-        dynamicDtos.add(dynamicDto);
-        return _prepareDynamicDtoResponse(dynamicDtos).get(0);
-    }
 
+        List<GuardDto> guardDtoList = new ArrayList<>();
+        return _prepareDynamicDtoResponse(Collections.singletonList(dynamicDto), guardDtoList).get(0);
+    }
 }

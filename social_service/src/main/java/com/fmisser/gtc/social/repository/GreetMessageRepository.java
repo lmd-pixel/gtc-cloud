@@ -11,4 +11,8 @@ public interface GreetMessageRepository extends JpaRepository<GreetMessage, Inte
     // 获取随机问候语
     @Query(value = "SELECT * FROM t_greet_message WHERE disable = 0 AND type = ?2 ORDER BY RAND() LIMIT ?1", nativeQuery = true)
     List<GreetMessage> findRandGreetMessageList(int limit, int type);
+
+    // 获取随机问候语（指定语言）
+    @Query(value = "SELECT * FROM t_greet_message WHERE disable = 0 AND type = ?2 AND lang = ?3 ORDER BY RAND() LIMIT ?1", nativeQuery = true)
+    List<GreetMessage> findRandGreetMessageListWithLang(int limit, int type, String lang);
 }

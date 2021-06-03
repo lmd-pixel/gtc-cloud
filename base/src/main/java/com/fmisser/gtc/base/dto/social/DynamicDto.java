@@ -3,7 +3,6 @@ package com.fmisser.gtc.base.dto.social;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -13,12 +12,11 @@ import java.util.List;
  * 动态返回的数据
  */
 @Data
-@NoArgsConstructor
 public class DynamicDto {
 
-//    public DynamicDto() {
-//
-//    }
+    public DynamicDto(String content) {
+
+    }
 
     public DynamicDto(Long id, Long userId, String digitId, String content, String city,
                       int type, String video, String pictures,
@@ -46,6 +44,7 @@ public class DynamicDto {
         this.birth = birth;
         this.gender = gender;
         this.head = head;
+        this.selfIsGuard = 0L;
     }
 
     public DynamicDto(Long id, Long userId, String digitId, String content, String city,
@@ -73,6 +72,7 @@ public class DynamicDto {
         this.birth = birth;
         this.gender = gender;
         this.head = head;
+        this.selfIsGuard = 0L;
     }
 
     public DynamicDto(Long id, Long userId, String digitId, String content, String city,
@@ -100,6 +100,7 @@ public class DynamicDto {
         this.birth = birth;
         this.gender = gender;
         this.head = head;
+        this.selfIsGuard = 0L;
     }
 
     private Long id;
@@ -125,6 +126,7 @@ public class DynamicDto {
     private List<String> pictureUrlList; // 图片列表
     private List<String> pictureThumbnailUrlList; // 图片缩略图列表
     private String videoUrl;    // 视频
+    private String videoThumbnailUrl;
     private String nick;
     @JsonIgnore
     private Date birth;
@@ -135,5 +137,6 @@ public class DynamicDto {
     private String head;
     private String headUrl;
     private String headThumbnailUrl;    // 头像缩略图
+    private Long selfIsGuard;
 }
 

@@ -159,17 +159,40 @@ public class UserController {
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/update-photos-ex")
     ApiResp<User> uploadPhotosEx(MultipartHttpServletRequest request,
-                               @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
-                               @RequestParam(value = "update_type", required = false, defaultValue = "1") Integer updateType,
-                               @RequestParam(value = "existsNames", required = false) String existsNames,
-                               @RequestParam(value = "guardNames", required = false) String guardNames,
-                               @RequestParam(value = "coverName", required = false) String coverName) {
+                                 @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+                                 @RequestParam(value = "update_type", required = false, defaultValue = "1") Integer updateType,
+                                 @RequestParam(value = "existsNames", required = false) String existsNames,
+                                 @RequestParam(value = "coverName", required = false) String coverName) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
         //
         // TODO: 2020/11/10 check params
-        User user = userService.updatePhotosEx(userDo, updateType, existsNames, guardNames, coverName, request.getFileMap());
+        User user = userService.updatePhotosEx(userDo, updateType, existsNames, coverName, request.getFileMap());
+
+        // 针对版本审核
+        if (sysConfigService.getAppAuditVersion().equals(version)) {
+            user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+        }
+
+        return ApiResp.succeed(user);
+    }
+
+    @ApiOperation(value = "更新守护照片(守护版本)")
+    @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
+    @PostMapping(value = "/update-guard-photos")
+    ApiResp<User> uploadGuardPhotos(MultipartHttpServletRequest request,
+                                 @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+                                 @RequestParam(value = "update_type", required = false, defaultValue = "1") Integer updateType,
+                                 @RequestParam(value = "existsGuards", required = false) String existsGuards) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getPrincipal().toString();
+        User userDo = userService.getUserByUsername(username);
+        //
+        // TODO: 2020/11/10 check params
+        User user = userService.updateGuardPhotos(userDo, updateType, existsGuards, request.getFileMap());
 
         // 针对版本审核
         if (sysConfigService.getAppAuditVersion().equals(version)) {
@@ -185,14 +208,15 @@ public class UserController {
     @ApiImplicitParam(name = "Authorization", required = true, dataType = "String", paramType = "header")
     @PostMapping(value = "/update-audit-video")
     ApiResp<User> uploadAuditVideo(MultipartHttpServletRequest request,
-                              @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
-                              @RequestParam(value = "code", required = false, defaultValue = "1") Integer code) {
+                                   @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
+                                   @RequestParam(value = "update_type", required = false, defaultValue = "1") Integer updateType,
+                                   @RequestParam(value = "code", required = false, defaultValue = "1") Integer code) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
         //
         // TODO: 2020/11/10 check params
-        User user = userService.updateVerifyVideo(userDo, code, request.getFileMap());
+        User user = userService.updateAuditVideo(userDo, updateType, code, request.getFileMap());
 
         // 针对版本审核
         if (sysConfigService.getAppAuditVersion().equals(version)) {

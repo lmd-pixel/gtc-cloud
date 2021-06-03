@@ -2,6 +2,7 @@ package com.fmisser.gtc.social.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -30,6 +31,10 @@ public class GreetMessage {
     // 0: 女性用语 1: 男性用语
     @Column(nullable = false, columnDefinition = "int default 0")
     private int type = 0;
+
+    @Column(nullable = false, length = 16)
+    @ColumnDefault("'zh'")
+    private String lang = "zh";
 
     @Column(nullable = false, columnDefinition = "int default 0")
     private int disable = 0;

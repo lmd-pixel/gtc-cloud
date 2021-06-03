@@ -2,6 +2,7 @@ package com.fmisser.gtc.social.controller;
 
 import com.fmisser.fpp.cache.redis.service.RedisService;
 import com.fmisser.fpp.oss.abs.service.OssService;
+import com.fmisser.fpp.oss.minio.service.MinioService;
 import com.fmisser.gtc.base.dto.im.ImMsgBody;
 import com.fmisser.gtc.base.dto.im.ImMsgFactory;
 import com.fmisser.gtc.base.dto.im.ImSendMsgDto;
@@ -23,7 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     private final WxWebHookBinding wxWebHookBinding;
-    private final OssService ossService;
+//    private final OssService ossService;
+    private final MinioService minioService;
     private final RedisService redisService;
 
     @GetMapping("/slow")
@@ -46,7 +48,7 @@ public class TestController {
     @ApiOperation("fpp-test")
     @GetMapping("fpp-test")
     public String fppTest() {
-        return ossService.getName();
+        return minioService.getName();
     }
 
     @ApiOperation("redis-test")

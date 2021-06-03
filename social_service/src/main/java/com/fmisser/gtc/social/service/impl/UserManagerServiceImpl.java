@@ -204,6 +204,9 @@ public class UserManagerServiceImpl implements UserManagerService {
         Optional<IdentityAudit> userProfileAudit = identityAuditService.getLastProfileAudit(user);
         Optional<IdentityAudit> userPhotosAudit = identityAuditService.getLastPhotosAudit(user);
         Optional<IdentityAudit> userVideoAudit = identityAuditService.getLastVideoAudit(user);
+        Optional<IdentityAudit> userGuardPhotosAudit = identityAuditService.getLastGuardPhotosAudit(user);
+        Optional<IdentityAudit> userAuditVideoAudit = identityAuditService.getLastAuditVideoAudit(user);
+
         userProfileAudit.ifPresent(identityAudit -> {
             if (identityAudit.getStatus() == 10) {
                 // TODO: 2021/4/2 写个mapper 转换
@@ -244,22 +247,37 @@ public class UserManagerServiceImpl implements UserManagerService {
             }
         });
 
-//        userPhotosAudit.ifPresent(identityAudit -> {
-//            if (Objects.nonNull(identityAudit.getPhotos())) {
-//                user.setPhotos(identityAudit.getPhotos());
-//            }
-//        });
-        // 守护版本审核功能替换
         userPhotosAudit.ifPresent(identityAudit -> {
-            List<UserMaterial> photos = userMaterialService.getAuditPhotos(user);
-            if (photos.size() > 0) {
-                user.setOriginPhotos(photos);
+            if (Objects.nonNull(identityAudit.getPhotos())) {
+                user.setPhotos(identityAudit.getPhotos());
             }
         });
+//        // 守护版本审核功能替换
+//        userPhotosAudit.ifPresent(identityAudit -> {
+//            List<UserMaterial> photos = userMaterialService.getAuditPhotos(user);
+//            if (photos.size() > 0) {
+//                user.setOriginPhotos(photos);
+//            }
+//        });
 
         userVideoAudit.ifPresent(identityAudit -> {
             if (Objects.nonNull(identityAudit.getVideo())) {
                 user.setVideo(identityAudit.getVideo());
+            }
+        });
+
+        userGuardPhotosAudit.ifPresent(identityAudit -> {
+            if (Objects.nonNull(identityAudit.getGuardPhotos())) {
+                user.setGuardPhotos(identityAudit.getGuardPhotos());
+            }
+        });
+
+        userAuditVideoAudit.ifPresent(identityAudit -> {
+            if (Objects.nonNull(identityAudit.getAuditVideo())) {
+                user.setAuditVideo(identityAudit.getAuditVideo());
+            }
+            if (Objects.nonNull(identityAudit.getAuditVideoCode())) {
+                user.setVideoAuditCode(identityAudit.getAuditVideoCode());
             }
         });
 
@@ -424,16 +442,20 @@ public class UserManagerServiceImpl implements UserManagerService {
                 identityAuditRepository.save(identityAuditPrepare);
             }
 
-            if (type == 2) {
-                // 守护版本， 处理照片逻辑，删除审核准备的照片，把审核中照片转化成正常照片
-                List<UserMaterial> auditPreparePhotos = userMaterialService.getAuditPreparePhotos(user);
-                userMaterialService.deleteList(auditPreparePhotos);
-
-                List<UserMaterial> auditPhotos = userMaterialService.getAuditPhotos(user);
-                auditPhotos.forEach(userMaterial -> {
-                    userMaterial.setType(0);
-                });
-                userMaterialService.updateList(auditPhotos);
+//            if (type == 2) {
+//                // 守护版本， 处理照片逻辑，删除审核准备的照片，把审核中照片转化成正常照片
+//                List<UserMaterial> auditPreparePhotos = userMaterialService.getAuditPreparePhotos(user);
+//                userMaterialService.deleteList(auditPreparePhotos);
+//
+//                List<UserMaterial> auditPhotos = userMaterialService.getAuditPhotos(user);
+//                auditPhotos.forEach(userMaterial -> {
+//                    userMaterial.setType(0);
+//                });
+//                userMaterialService.updateList(auditPhotos);
+//            }
+            if (type == 6) {
+                user.setVideoAudit(1);
+                userRepository.save(user);
             }
 
             switch (type) {
@@ -445,6 +467,12 @@ public class UserManagerServiceImpl implements UserManagerService {
                     break;
                 case 3:
                     imService.sendToUser(null, user, "您提交的视频已审核通过");
+                    break;
+                case 4:
+                    imService.sendToUser(null, user, "您提交的守护照片已审核通过");
+                    break;
+                case 6:
+                    imService.sendToUser(null, user, "您提交的认证视频已审核通过");
                     break;
             }
 
@@ -462,6 +490,12 @@ public class UserManagerServiceImpl implements UserManagerService {
                     break;
                 case 3:
                     typeMsg = "视频";
+                    break;
+                case 4:
+                    typeMsg = "守护照片";
+                    break;
+                case 6:
+                    typeMsg = "认证视频";
                     break;
                 default:
                     typeMsg = "资料";
@@ -532,6 +566,18 @@ public class UserManagerServiceImpl implements UserManagerService {
                 user.setVoice(identityAudit.getVoice());
             }
 
+            if (Objects.nonNull(identityAudit.getGuardPhotos())) {
+                user.setGuardPhotos(identityAudit.getGuardPhotos());
+            }
+
+            if (Objects.nonNull(identityAudit.getAuditVideo())) {
+                user.setAuditVideo(identityAudit.getAuditVideo());
+            }
+
+            if (Objects.nonNull(identityAudit.getAuditVideoCode())) {
+                user.setVideoAuditCode(identityAudit.getAuditVideoCode());
+            }
+
             if (user.getIdentity() == 0) {
                 // 判断是否不同的审核都已满足,如果都通过，则完成了认证
                 boolean allPass = true;
@@ -575,6 +621,7 @@ public class UserManagerServiceImpl implements UserManagerService {
         return null;
     }
 
+    @Deprecated
     @Override
     public int anchorVideoAudit(String digitId, int operate, String message) throws ApiException {
         log.info("[user manager] anchor video audit with digit id: {}, operate: {}, message: {}.",

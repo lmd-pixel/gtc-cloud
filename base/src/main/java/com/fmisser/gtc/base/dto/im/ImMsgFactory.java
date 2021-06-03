@@ -9,7 +9,7 @@ import java.util.Random;
  */
 
 public class ImMsgFactory {
-    static public ImSendMsgDto buildTextMsg(String fromAccount, String toAccount, String content, boolean syncMsg) {
+    static public ImSendMsgDto buildTextMsg(String fromAccount, String toAccount, String content, String pushSound, boolean syncMsg) {
         ImSendMsgDto imSendMsgDto = new ImSendMsgDto();
         imSendMsgDto.setSyncOtherMachine(syncMsg ? 1 : 2);
         imSendMsgDto.setTo_Account(toAccount);
@@ -37,7 +37,7 @@ public class ImMsgFactory {
         imOfflinePushInfo.setExt("");
 
         ImOfflinePushInfo.ImApnsInfo imApnsInfo = new ImOfflinePushInfo.ImApnsInfo();
-        imApnsInfo.setSound("");
+        imApnsInfo.setSound(pushSound);
         imApnsInfo.setImage("");
         imApnsInfo.setBadgeMode(1);
         imApnsInfo.setTitle("");
@@ -45,7 +45,7 @@ public class ImMsgFactory {
         imOfflinePushInfo.setApnsInfo(imApnsInfo);
 
         ImOfflinePushInfo.ImAndroidInfo imAndroidInfo = new ImOfflinePushInfo.ImAndroidInfo();
-        imAndroidInfo.setSound("");
+        imAndroidInfo.setSound(pushSound);
         imOfflinePushInfo.setAndroidInfo(imAndroidInfo);
 
         imSendMsgDto.setOfflinePushInfo(imOfflinePushInfo);

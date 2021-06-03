@@ -54,6 +54,26 @@ spring:
           args:
             name: fallbackcmd
             fallbackUri: forward:/fallback
+      - id: passport-route
+        uri: lb://passport
+        predicates:
+        - Path=/api/passport/**
+        filters:
+        - StripPrefix=2
+        - name: Hystrix
+          args:
+            name: fallbackcmd
+            fallbackUri: forward:/fallback
+      - id: push-route
+        uri: lb:ws://push
+        predicates:
+          - Path=/api/push/**
+        filters:
+        - StripPrefix=2
+        - name: Hystrix
+          args:
+            name: fallbackcmd
+            fallbackUri: forward:/fallback
       # cors 全局设置
       globalcors:
         cors-configurations:
@@ -66,7 +86,7 @@ spring:
         enabled: true
   profiles:
     # 使用测试配置
-    active: local
+    active: test
 
 # hystrix 超时设置
 hystrix:

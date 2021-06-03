@@ -6,43 +6,28 @@ import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.Greet;
 import com.fmisser.gtc.social.domain.GreetMessage;
 import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.social.domain.UserDevice;
 import com.fmisser.gtc.social.mq.GreetDelayedBinding;
 import com.fmisser.gtc.social.repository.GreetRepository;
-import com.fmisser.gtc.social.service.GreetMessageService;
-import com.fmisser.gtc.social.service.GreetService;
-import com.fmisser.gtc.social.service.RecommendService;
-import com.fmisser.gtc.social.service.UserService;
+import com.fmisser.gtc.social.service.*;
+import lombok.AllArgsConstructor;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class GreetServiceImpl implements GreetService {
-
     private final GreetRepository greetRepository;
-
-    private final UserService userService;
-
+//    private final UserService userService;
     private final GreetMessageService greetMessageService;
-
     private final GreetDelayedBinding greetDelayedBinding;
-
     private final RecommendService recommendService;
-
-    public GreetServiceImpl(GreetRepository greetRepository,
-                            UserService userService,
-                            GreetMessageService greetMessageService,
-                            GreetDelayedBinding greetDelayedBinding,
-                            RecommendService recommendService) {
-        this.greetRepository = greetRepository;
-        this.userService = userService;
-        this.greetMessageService = greetMessageService;
-        this.greetDelayedBinding = greetDelayedBinding;
-        this.recommendService = recommendService;
-    }
+    private final UserDeviceService userDeviceService;
 
     @Override
     public int createGreet(User user) throws ApiException {
@@ -64,8 +49,19 @@ public class GreetServiceImpl implements GreetService {
         // 男用户选择女主播骚扰， 女用户选择男主播骚扰
         List<RecommendAnchorDto> anchorList = recommendService
                 .getRandRecommendAnchorList(totalCount, user.getGender() == 0 ? 1 : 0);
+
+        String lang = "zh";
+        UserDevice userDevice = userDeviceService.getRecentUserDevice(user);
+        if (Objects.nonNull(userDevice)) {
+            String userLang = userDevice.getLang();
+            if (!StringUtils.isEmpty(userLang) && !userLang.equals("zh")) {
+                // 获取不到或者是zh 则认为zh 其他默认en
+                lang = "en";
+            }
+        }
+
         List<GreetMessage> greetMessageList = greetMessageService
-                .getRandGreetMessage(totalCount, user.getGender() == 0 ? 1 : 0);
+                .getRandGreetMessage(totalCount, user.getGender() == 0 ? 1 : 0, lang);
         List<Greet> greetList = new ArrayList<>();
         for (int i = 0; i < anchorList.size(); i++) {
 //            User anchor = anchorList.get(i);

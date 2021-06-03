@@ -32,7 +32,10 @@ public class Dynamic {
     private String content;
 
     /**
-     * 发布的媒体类型 0: 纯文本， 1： 图片 2：视频
+     * 发布的媒体类型
+     * 所有可见（旧的版本使用） 0: 纯文本， 1： 图片 2：视频
+     * 所有可见 (新的版本使用) 10：纯文本 11：图片  12： 视频
+     * 守护可见 20: 纯文本 21： 图片 22： 视频
      */
     @Column(nullable = false)
     private int type = 0;
@@ -72,10 +75,12 @@ public class Dynamic {
     @Column
     private String message;
 
-    // 状态：
-    // 1： 审核中
-    // 10： 审核通过
-    // 20：审核不通过
+    /**
+     * 状态
+     * 1： 审核中
+     * 10： 审核通过
+     * 20：审核不通过
+     */
     @Column(nullable = false, columnDefinition = "int default 10")
     private int status = 1;
 

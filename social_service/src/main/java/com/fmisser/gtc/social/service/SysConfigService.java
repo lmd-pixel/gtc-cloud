@@ -41,4 +41,6 @@ public interface SysConfigService {
     boolean isRandRecommend() throws ApiException;
 
     BigDecimal getRechargeInviterRewardRatio() throws ApiException;
+
+    Integer getDynamicDailyCountLimit() throws ApiException;
 }

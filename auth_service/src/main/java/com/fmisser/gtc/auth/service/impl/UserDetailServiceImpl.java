@@ -194,6 +194,12 @@ public class UserDetailServiceImpl implements UserService {
     }
 
     @Override
+    public TokenDto wxLogin(String unionid) throws ApiException {
+        String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
+        return oAuthFeign.wxLogin(basicAuth, unionid, oauthConfProp.getOauth2Scope(), "wx_login");
+    }
+
+    @Override
     public TokenDto refreshToken(String refreshToken) throws ApiException {
         String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
         return oAuthFeign.refreshToken(basicAuth, refreshToken, "refresh_token");
@@ -263,6 +269,24 @@ public class UserDetailServiceImpl implements UserService {
 
         // 认证过后，如果数据库没有这条数据，则创建一条
         return _innerCreateByUsername(subject, 11);
+    }
+
+    /**
+     * 自定义苹果一键登录
+     * 注册。登录一体
+     */
+    public UserDetails loadUserByWxLogin(String unionid) {
+        if (!thirdPartyLoginService.checkWxLogin(unionid)) {
+            return null;
+        }
+
+        User user = userRepository.findByUsername(unionid);
+        if (user != null) {
+            return user;
+        }
+
+        // 认证过后，如果数据库没有这条数据，则创建一条
+        return _innerCreateByUsername(unionid, 12);
     }
 
     @Override

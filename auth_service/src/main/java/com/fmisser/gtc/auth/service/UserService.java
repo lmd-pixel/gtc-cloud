@@ -44,6 +44,11 @@ public interface UserService extends UserDetailsService {
     TokenDto appleLogin(String subject, String token) throws ApiException;
 
     /**
+     * wx 登录
+     */
+    TokenDto wxLogin(String unionid) throws ApiException;
+
+    /**
      * 通过refresh token 刷新 token
      */
     TokenDto refreshToken(String refreshToken) throws ApiException;

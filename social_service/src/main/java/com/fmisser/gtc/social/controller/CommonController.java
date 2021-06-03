@@ -204,12 +204,13 @@ public class CommonController {
 
     @ApiOperation(value = "获取主播的守护列表")
     @GetMapping("anchor-guard-list")
-    ApiResp<List<GuardDto>> getAnchorGuardList(@RequestParam("digitId") String digitId) {
+    ApiResp<Map<String, Object>> getAnchorGuardList(@RequestParam("digitId") String digitId) {
         User user = userService.getUserByDigitId(digitId);
 
         List<GuardDto> guardList = guardService.getAnchorGuardList(user);
         Map<String, Object> extraMap = new HashMap<>();
         extraMap.put("totalGuard", guardList.size());
-        return ApiResp.succeed(guardList.subList(0, 10), extraMap);
+        extraMap.put("guardList", guardList);
+        return ApiResp.succeed(extraMap);
     }
 }

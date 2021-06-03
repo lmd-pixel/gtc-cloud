@@ -21,8 +21,14 @@ public interface IdentityAuditService {
     // 获取最近的视频资料的审核，可能为空，表示未进行过审核
     Optional<IdentityAudit> getLastVideoAudit(User user) throws ApiException;
 
+    Optional<IdentityAudit> getLastGuardPhotosAudit(User user) throws ApiException;
+
+    Optional<IdentityAudit> getLastGuardVideoAudit(User user) throws ApiException;
+
+    Optional<IdentityAudit> getLastAuditVideoAudit(User user) throws ApiException;
+
     // 请求身份认证审核 type = 0 不需要资料都完善 type = 1需要资料都完善
-    // mode 是 0表示有待审核的都提交 1 2 3分别表示单独提交资料 照片 视频
+    // mode 是 0表示有待审核的都提交 1 2 3 4 5 6 分别表示单独提交资料 照片 视频 守护照片 守护视频 认证视频
     int requestIdentityAudit(User user, int type, int mode) throws ApiException;
 
     // 守护版本新的审核
@@ -40,6 +46,12 @@ public interface IdentityAuditService {
     Optional<IdentityAudit> getLastPhotosPrepare(User user) throws ApiException;
 
     Optional<IdentityAudit> getLastVideoPrepare(User user) throws ApiException;
+
+    Optional<IdentityAudit> getLastGuardPhotosPrepare(User user) throws ApiException;
+
+    Optional<IdentityAudit> getLastGuardVideoPrepare(User user) throws ApiException;
+
+    Optional<IdentityAudit> getLastAuditVideoPrepare(User user) throws ApiException;
 
     Optional<IdentityAudit> getLastAuditPrepare(Long userId, int type) throws ApiException;
 

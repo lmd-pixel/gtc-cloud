@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fmisser.fpp.cache.redis.service.RedisService;
 import com.fmisser.gtc.base.dto.im.ImAfterSendMsgDto;
 import com.fmisser.gtc.base.dto.im.ImBeforeSendMsgDto;
 import com.fmisser.gtc.base.dto.im.ImCbResp;
@@ -10,6 +11,7 @@ import com.fmisser.gtc.base.prop.ImConfProp;
 import com.fmisser.gtc.social.service.ImCallbackService;
 import com.fmisser.gtc.social.service.ModerationService;
 import io.swagger.annotations.Api;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,22 +20,12 @@ import java.util.Objects;
 @Api(description = "Tencent IM Callback")
 @RestController
 @RequestMapping("/im_cb")
+@AllArgsConstructor
 public class ImCallbackController {
 
     private final ObjectMapper objectMapper;
-
     private final ImCallbackService imCallbackService;
-
     private final ImConfProp imConfProp;
-
-    public ImCallbackController(ObjectMapper objectMapper,
-                                ImCallbackService imCallbackService,
-                                ImConfProp imConfProp) {
-        this.objectMapper = objectMapper;
-        this.imCallbackService = imCallbackService;
-        this.imConfProp = imConfProp;
-
-    }
 
     @GetMapping
     public Integer testTextModeration(@RequestParam("userId") String userId,
@@ -72,19 +64,21 @@ public class ImCallbackController {
                 System.out.println("im recv msg callback before");
 
                 // 发送消息之前
+                // TODO: 2021/6/1 消息的解析这里不完善，具体消息格式较复杂
                 ImBeforeSendMsgDto dto = objectMapper.readValue(content, ImBeforeSendMsgDto.class);
                 dto.setClientIP(ClientIP);
                 dto.setOptPlatform(OptPlatform);
-                return imCallbackService.beforeSendMsg(dto);
+                return imCallbackService.beforeSendMsg(dto, content);
             } else if (CallbackCommand.equals("C2C.CallbackAfterSendMsg")) {
 
                 System.out.println("im recv msg callback after");
 
                 // 发送消息之后
+                // TODO: 2021/6/1 消息的解析这里不完善，具体消息格式较复杂
                 ImAfterSendMsgDto dto = objectMapper.readValue(content, ImAfterSendMsgDto.class);
                 dto.setClientIP(ClientIP);
                 dto.setOptPlatform(OptPlatform);
-                return imCallbackService.afterSendMsg(dto);
+                return imCallbackService.afterSendMsg(dto, content);
             } else {
                 return new ImCbResp();
             }

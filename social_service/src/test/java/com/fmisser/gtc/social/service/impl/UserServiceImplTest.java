@@ -1,11 +1,15 @@
 package com.fmisser.gtc.social.service.impl;
 
+import com.fmisser.gtc.base.utils.ArrayUtils;
 import com.fmisser.gtc.base.utils.DateUtils;
+import com.fmisser.gtc.social.domain.UserMaterial;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 class UserServiceImplTest {
 
@@ -39,5 +43,22 @@ class UserServiceImplTest {
     void getConstellationFromBirth() {
         Date birth = new Date(86, 5, 26);
         System.out.println(DateUtils.getConstellationFromBirth(birth));
+    }
+
+    @Test
+    void testDeepClone() {
+
+        List<UserMaterial> userMaterialList = new ArrayList<>();
+
+        for (int i = 0; i < 10; i++) {
+            UserMaterial userMaterial = new UserMaterial();
+            userMaterial.setUserId((long) i);
+            userMaterialList.add(userMaterial);
+        }
+
+        List<UserMaterial> deepCloneList = ArrayUtils.deepCopy(userMaterialList);
+
+        userMaterialList.get(0).setUserId(999L);
+        Assertions.assertNotEquals(999L, deepCloneList.get(0).getUserId());
     }
 }

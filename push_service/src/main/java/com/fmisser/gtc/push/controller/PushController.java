@@ -3,10 +3,7 @@ package com.fmisser.gtc.push.controller;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.push.service.PushService;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author by fmisser
@@ -20,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PushController {
     private final PushService pushService;
 
-    @GetMapping("/broadcast")
+    @PostMapping("/broadcast")
     public ApiResp<Integer> broadcast(@RequestParam("content") String content) {
         pushService.broadcastMsg(content);
         return ApiResp.succeed(1);

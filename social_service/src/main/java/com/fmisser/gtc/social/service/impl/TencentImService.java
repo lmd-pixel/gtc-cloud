@@ -218,13 +218,13 @@ public class TencentImService implements ImService {
                         //
                         Optional<User> toUser = userRepository.findById(call.getUserIdTo());
                         String content = String.format("用户%s拨打已取消", user.getNick());
-                        toUser.ifPresent(value -> sendToUser(null, value, content));
+                        toUser.ifPresent(value -> sendToUser(null, value, content, ""));
                     }
                 } else if (call.getCallMode() == 1) {
                     if (user.getId().equals(call.getUserIdTo())) {
                         Optional<User> toUser = userRepository.findById(call.getUserIdFrom());
                         String content = String.format("用户%s拨打已取消", user.getNick());
-                        toUser.ifPresent(value -> sendToUser(null, value, content));
+                        toUser.ifPresent(value -> sendToUser(null, value, content, ""));
                     }
                 }
 
@@ -1323,11 +1323,16 @@ public class TencentImService implements ImService {
 
     @Override
     public int sendToUser(User fromUser, User toUser, String content) throws ApiException {
+        return sendToUser(fromUser, toUser, content, "");
+    }
+
+    @Override
+    public int sendToUser(User fromUser, User toUser, String content, String pushSound) throws ApiException {
         if (Objects.isNull(toUser)) {
             throw new ApiException(-1, "目标用户不存在!");
         }
         String fromAccount = Objects.isNull(fromUser) ? null : fromUser.getDigitId();
-        ImSendMsgDto imSendMsgDto = ImMsgFactory.buildTextMsg(fromAccount, toUser.getDigitId(), content, true);
+        ImSendMsgDto imSendMsgDto = ImMsgFactory.buildTextMsg(fromAccount, toUser.getDigitId(), content, "", true);
 
         // 获取管理员的 usersig
         String admin = imConfProp.getAdmin();

@@ -150,4 +150,10 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
 
         return true;
     }
+
+    @Override
+    public boolean checkWxLogin(String unionid) throws ApiException {
+        // 这里暂不验证
+        return true;
+    }
 }

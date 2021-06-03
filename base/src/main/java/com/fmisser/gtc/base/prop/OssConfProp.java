@@ -64,4 +64,10 @@ public class OssConfProp {
 
     @Value("${banner.prefix}")
     private String bannerPrefix;
+
+    @Value("${oss.cos.bucket.user_dynamic}")
+    private String userDynamicCosBucket;
+
+    @Value("${oss.cos.cdn}")
+    private String cosCdn;
 }

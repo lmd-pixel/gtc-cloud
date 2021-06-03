@@ -2,6 +2,7 @@ package com.fmisser.gtc.social.service;
 
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.social.domain.UserDevice;
 
 /**
  * @author fmisser
@@ -11,4 +12,5 @@ import com.fmisser.gtc.social.domain.User;
 public interface UserDeviceService {
     int create(User user, int deviceType, String deviceName,
                String deviceCategory, String idfa, String deviceToken, String ipAddr, String lang) throws ApiException;
+    UserDevice getRecentUserDevice(User user) throws ApiException;
 }

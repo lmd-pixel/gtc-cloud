@@ -42,6 +42,22 @@ public class DynamicManagerController {
         return ApiResp.succeed(dynamicList.getFirst(), dynamicList.getSecond());
     }
 
+    @ApiOperation(value = "获取守护动态审核")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @GetMapping("/guard-list")
+    @PreAuthorize("hasAnyRole('MANAGER')")
+    ApiResp<List<DynamicDto>> getGuardDynamicList(@RequestParam(value = "digitId", required = false) String digitId,
+                                             @RequestParam(value = "nick", required = false) String nick,
+                                             @RequestParam(value = "content", required = false) String content,
+                                             @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
+                                             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
+                                             @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
+                                             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
+        Pair<List<DynamicDto>, Map<String, Object>> dynamicList = dynamicService
+                .managerListDynamic(digitId, nick, content, startTime, endTime, pageIndex, pageSize);
+        return ApiResp.succeed(dynamicList.getFirst(), dynamicList.getSecond());
+    }
+
     @ApiOperation(value = "删除动态")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
     @PostMapping("/del")

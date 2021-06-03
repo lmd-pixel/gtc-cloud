@@ -114,7 +114,7 @@ public class GiftServiceImpl implements GiftService {
 
     @Override
     public boolean isGuardGift(Gift gift) throws ApiException {
-        return gift.getName().equals("女神");
+        return gift.getName().equals("香水");
     }
 
     private List<Gift> _prepareGiftResponse(List<Gift> giftList) {

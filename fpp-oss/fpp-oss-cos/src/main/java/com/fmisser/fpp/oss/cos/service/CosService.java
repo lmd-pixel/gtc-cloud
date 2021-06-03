@@ -9,6 +9,6 @@ import com.fmisser.fpp.oss.abs.service.OssService;
  */
 public interface CosService extends OssService {
     // cos的域名
-    String getDomainName(String bucketName) throws RuntimeException;
+    String getDomainName(String cdn, String bucketName) throws RuntimeException;
 }
 

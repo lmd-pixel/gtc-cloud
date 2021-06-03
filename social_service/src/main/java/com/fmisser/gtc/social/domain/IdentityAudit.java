@@ -92,14 +92,25 @@ public class IdentityAudit {
     private String photos;
 
     // 守护版本后的photos数据 已经放到 UserMaterial里面
+    @Deprecated
     @Column
     private Integer materialPhoto;
+
+    @Column(length = 4096)
+    private String guardPhotos;
 
     @Column
     private String video;
 
+    @Column
+    private String auditVideo;
+
+    @Column
+    private Integer auditVideoCode;
+
     /**
-     * 审核类型 1： 资料审核  2： 相册审核  3：视频审核 11：待审资料 12：待审相册 13：待审视频
+     * 审核类型 1：资料审核  2：相册审核  3：视频审核 4: 守护相册 5：守护视频 6：认证视频
+     *        11：待审资料 12：待审相册 13：待审视频 14：守护相册待审核 15：守护视频待审核 16：认证视频待审核
      */
     @Column(nullable = false)
     private Integer type;

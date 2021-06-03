@@ -42,6 +42,12 @@ public interface OAuthFeign {
                    @RequestParam(value = "grant_type") String grant_type);
 
     @PostMapping(value = "/oauth/token")
+    TokenDto wxLogin(@RequestHeader("Authorization") String basicAuth,
+                        @RequestParam("unionid") String unionid,
+                        @RequestParam("scope") String scope,
+                        @RequestParam(value = "grant_type") String grant_type);
+
+    @PostMapping(value = "/oauth/token")
     TokenDto refreshToken(@RequestHeader("Authorization") String basicAuth,
                         @RequestParam("refresh_token") String refreshToken,
                         @RequestParam(value = "grant_type") String grant_type);

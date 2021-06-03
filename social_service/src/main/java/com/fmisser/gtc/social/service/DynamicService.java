@@ -46,6 +46,10 @@ public interface DynamicService {
     Pair<List<DynamicDto>, Map<String, Object>> managerListDynamic(String digitId, String nick, String content,
                                                                    Date startTime, Date endTime,
                                                                    int pageIndex, int pageSize) throws ApiException;
+
+    Pair<List<DynamicDto>, Map<String, Object>> managerGuardListDynamic(String digitId, String nick, String content,
+                                                                   Date startTime, Date endTime,
+                                                                   int pageIndex, int pageSize) throws ApiException;
     int deleteDynamic(Long dynamicId) throws ApiException;
 
     int auditDynamic(Long dynamicId, int pass, String message) throws ApiException;

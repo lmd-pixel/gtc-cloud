@@ -19,10 +19,8 @@ public class CosConfig {
 
     @Bean
     COSClient cosClient() {
-        String secretId = "";
-        String secretKey = "";
-        COSCredentials credentials = new BasicCOSCredentials(secretId, secretKey);
-        Region region = new Region("ap-shanghai");
+        COSCredentials credentials = new BasicCOSCredentials(CosDefine.COS_SECRET_ID, CosDefine.COS_SECRET_KEY);
+        Region region = new Region(CosDefine.COS_REGION);
         ClientConfig clientConfig = new ClientConfig(region);
         clientConfig.setHttpProtocol(HttpProtocol.https);
         return new COSClient(credentials, clientConfig);

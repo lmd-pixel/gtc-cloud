@@ -153,6 +153,12 @@ public class SysConfigServiceImpl implements SysConfigService {
         return BigDecimal.valueOf(Double.parseDouble(sysConfig.getValue1()));
     }
 
+    @Override
+    public Integer getDynamicDailyCountLimit() throws ApiException {
+        SysConfig sysConfig = sysConfigRepository.findByName("dynamic_limit");
+        return Integer.parseInt(sysConfig.getValue1());
+    }
+
     @SneakyThrows
     private boolean _commonCheck(SysConfig sysConfig) {
         String value2 = sysConfig.getValue2();

@@ -51,6 +51,24 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
     }
 
     @Override
+    public Optional<IdentityAudit> getLastGuardPhotosAudit(User user) throws ApiException {
+        return identityAuditRepository
+                .findTopByUserIdAndTypeOrderByCreateTimeDesc(user.getId(), 4);
+    }
+
+    @Override
+    public Optional<IdentityAudit> getLastGuardVideoAudit(User user) throws ApiException {
+        return identityAuditRepository
+                .findTopByUserIdAndTypeOrderByCreateTimeDesc(user.getId(), 5);
+    }
+
+    @Override
+    public Optional<IdentityAudit> getLastAuditVideoAudit(User user) throws ApiException {
+        return identityAuditRepository
+                .findTopByUserIdAndTypeOrderByCreateTimeDesc(user.getId(), 6);
+    }
+
+    @Override
     public int requestIdentityAudit(User user, int type, int mode) throws ApiException {
         if (type == 1) {
             if (!_checkProfileCompleted(user) ||
@@ -116,9 +134,37 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
             }
         }
 
+        if (mode == 4) {
+            // 守护照片审核
+            Optional<IdentityAudit> optionalIdentityAudit = getLastGuardPhotosAudit(user);
+            if (optionalIdentityAudit.isPresent() &&
+                optionalIdentityAudit.get().getStatus() == 10) {
+                throw new ApiException(-1, "用户守护招照片仍在审核中，无法再次提交");
+            } else {
+                IdentityAudit identityAudit = _createGuardPhotosFromPrepare(user, 4);
+                if (Objects.nonNull(identityAudit)) {
+                    identityAuditRepository.save(identityAudit);
+                }
+            }
+        }
+
+        if (mode == 5) {
+            Optional<IdentityAudit> optionalIdentityAudit = getLastAuditVideoAudit(user);
+            if (optionalIdentityAudit.isPresent() &&
+                    optionalIdentityAudit.get().getStatus() == 10) {
+                throw new ApiException(-1, "用户守护招照片仍在审核中，无法再次提交");
+            } else {
+                IdentityAudit identityAudit = _createAuditVideoFromPrepare(user, 6);
+                if (Objects.nonNull(identityAudit)) {
+                    identityAuditRepository.save(identityAudit);
+                }
+            }
+        }
+
         return 1;
     }
 
+    @Deprecated
     @Override
     public int requestIdentityAuditEx(User user, int type, int mode) throws ApiException {
         if (type == 1) {
@@ -292,6 +338,24 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
     }
 
     @Override
+    public Optional<IdentityAudit> getLastGuardPhotosPrepare(User user) throws ApiException {
+        return identityAuditRepository
+                .findTopByUserIdAndTypeOrderByCreateTimeDesc(user.getId(), 14);
+    }
+
+    @Override
+    public Optional<IdentityAudit> getLastGuardVideoPrepare(User user) throws ApiException {
+        return identityAuditRepository
+                .findTopByUserIdAndTypeOrderByCreateTimeDesc(user.getId(), 15);
+    }
+
+    @Override
+    public Optional<IdentityAudit> getLastAuditVideoPrepare(User user) throws ApiException {
+        return identityAuditRepository
+                .findTopByUserIdAndTypeOrderByCreateTimeDesc(user.getId(), 16);
+    }
+
+    @Override
     public Optional<IdentityAudit> getLastAuditPrepare(Long userId, int type) throws ApiException {
         return identityAuditRepository
                 .findTopByUserIdAndTypeOrderByCreateTimeDesc(userId, type);
@@ -460,6 +524,34 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
         return __innerCreateFromAuditPrepare(identityAuditPrepare, user, type);
     }
 
+    private IdentityAudit _createGuardPhotosFromPrepare(User user, int type) {
+        Optional<IdentityAudit> identityAuditOptional = getLastGuardPhotosPrepare(user);
+        if (!identityAuditOptional.isPresent()) {
+            return null;
+        }
+        IdentityAudit identityAuditPrepare = identityAuditOptional.get();
+        if (identityAuditPrepare.getStatus() != 10) {
+            // 状态不是待审核的则无效
+            return null;
+        }
+
+        return __innerCreateFromAuditPrepare(identityAuditPrepare, user, type);
+    }
+
+    private IdentityAudit _createAuditVideoFromPrepare(User user, int type) {
+        Optional<IdentityAudit> identityAuditOptional = getLastAuditVideoPrepare(user);
+        if (!identityAuditOptional.isPresent()) {
+            return null;
+        }
+        IdentityAudit identityAuditPrepare = identityAuditOptional.get();
+        if (identityAuditPrepare.getStatus() != 10) {
+            // 状态不是待审核的则无效
+            return null;
+        }
+
+        return __innerCreateFromAuditPrepare(identityAuditPrepare, user, type);
+    }
+
     private IdentityAudit __innerCreateFromAuditPrepare(IdentityAudit identityAuditPrepare, User user, int type) {
         IdentityAudit audit = new IdentityAudit();
         audit.setSerialNumber(createAuditSerialNumber(user.getId(), type));
@@ -484,6 +576,9 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
         audit.setHead(identityAuditPrepare.getHead());
         audit.setPhotos(identityAuditPrepare.getPhotos());
         audit.setVideo(identityAuditPrepare.getVideo());
+        audit.setGuardPhotos(identityAuditPrepare.getGuardPhotos());
+        audit.setAuditVideo(identityAuditPrepare.getAuditVideo());
+        audit.setAuditVideoCode(identityAuditPrepare.getAuditVideoCode());
 
         audit.setType(type);
         audit.setStatus(10);

@@ -31,6 +31,7 @@ public class User implements UserDetails {
      * 1: 通过手机号验证码创建的账户,username 是手机号
      * 2：通过手机号一键登录创建的账户，username 是手机号
      * 11：第三方苹果登录
+     * 12：wx登录
      */
     @Column(nullable = false, columnDefinition = "int default 0")
     private int type = 0;

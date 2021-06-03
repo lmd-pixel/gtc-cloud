@@ -64,6 +64,11 @@ public class UserController {
         return ApiResp.succeed(userService.appleLogin(subject, token));
     }
 
+    @PostMapping("/wx-login")
+    public ApiResp<TokenDto> appleLogin(@RequestParam("unionid") String unionid) throws ApiException {
+        return ApiResp.succeed(userService.wxLogin(unionid));
+    }
+
     @PostMapping("/refresh-token")
     public ApiResp<TokenDto> refreshToken(@RequestParam("refreshToken") String refreshToken) throws ApiException {
         return ApiResp.succeed(userService.refreshToken(refreshToken));

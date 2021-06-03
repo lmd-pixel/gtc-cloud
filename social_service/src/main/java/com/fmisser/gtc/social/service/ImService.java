@@ -81,6 +81,8 @@ public interface ImService {
     // send to user
     int sendToUser(User fromUser, User toUser, String content) throws ApiException;
 
+    int sendToUser(User fromUser, User toUser, String content, String pushSound) throws ApiException;
+
     int sendGiftMsg(User userFrom, User userTo, Gift gift, int count) throws ApiException;
 
     // mode 0 发起通话 1：取消通话 2：拒绝通话 3: 超时 4: 结束通话（已接通）5: 接受通话 6：确认通话
