@@ -107,11 +107,10 @@ public class TencentImCallbackService implements ImCallbackService {
                         ImTransferMsgCb transferMsgCb = new ImTransferMsgCb();
                         transferMsgCb.setActionStatus("OK");
                         transferMsgCb.setErrorCode(0);
-                        transferMsgCb.setErrorInfo("");
                         ImMsgBody imMsgBody = new ImMsgBody();
                         imMsgBody.setMsgType("TIMTextElem");
                         ImMsgBody.ImMsgContent msgContent = new ImMsgBody.ImMsgContent();
-                        msgContent.setText("");
+                        msgContent.setText("[微笑]");
                         imMsgBody.setMsgContent(msgContent);
                         transferMsgCb.setMsgBody(imMsgBody);
                         return transferMsgCb;

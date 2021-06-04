@@ -12,13 +12,19 @@ import org.springframework.web.bind.annotation.*;
  */
 
 @RestController
-@RequestMapping("/push")
+@RequestMapping("/")
 @AllArgsConstructor
 public class PushController {
     private final PushService pushService;
 
     @PostMapping("/broadcast")
     public ApiResp<Integer> broadcast(@RequestParam("content") String content) {
+        pushService.broadcastMsg(content);
+        return ApiResp.succeed(1);
+    }
+
+    @GetMapping("/broadcast")
+    public ApiResp<Integer> broadcast2(@RequestParam("content") String content) {
         pushService.broadcastMsg(content);
         return ApiResp.succeed(1);
     }

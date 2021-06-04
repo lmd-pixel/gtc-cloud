@@ -112,13 +112,13 @@ public class GiftServiceImpl implements GiftService {
             // 发送成为守护的消息
             String msgData = String.format("{\"tag\":%d,\"giftId\":%d,\"giftCount\":%d,\"giftName\":\"%s\",\"recvNick\":\"%s\",\"sendHead\":\"%s\"}",
                     1, giftId, count, gift.getName(), toUser.getNick(), headThumbnailUrl);
-            pushFeign.broadcast(msgData);
+//            pushFeign.broadcast(msgData);
         }
 
         // 发送礼物的消息
         String msgData = String.format("{\"tag\":%d,\"giftId\":%d,\"giftCount\":%d,\"giftName\":\"%s\",\"recvNick\":\"%s\",\"sendHead\":\"%s\"}",
                 2, giftId, count, gift.getName(), toUser.getNick(), headThumbnailUrl);
-        pushFeign.broadcast(msgData);
+//        pushFeign.broadcast(msgData);
 
         // 发送通知消息
         // TODO: 2021/1/4 通过mq放到 notice service 去做

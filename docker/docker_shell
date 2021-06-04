@@ -79,13 +79,29 @@ sudo docker run -p 9411:9411 --name gtc_cloud_zipkin -e STORAGE_TYPE=elasticsear
 ############################## logstash
 sudo docker run -it -p 5044:5044 -p 5045:5045 --name gtc_cloud_logstash --network=es-network -d logstash:7.12.1
 
-docker cp gtc_cloud_logstash:/usr/share/logstash/config/logstash-sample.conf .
-docker cp logstash-gtc-cloud-log.conf gtc_cloud_logstash:/usr/share/logstash/config/
+docker cp gtc_cloud_logstash:/usr/share/logstash/pipeline/logstash.conf .
 
-docker cp gtc_cloud_logstash:/usr/share/logstash/config/logstash.yml .
-docker cp logstash.yml gtc_cloud_logstash:/usr/share/logstash/config/
+vi logstash.conf
 
-docker cp gtc_cloud_logstash:/usr/share/logstash/config/pipelines.yml .
+input {
+  tcp {
+    port => 5044
+    codec => json_lines
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["http://gtc_cloud_es:9200"]
+    index => "gtc-cloud-log-%{+YYYY.MM.dd}"
+    user => "elastic"
+    password => "gtc_cloud@123456"
+  }
+}
+
+docker cp logstash.conf gtc_cloud_logstash:/usr/share/logstash/pipeline/logstash.conf
+
+重启容器 docker restart gtc_cloud_logstash
 
 ############################## 服务
 sudo docker run -p 8001:8001 --name gtc_registry -d registry

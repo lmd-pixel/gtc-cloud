@@ -541,6 +541,7 @@ public class DynamicServiceImpl implements DynamicService {
                 // cos 通过设定后缀返回不同作用的图（比如缩略图、模糊效果等）
                 final String thumbnail_tail;
                 final String origin_tail;
+                final String thumbnail_tail_video = "/gsv";
                 if (isGuard.get()) {
 //                    thumbnail_tail = "?imageMogr2/thumbnail/480x";
                     thumbnail_tail = "/gsv";
@@ -579,7 +580,7 @@ public class DynamicServiceImpl implements DynamicService {
                     String webpVideo = dynamicDto.getVideo().substring(0, dynamicDto.getVideo().lastIndexOf('.'));
                     String videoThumbnailUrl =  String.format("%s/%s.webp%s",
                             cosService.getDomainName(ossConfProp.getCosCdn(), ossConfProp.getUserDynamicCosBucket()),
-                            webpVideo, thumbnail_tail);
+                            webpVideo, thumbnail_tail_video);
                     dynamicDto.setVideoThumbnailUrl(videoThumbnailUrl);
                 }
             }
