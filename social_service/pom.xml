@@ -177,6 +177,11 @@
             <artifactId>fpp-thirdparty-apple</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.fmisser.fpp</groupId>
+            <artifactId>fpp-log-logstash</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>

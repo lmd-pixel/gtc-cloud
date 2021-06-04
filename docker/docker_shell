@@ -76,6 +76,17 @@ docker restart gtc_cloud_kibana
 ############################## zipkin
 sudo docker run -p 9411:9411 --name gtc_cloud_zipkin -e STORAGE_TYPE=elasticsearch -e ES_HOSTS=http://42.192.212.67:9200 -e ES_USERNAME=elastic -e ES_PASSWORD=gtc_cloud@123456 -d openzipkin/zipkin
 
+############################## logstash
+sudo docker run -it -p 5044:5044 -p 5045:5045 --name gtc_cloud_logstash --network=es-network -d logstash:7.12.1
+
+docker cp gtc_cloud_logstash:/usr/share/logstash/config/logstash-sample.conf .
+docker cp logstash-gtc-cloud-log.conf gtc_cloud_logstash:/usr/share/logstash/config/
+
+docker cp gtc_cloud_logstash:/usr/share/logstash/config/logstash.yml .
+docker cp logstash.yml gtc_cloud_logstash:/usr/share/logstash/config/
+
+docker cp gtc_cloud_logstash:/usr/share/logstash/config/pipelines.yml .
+
 ############################## 服务
 sudo docker run -p 8001:8001 --name gtc_registry -d registry
 sudo docker run -p 8002:8002 --name gtc_auth -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/auth/:/ROOT/logs/ -d auth

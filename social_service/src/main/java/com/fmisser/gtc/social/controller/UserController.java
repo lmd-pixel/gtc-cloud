@@ -427,10 +427,8 @@ public class UserController {
         String username = authentication.getPrincipal().toString();
         User userDo = userService.getUserByUsername(username);
 
-        String remoteAddr = req.getRemoteAddr();
-
         int ret = userDeviceService.create(userDo, deviceType, deviceName, deviceCategory,
-                deviceIdfa, deviceToken, remoteAddr, lang);
+                deviceIdfa, deviceToken, ipAddr, lang);
         return ApiResp.succeed(ret);
     }
 

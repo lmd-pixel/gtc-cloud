@@ -36,6 +36,7 @@
 
     <modules>
         <module>fpp-log-zipkin</module>
+        <module>fpp-log-logstash</module>
     </modules>
 
 </project>
