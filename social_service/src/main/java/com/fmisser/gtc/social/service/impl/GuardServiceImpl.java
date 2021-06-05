@@ -1,7 +1,10 @@
 package com.fmisser.gtc.social.service.impl;
 
+import com.fmisser.gtc.base.dto.social.FansDto;
 import com.fmisser.gtc.base.dto.social.GuardDto;
 import com.fmisser.gtc.base.exception.ApiException;
+import com.fmisser.gtc.base.prop.OssConfProp;
+import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.Guard;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.repository.GuardRepository;
@@ -9,6 +12,7 @@ import com.fmisser.gtc.social.service.GuardService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,15 +28,18 @@ import java.util.Optional;
 @AllArgsConstructor
 public class GuardServiceImpl implements GuardService {
     private final GuardRepository guardRepository;
+    private final OssConfProp ossConfProp;
 
     @Override
     public List<GuardDto> getAnchorGuardList(User user) throws ApiException {
-        return guardRepository.getAnchorGuardList(user.getId());
+        List<GuardDto> guardList = guardRepository.getAnchorGuardList(user.getId());
+        return _prepareGuardDtoResponse(guardList);
     }
 
     @Override
     public List<GuardDto> getUserGuardList(User user) throws ApiException {
-        return guardRepository.getUserGuardList(user.getId());
+        List<GuardDto> guardList = guardRepository.getUserGuardList(user.getId());
+        return _prepareGuardDtoResponse(guardList);
     }
 
     @Override
@@ -57,5 +64,32 @@ public class GuardServiceImpl implements GuardService {
         Optional<Guard> guardOptional = guardRepository
                 .findByUserIdFromAndUserIdToAndIsDelete(from.getId(), to.getId(), 0);
         return guardOptional.isPresent();
+    }
+
+    private List<GuardDto> _prepareGuardDtoResponse(List<GuardDto> guardDtos) {
+        for (GuardDto guardDto:
+                guardDtos) {
+
+            // 完善个人信息数据
+            if (guardDto.getBirth() != null) {
+                // 通过生日计算年龄
+                guardDto.setAge(DateUtils.getAgeFromBirth(guardDto.getBirth()));
+            }
+
+            if (!StringUtils.isEmpty(guardDto.getHead())) {
+                String headUrl = String.format("%s/%s/%s",
+                        ossConfProp.getMinioVisitUrl(),
+                        ossConfProp.getUserProfileBucket(),
+                        guardDto.getHead());
+                String headThumbnailUrl = String.format("%s/%s/thumbnail_%s",
+                        ossConfProp.getMinioVisitUrl(),
+                        ossConfProp.getUserProfileBucket(),
+                        guardDto.getHead());
+                guardDto.setHeadUrl(headUrl);
+                guardDto.setHeadThumbnailUrl(headThumbnailUrl);
+            }
+        }
+
+        return guardDtos;
     }
 }

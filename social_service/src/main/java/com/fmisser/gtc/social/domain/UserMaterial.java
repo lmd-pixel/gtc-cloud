@@ -16,9 +16,10 @@ import java.util.Date;
 /**
  * @author by fmisser
  * @create 2021/5/26 10:39 上午
- * @description
+ * @description 暂时不需要
  */
 
+@Deprecated
 @Entity
 @Table(name = "t_user_material", indexes = {@Index(columnList = "createTime")})
 @Data

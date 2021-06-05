@@ -67,7 +67,7 @@ spring:
       - id: push-route
         uri: lb://push
         predicates:
-          - Path=/api/push/**
+        - Path=/api/push/**
         filters:
         - StripPrefix=2
         - name: Hystrix

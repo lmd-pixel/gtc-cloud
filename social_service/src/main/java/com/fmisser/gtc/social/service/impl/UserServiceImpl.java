@@ -1784,7 +1784,7 @@ public class UserServiceImpl implements UserService {
                     ossConfProp.getMinioVisitUrl(),
                     ossConfProp.getUserProfileBucket(),
                     user.getAuditVideo());
-            user.setAuditVideo(videoUrl);
+            user.setVideoAuditUrl(videoUrl);
         }
 
         // 守护版本照片判断

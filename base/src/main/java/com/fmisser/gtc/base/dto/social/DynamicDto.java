@@ -22,7 +22,7 @@ public class DynamicDto {
                       int type, String video, String pictures,
                       Date createTime, Date modifyTime, BigDecimal longitude, BigDecimal latitude,
                       Long heartCount, Long commentCount,
-                      String nick, Date birth, int gender, String head) {
+                      String nick, Date birth, int gender, String head, String message, int status) {
 
         this.id = id;
         this.userId = userId;
@@ -45,6 +45,8 @@ public class DynamicDto {
         this.gender = gender;
         this.head = head;
         this.selfIsGuard = 0L;
+        this.message = message;
+        this.status = status;
     }
 
     public DynamicDto(Long id, Long userId, String digitId, String content, String city,
@@ -138,5 +140,7 @@ public class DynamicDto {
     private String headUrl;
     private String headThumbnailUrl;    // 头像缩略图
     private Long selfIsGuard;
+    private String message;
+    private int status;
 }
 

@@ -70,4 +70,7 @@ public class OssConfProp {
 
     @Value("${oss.cos.cdn}")
     private String cosCdn;
+
+    @Value("${user_dynamic.video.thumbnail_prefix}")
+    private String userDynamicVideoThumbnailPrefix;
 }

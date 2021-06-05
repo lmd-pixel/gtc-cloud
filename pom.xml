@@ -41,6 +41,7 @@
         <module>fpp-cache</module>
         <module>fpp-thirdparty</module>
         <module>fpp-push</module>
+        <module>fpp-nosql</module>
 
         <module>base</module>
 
@@ -50,7 +51,6 @@
 
         <!--        <module>registry</module>-->
         <module>gateway</module>
-        <module>fpp-nosql</module>
         <!--        <module>monitor</module>-->
 <!--        <module>notice_service</module>-->
 <!--        <module>im_service</module>-->

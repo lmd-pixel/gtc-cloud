@@ -123,20 +123,20 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
             "(td.id, td.userId, tu.digitId, td.content, td.city, td.type, td.video, td.pictures, " +
             "td.createTime, td.modifyTime, td.longitude, td.latitude, " +
             "COUNT(DISTINCT tdh.id), COUNT(DISTINCT tdc.id), " +
-            "tu.nick, tu.birth, tu.gender, tu.head) FROM Dynamic td " +
+            "tu.nick, tu.birth, tu.gender, tu.head, td.message, td.status) FROM Dynamic td " +
             "INNER JOIN User tu ON tu.id = td.userId AND " +
             "(tu.digitId LIKE CONCAT('%', :digitId, '%') OR :digitId IS NULL ) AND " +
             "(tu.nick LIKE CONCAT('%', :nick, '%') OR :nick IS NULL ) " +
             "LEFT JOIN DynamicHeart tdh ON tdh.dynamicId = td.id AND tdh.isCancel = 0 " +
             "LEFT JOIN DynamicComment tdc ON tdc.dynamicId = td.id AND tdc.isDelete = 0 " +
             "WHERE td.isDelete = 0 AND td.status = 10 AND " +
-            "td.content LIKE CONCAT('%', :content, '%') OR :content IS NULL AND " +
+//            "td.content LIKE CONCAT('%', :content, '%') OR :content IS NULL AND " +
             "(td.createTime BETWEEN :startTime AND :endTime OR :startTime IS NULL OR :endTime IS NULL)" +
             "GROUP BY td.id " +
             "ORDER BY td.id DESC")
     Page<DynamicDto> getManagerDynamicList(@Param("digitId") String digitId,
                                            @Param("nick") String nick,
-                                           @Param("content") String content,
+//                                           @Param("content") String content,
                                            @Param("startTime") Date startTime,
                                            @Param("endTime") Date endTime,
                                            Pageable pageable);
@@ -145,21 +145,21 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
             "(td.id, td.userId, tu.digitId, td.content, td.city, td.type, td.video, td.pictures, " +
             "td.createTime, td.modifyTime, td.longitude, td.latitude, " +
             "COUNT(DISTINCT tdh.id), COUNT(DISTINCT tdc.id), " +
-            "tu.nick, tu.birth, tu.gender, tu.head) FROM Dynamic td " +
+            "tu.nick, tu.birth, tu.gender, tu.head, td.message, td.status) FROM Dynamic td " +
             "INNER JOIN User tu ON tu.id = td.userId AND " +
             "(tu.digitId LIKE CONCAT('%', :digitId, '%') OR :digitId IS NULL ) AND " +
             "(tu.nick LIKE CONCAT('%', :nick, '%') OR :nick IS NULL ) " +
             "LEFT JOIN DynamicHeart tdh ON tdh.dynamicId = td.id AND tdh.isCancel = 0 " +
             "LEFT JOIN DynamicComment tdc ON tdc.dynamicId = td.id AND tdc.isDelete = 0 " +
             "WHERE td.isDelete = 0 AND td.status IN (1,20) AND " +
-            "td.content LIKE CONCAT('%', :content, '%') OR :content IS NULL AND " +
+//            "td.content LIKE CONCAT('%', :content, '%') OR :content IS NULL AND " +
             "(td.createTime BETWEEN :startTime AND :endTime OR :startTime IS NULL OR :endTime IS NULL)" +
             "GROUP BY td.id " +
             "ORDER BY td.id DESC")
     Page<DynamicDto> getManagerGuardDynamicList(@Param("digitId") String digitId,
-                                           @Param("nick") String nick,
-                                           @Param("content") String content,
-                                           @Param("startTime") Date startTime,
-                                           @Param("endTime") Date endTime,
-                                           Pageable pageable);
+                                                @Param("nick") String nick,
+//                                                @Param("content") String content,
+                                                @Param("startTime") Date startTime,
+                                                @Param("endTime") Date endTime,
+                                                Pageable pageable);
 }

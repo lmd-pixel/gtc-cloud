@@ -19,7 +19,10 @@ public interface IdentityAuditRepository extends JpaRepository<IdentityAudit, Lo
 
     @Query(value = "(SELECT * FROM t_identity_audit WHERE user_id = ?1 AND type = 1 ORDER BY create_time DESC LIMIT 1) " +
             "UNION ALL (SELECT * FROM t_identity_audit WHERE user_id = ?1 AND type = 2 ORDER BY create_time DESC LIMIT 1) " +
-            "UNION ALL (SELECT * FROM t_identity_audit WHERE user_id = ?1 AND type = 3 ORDER BY create_time DESC LIMIT 1)",
+            "UNION ALL (SELECT * FROM t_identity_audit WHERE user_id = ?1 AND type = 3 ORDER BY create_time DESC LIMIT 1) " +
+            "UNION ALL (SELECT * FROM t_identity_audit WHERE user_id = ?1 AND type = 4 ORDER BY create_time DESC LIMIT 1) " +
+            "UNION ALL (SELECT * FROM t_identity_audit WHERE user_id = ?1 AND type = 5 ORDER BY create_time DESC LIMIT 1) " +
+            "UNION ALL (SELECT * FROM t_identity_audit WHERE user_id = ?1 AND type = 6 ORDER BY create_time DESC LIMIT 1)",
             nativeQuery = true)
     List<IdentityAudit> getLatestWithAllType(Long userId);
 

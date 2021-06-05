@@ -148,11 +148,11 @@ public class IdentityAuditServiceImpl implements IdentityAuditService {
             }
         }
 
-        if (mode == 5) {
+        if (mode == 6) {
             Optional<IdentityAudit> optionalIdentityAudit = getLastAuditVideoAudit(user);
             if (optionalIdentityAudit.isPresent() &&
                     optionalIdentityAudit.get().getStatus() == 10) {
-                throw new ApiException(-1, "用户守护招照片仍在审核中，无法再次提交");
+                throw new ApiException(-1, "用户认证视频仍在审核中，无法再次提交");
             } else {
                 IdentityAudit identityAudit = _createAuditVideoFromPrepare(user, 6);
                 if (Objects.nonNull(identityAudit)) {

@@ -12,11 +12,11 @@ import com.fmisser.gtc.base.exception.ApiException;
 
 public interface ImCallbackService {
     // 状态改变
-    ImCbResp stateChangeCallback(ImStateChangeDto imStateChangeDto);
+    Object stateChangeCallback(ImStateChangeDto imStateChangeDto);
 
-    ImCbResp beforeSendMsg(ImBeforeSendMsgDto imBeforeSendMsgDto, String originContent);
+    Object beforeSendMsg(ImBeforeSendMsgDto imBeforeSendMsgDto, String originContent);
 
-    ImCbResp afterSendMsg(ImAfterSendMsgDto imAfterSendMsgDto, String originContent);
+    Object afterSendMsg(ImAfterSendMsgDto imAfterSendMsgDto, String originContent);
 
     int textModeration(String userId, String text);
 

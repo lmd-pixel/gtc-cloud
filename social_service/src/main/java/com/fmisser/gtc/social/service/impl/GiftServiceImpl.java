@@ -106,23 +106,23 @@ public class GiftServiceImpl implements GiftService {
         }
 
         // 守护判断
-        if (fromUser.getIdentity() == 0 && toUser.getIdentity() == 1 && isGuardGift(gift)) {
+        if (isGuardGift(gift)) {
             guardService.becomeGuard(fromUser, toUser);
 
             // 发送成为守护的消息
-            String msgData = String.format("{\"tag\":%d,\"giftId\":%d,\"giftCount\":%d,\"giftName\":\"%s\",\"recvNick\":\"%s\",\"sendHead\":\"%s\"}",
-                    1, giftId, count, gift.getName(), toUser.getNick(), headThumbnailUrl);
-//            pushFeign.broadcast(msgData);
+            String msgData = String.format("{\"tag\":%d,\"giftId\":%d,\"giftCount\":%d,\"giftName\":\"%s\",\"recvNick\":\"%s\",\"sendHead\":\"%s\",\"sendNick\":\"%s\"}",
+                    1, giftId, count, gift.getName(), toUser.getNick(), headThumbnailUrl, fromUser.getNick());
+            pushFeign.broadcast(msgData);
         }
 
         // 发送礼物的消息
-        String msgData = String.format("{\"tag\":%d,\"giftId\":%d,\"giftCount\":%d,\"giftName\":\"%s\",\"recvNick\":\"%s\",\"sendHead\":\"%s\"}",
-                2, giftId, count, gift.getName(), toUser.getNick(), headThumbnailUrl);
-//        pushFeign.broadcast(msgData);
+        String msgData = String.format("{\"tag\":%d,\"giftId\":%d,\"giftCount\":%d,\"giftName\":\"%s\",\"recvNick\":\"%s\",\"sendHead\":\"%s\",\"sendNick\":\"%s\"}",
+                2, giftId, count, gift.getName(), toUser.getNick(), headThumbnailUrl, fromUser.getNick());
+        pushFeign.broadcast(msgData);
 
         // 发送通知消息
         // TODO: 2021/1/4 通过mq放到 notice service 去做
-        imService.sendGiftMsg(fromUser, toUser, gift, count);
+//        imService.sendGiftMsg(fromUser, toUser, gift, count);
 
         return 1;
     }

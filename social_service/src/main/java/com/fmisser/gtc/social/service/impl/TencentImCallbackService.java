@@ -15,6 +15,7 @@ import com.tencentcloudapi.tms.v20201229.models.TextModerationRequest;
 import com.tencentcloudapi.tms.v20201229.models.TextModerationResponse;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Base64Utils;
@@ -23,6 +24,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class TencentImCallbackService implements ImCallbackService {
@@ -43,7 +45,7 @@ public class TencentImCallbackService implements ImCallbackService {
     private final RedisService redisService;
 
     @Override
-    public ImCbResp stateChangeCallback(ImStateChangeDto imStateChangeDto) {
+    public Object stateChangeCallback(ImStateChangeDto imStateChangeDto) {
         ImCbResp resp = new ImCbResp();
         resp.setActionStatus("OK");
         resp.setErrorCode(0);
@@ -70,7 +72,7 @@ public class TencentImCallbackService implements ImCallbackService {
     }
 
     @Override
-    public ImCbResp beforeSendMsg(ImBeforeSendMsgDto imBeforeSendMsgDto, String originContent) {
+    public Object beforeSendMsg(ImBeforeSendMsgDto imBeforeSendMsgDto, String originContent) {
         ImCbResp resp = new ImCbResp();
         resp.setActionStatus("OK");
         resp.setErrorCode(0);
@@ -95,6 +97,11 @@ public class TencentImCallbackService implements ImCallbackService {
                 if (msgbody.getMsgType().equals("TIMTextElem")) {
                     int ret = textModeration(imBeforeSendMsgDto.getFrom_Account(), msgbody.getMsgContent().getText());
 
+                    log.info("[imcb] text blocked from: {}, to: {} with content: {}",
+                            imBeforeSendMsgDto.getFrom_Account(),
+                            imBeforeSendMsgDto.getTo_Account(),
+                            msgbody.getMsgContent().getText());
+
                     userMessage.setMsgType(msgbody.getMsgType());
                     userMessage.setMsgText(msgbody.getMsgContent().getText());
                     userMessage.setMsgDesc(msgbody.getMsgContent().getDesc());
@@ -112,7 +119,7 @@ public class TencentImCallbackService implements ImCallbackService {
                         ImMsgBody.ImMsgContent msgContent = new ImMsgBody.ImMsgContent();
                         msgContent.setText("[微笑]");
                         imMsgBody.setMsgContent(msgContent);
-                        transferMsgCb.setMsgBody(imMsgBody);
+                        transferMsgCb.setMsgBody(Collections.singletonList(imMsgBody));
                         return transferMsgCb;
                     }
                 } else {
@@ -227,7 +234,7 @@ public class TencentImCallbackService implements ImCallbackService {
     @Transactional
 //    @Retryable
     @Override
-    public ImCbResp afterSendMsg(ImAfterSendMsgDto imAfterSendMsgDto, String originContent) {
+    public Object afterSendMsg(ImAfterSendMsgDto imAfterSendMsgDto, String originContent) {
         ImCbResp resp = new ImCbResp();
         resp.setActionStatus("OK");
         resp.setErrorCode(0);

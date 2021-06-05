@@ -10,7 +10,7 @@ import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
  * @description TODO
  */
 
-@SpringBootApplication(scanBasePackages = {"com.fmisser.gtc.push", "com.fmisser.fpp.*"})
+@SpringBootApplication(scanBasePackages = {"com.fmisser.gtc.push", "com.fmisser.gtc.base", "com.fmisser.fpp.*"})
 @EnableEurekaClient
 public class PushApplication {
     public static void main(String[] args) {

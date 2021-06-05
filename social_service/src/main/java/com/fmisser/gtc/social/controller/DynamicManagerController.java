@@ -54,7 +54,7 @@ public class DynamicManagerController {
                                              @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
                                              @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
         Pair<List<DynamicDto>, Map<String, Object>> dynamicList = dynamicService
-                .managerListDynamic(digitId, nick, content, startTime, endTime, pageIndex, pageSize);
+                .managerGuardListDynamic(digitId, nick, content, startTime, endTime, pageIndex, pageSize);
         return ApiResp.succeed(dynamicList.getFirst(), dynamicList.getSecond());
     }
 
@@ -68,7 +68,7 @@ public class DynamicManagerController {
 
     @ApiOperation(value = "动态审核")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
-    @GetMapping("/audit")
+    @PostMapping("/audit")
     @PreAuthorize("hasAnyRole('MANAGER')")
     ApiResp<Integer> auditDynamic(@RequestParam("dynamicId") Long dynamicId,
                                   @RequestParam("pass") Integer pass,

@@ -73,8 +73,13 @@ public class DynamicServiceImpl implements DynamicService {
         dynamic.setUserId(user.getId());
         dynamic.setType(type);
         dynamic.setContent(content);
-        // 直接设置通过
-        dynamic.setStatus(10);
+        if (type < 20) {
+            // 直接设置通过
+            dynamic.setStatus(10);
+        } else {
+            // 守护视频需要审核
+            dynamic.setStatus(1);
+        }
 
         if (Objects.nonNull(city)) {
             dynamic.setCity(city);
@@ -206,7 +211,7 @@ public class DynamicServiceImpl implements DynamicService {
             guardDtoList = new ArrayList<>();
         }
 
-        return _prepareDynamicDtoResponse(dynamicDtos.getContent(), guardDtoList);
+        return _prepareDynamicDtoResponse(dynamicDtos.getContent(), guardDtoList, false);
     }
 
     @Override
@@ -337,7 +342,7 @@ public class DynamicServiceImpl implements DynamicService {
         } else {
             guardDtoList = new ArrayList<>();
         }
-        return _prepareDynamicDtoResponse(dynamicDtos, guardDtoList);
+        return _prepareDynamicDtoResponse(dynamicDtos, guardDtoList, false);
     }
 
     @Override
@@ -351,7 +356,7 @@ public class DynamicServiceImpl implements DynamicService {
                 .getDynamicListByFollow(selfUser.getId(), dateLimit, pageable).getContent();
 
         List<GuardDto> guardDtoList = guardService.getUserGuardList(selfUser);
-        return _prepareDynamicDtoResponse(dynamicDtos, guardDtoList);
+        return _prepareDynamicDtoResponse(dynamicDtos, guardDtoList, false);
     }
 
     @Override
@@ -382,14 +387,14 @@ public class DynamicServiceImpl implements DynamicService {
                                    int pageIndex, int pageSize) throws ApiException {
         Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
         Page<DynamicDto> dynamicDtoPage =
-                dynamicRepository.getManagerDynamicList(digitId, nick, content, startTime, endTime, pageable);
+                dynamicRepository.getManagerDynamicList(digitId, nick, startTime, endTime, pageable);
 
         Map<String, Object> extra = new HashMap<>();
         extra.put("totalPage", dynamicDtoPage.getTotalPages());
         extra.put("totalEle", dynamicDtoPage.getTotalElements());
         extra.put("currPage", pageIndex);
 
-        return Pair.of(dynamicDtoPage.getContent(), extra);
+        return Pair.of(_prepareDynamicDtoResponse(dynamicDtoPage.getContent(), Collections.emptyList(), true), extra);
     }
 
     @Override
@@ -398,14 +403,14 @@ public class DynamicServiceImpl implements DynamicService {
                                                                                int pageIndex, int pageSize) throws ApiException {
         Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
         Page<DynamicDto> dynamicDtoPage =
-                dynamicRepository.getManagerGuardDynamicList(digitId, nick, content, startTime, endTime, pageable);
+                dynamicRepository.getManagerGuardDynamicList(digitId, nick, startTime, endTime, pageable);
 
         Map<String, Object> extra = new HashMap<>();
         extra.put("totalPage", dynamicDtoPage.getTotalPages());
         extra.put("totalEle", dynamicDtoPage.getTotalElements());
         extra.put("currPage", pageIndex);
 
-        return Pair.of(dynamicDtoPage.getContent(), extra);
+        return Pair.of(_prepareDynamicDtoResponse(dynamicDtoPage.getContent(), Collections.emptyList(), true), extra);
     }
 
     @Override
@@ -491,7 +496,7 @@ public class DynamicServiceImpl implements DynamicService {
         return dynamicCommentDtos;
     }
 
-    private List<DynamicDto> _prepareDynamicDtoResponse(List<DynamicDto> dynamicDtos, List<GuardDto> guardList) {
+    private List<DynamicDto> _prepareDynamicDtoResponse(List<DynamicDto> dynamicDtos, List<GuardDto> guardList, boolean isManager) {
         for (DynamicDto dynamicDto:
                 dynamicDtos) {
 
@@ -541,16 +546,16 @@ public class DynamicServiceImpl implements DynamicService {
                 // cos 通过设定后缀返回不同作用的图（比如缩略图、模糊效果等）
                 final String thumbnail_tail;
                 final String origin_tail;
-                final String thumbnail_tail_video = "/gsv";
-                if (isGuard.get()) {
+                final String thumbnail_tail_video = "";
+                if (isGuard.get() || isManager) {
 //                    thumbnail_tail = "?imageMogr2/thumbnail/480x";
-                    thumbnail_tail = "/gsv";
-                    origin_tail = "/0";
+                    thumbnail_tail = "!gsv";
+                    origin_tail = "!0";
                 } else {
 //                    thumbnail_tail = "?imageMogr2/thumbnail/480x|imageMogr2/blur/8x10";
-                    thumbnail_tail = "/ngsv";
+                    thumbnail_tail = "!ngsv";
 //                    origin_tail = "?imageMogr2/blur/8x10";
-                    origin_tail = "/n";
+                    origin_tail = "!n";
                 }
 
                 // 提供完整的图片url
@@ -572,15 +577,18 @@ public class DynamicServiceImpl implements DynamicService {
 
                 // 提供完整的视频链接
                 if (!StringUtils.isEmpty(dynamicDto.getVideo())) {
-                    String videoUrl = String.format("%s/%s",
+                    String pureName = dynamicDto.getVideo().substring(0, dynamicDto.getVideo().lastIndexOf('.'));
+                    String thumbnailPurlName = StringUtils.replace(pureName, ossConfProp.getUserDynamicVideoPrefix(),
+                            ossConfProp.getUserDynamicVideoThumbnailPrefix());
+
+                    String videoUrl = String.format("%s/%s.mp4",
                             cosService.getDomainName(ossConfProp.getCosCdn(), ossConfProp.getUserDynamicCosBucket()),
-                            dynamicDto.getVideo());
+                            thumbnailPurlName);
                     dynamicDto.setVideoUrl(videoUrl);
 
-                    String webpVideo = dynamicDto.getVideo().substring(0, dynamicDto.getVideo().lastIndexOf('.'));
-                    String videoThumbnailUrl =  String.format("%s/%s.webp%s",
+                    String videoThumbnailUrl =  String.format("%s/%s_mute.mp4%s",
                             cosService.getDomainName(ossConfProp.getCosCdn(), ossConfProp.getUserDynamicCosBucket()),
-                            webpVideo, thumbnail_tail_video);
+                            thumbnailPurlName, thumbnail_tail_video);
                     dynamicDto.setVideoThumbnailUrl(videoThumbnailUrl);
                 }
             }
@@ -621,6 +629,6 @@ public class DynamicServiceImpl implements DynamicService {
                 user.getNick(), user.getBirth(), user.getGender(), user.getHead());
 
         List<GuardDto> guardDtoList = new ArrayList<>();
-        return _prepareDynamicDtoResponse(Collections.singletonList(dynamicDto), guardDtoList).get(0);
+        return _prepareDynamicDtoResponse(Collections.singletonList(dynamicDto), guardDtoList, false).get(0);
     }
 }

@@ -1,8 +1,10 @@
 package com.fmisser.gtc.base.dto.im;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.codehaus.jackson.annotate.JsonProperty;
+
+import java.util.List;
 
 /**
  * @author by fmisser
@@ -14,5 +16,5 @@ import org.codehaus.jackson.annotate.JsonProperty;
 @Data
 public class ImTransferMsgCb extends ImCbResp {
     @JsonProperty("MsgBody")
-    private ImMsgBody msgBody;
+    private List<ImMsgBody> MsgBody;
 }

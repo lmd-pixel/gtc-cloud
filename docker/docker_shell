@@ -77,10 +77,10 @@ docker restart gtc_cloud_kibana
 sudo docker run -p 9411:9411 --name gtc_cloud_zipkin -e STORAGE_TYPE=elasticsearch -e ES_HOSTS=http://42.192.212.67:9200 -e ES_USERNAME=elastic -e ES_PASSWORD=gtc_cloud@123456 -d openzipkin/zipkin
 
 ############################## logstash
-sudo docker run -it -p 5044:5044 -p 5045:5045 --name gtc_cloud_logstash --network=es-network -d logstash:7.12.1
+sudo docker run -it -p 5044:5044 -p 5045:5045 --name gtc_cloud_logstash --network=es-network -d docker.elastic.co/logstash/logstash:7.12.0
 
+# 修改管道配置input为tcp模式
 docker cp gtc_cloud_logstash:/usr/share/logstash/pipeline/logstash.conf .
-
 vi logstash.conf
 
 input {
@@ -92,7 +92,9 @@ input {
 
 output {
   elasticsearch {
-    hosts => ["http://gtc_cloud_es:9200"]
+    # 这里这用容器名称会报错，暂时使用ip，通过 docker inspect gtc_cloud_es 查看 es 的ip，这样的问题是es重启后ip可能会变，这里也要跟着变
+    #hosts => ["http://gtc_cloud_es:9200"]
+    hosts => ["http://192.168.224.2:9200"]
     index => "gtc-cloud-log-%{+YYYY.MM.dd}"
     user => "elastic"
     password => "gtc_cloud@123456"
@@ -100,6 +102,18 @@ output {
 }
 
 docker cp logstash.conf gtc_cloud_logstash:/usr/share/logstash/pipeline/logstash.conf
+
+# 修改 logstash.yml
+docker cp gtc_cloud_logstash:/usr/share/logstash/config/logstash.yml .
+
+vim logstash.yml
+http.host: "0.0.0.0"
+#xpack.monitoring.elasticsearch.hosts: [ "http://gtc_cloud_es:9200" ]
+#xpack.monitoring.enabled: true
+#xpack.monitoring.elasticsearch.username: elastic
+#xpack.monitoring.elasticsearch.password: gtc_cloud@123456
+
+docker cp logstash.yml gtc_cloud_logstash:/usr/share/logstash/config/logstash.yml
 
 重启容器 docker restart gtc_cloud_logstash
 
