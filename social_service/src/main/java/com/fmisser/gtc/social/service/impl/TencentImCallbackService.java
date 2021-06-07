@@ -183,10 +183,10 @@ public class TencentImCallbackService implements ImCallbackService {
         }
 
         User userTo = optionalUserTo.get();
-        if (userTo.getIdentity() == 0) {
-            // 目标用户是普通用户，则不用考虑金币问题
-            return resp;
-        }
+//        if (userTo.getIdentity() == 0) {
+//            // 目标用户是普通用户，则不用考虑金币问题
+//            return resp;
+//        }
 
         if (userFrom.getIdentity() == 1 && userTo.getIdentity() == 1) {
             // 不允许主播和主播聊天
