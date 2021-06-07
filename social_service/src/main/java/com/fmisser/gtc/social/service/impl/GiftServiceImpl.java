@@ -122,7 +122,7 @@ public class GiftServiceImpl implements GiftService {
 
         // 发送通知消息
         // TODO: 2021/1/4 通过mq放到 notice service 去做
-//        imService.sendGiftMsg(fromUser, toUser, gift, count);
+        imService.sendGiftMsg(fromUser, toUser, gift, count);
 
         return 1;
     }

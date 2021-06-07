@@ -78,8 +78,8 @@ public class TencentImCallbackService implements ImCallbackService {
         resp.setErrorCode(0);
 
         // 存储到redis
-        String redisKey = String.format("social:im:before:touser:%s", imBeforeSendMsgDto.getFrom_Account());
-        redisService.set(redisKey, originContent, 7 * 24 * 3600);
+//        String redisKey = String.format("social:im:before:touser:%s", imBeforeSendMsgDto.getFrom_Account());
+//        redisService.set(redisKey, originContent, 7 * 24 * 3600);
 
         // 安全打击
         if (imBeforeSendMsgDto.getMsgBody().size() > 0) {
@@ -240,8 +240,8 @@ public class TencentImCallbackService implements ImCallbackService {
         resp.setErrorCode(0);
 
         // 存储到redis
-        String redisKey = String.format("social:im:after:touser:%s", imAfterSendMsgDto.getFrom_Account());
-        redisService.set(redisKey, originContent, 7 * 24 * 3600);
+//        String redisKey = String.format("social:im:after:touser:%s", imAfterSendMsgDto.getFrom_Account());
+//        redisService.set(redisKey, originContent, 7 * 24 * 3600);
 
         if (sysConfigService.isAppAudit()) {
             // 审核中消息聊天不扣费

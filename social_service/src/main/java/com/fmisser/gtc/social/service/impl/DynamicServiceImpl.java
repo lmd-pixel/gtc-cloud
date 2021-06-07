@@ -119,14 +119,18 @@ public class DynamicServiceImpl implements DynamicService {
                         randomUUID,
                         suffixName);
 
-//                String response = minioPutImageAndThumbnail(ossConfProp.getUserDynamicBucket(),
-//                        objectName,
-//                        inputStream,
-//                        file.getSize(),
-//                        "image/png",
-//                        minioService);
-                String response = cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
-                        objectName, inputStream, file.getSize(), "image/png");
+                String response;
+                if (type < 10) {
+                    response = minioPutImageAndThumbnail(ossConfProp.getUserDynamicBucket(),
+                            objectName,
+                            inputStream,
+                            file.getSize(),
+                            "image/png",
+                            minioService);
+                } else {
+                    response = cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
+                            objectName, inputStream, file.getSize(), "image/png");
+                }
 
                 if (!StringUtils.isEmpty(response)) {
                     photoList.add(response);
@@ -146,10 +150,14 @@ public class DynamicServiceImpl implements DynamicService {
                         randomUUID,
                         suffixName);
 
-//                String response = minioService.putObject(ossConfProp.getUserDynamicBucket(), objectName,
-//                        inputStream, file.getSize(), "video/mp4");
-                String response = cosService.putObject(ossConfProp.getUserDynamicCosBucket(), objectName,
+                String response;
+                if (type < 10) {
+                    response = minioService.putObject(ossConfProp.getUserDynamicBucket(), objectName,
                         inputStream, file.getSize(), "video/mp4");
+                } else {
+                    response = cosService.putObject(ossConfProp.getUserDynamicCosBucket(), objectName,
+                            inputStream, file.getSize(), "video/mp4");
+                }
 
                 dynamic.setVideo(response);
 
