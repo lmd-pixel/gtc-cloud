@@ -218,13 +218,13 @@ public class TencentImService implements ImService {
                         //
                         Optional<User> toUser = userRepository.findById(call.getUserIdTo());
                         String content = String.format("用户%s拨打已取消", user.getNick());
-                        toUser.ifPresent(value -> sendToUser(null, value, content, ""));
+                        toUser.ifPresent(value -> sendToUser(null, value, content, "call_cancel.wav"));
                     }
                 } else if (call.getCallMode() == 1) {
                     if (user.getId().equals(call.getUserIdTo())) {
                         Optional<User> toUser = userRepository.findById(call.getUserIdFrom());
                         String content = String.format("用户%s拨打已取消", user.getNick());
-                        toUser.ifPresent(value -> sendToUser(null, value, content, ""));
+                        toUser.ifPresent(value -> sendToUser(null, value, content, "call_cancel.wav"));
                     }
                 }
 
