@@ -14,10 +14,7 @@ import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.repository.DynamicCommentRepository;
 import com.fmisser.gtc.social.repository.DynamicHeartRepository;
 import com.fmisser.gtc.social.repository.DynamicRepository;
-import com.fmisser.gtc.social.service.DynamicService;
-import com.fmisser.gtc.social.service.GuardService;
-import com.fmisser.gtc.social.service.ImCallbackService;
-import com.fmisser.gtc.social.service.SysConfigService;
+import com.fmisser.gtc.social.service.*;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.dao.PessimisticLockingFailureException;
@@ -50,6 +47,8 @@ public class DynamicServiceImpl implements DynamicService {
     private final MinioService minioService;
     private final CosService cosService;
     private final GuardService guardService;
+    private final ImService imService;
+    private final UserService userService;
 
     @Override
     @SneakyThrows
@@ -452,11 +451,22 @@ public class DynamicServiceImpl implements DynamicService {
             dynamic.setMessage(message);
         }
 
+        User user = userService.getUserById(dynamic.getUserId());
         if (pass == 1) {
             dynamic.setStatus(10);
+            imService.sendToUser(null, user, "您发表的守护动态已审核通过");
         } else {
             dynamic.setStatus(20);
+
+            if (StringUtils.isEmpty(message)) {
+                imService.sendToUser(null, user, "您发表的守护动态未审核通过");
+            } else {
+                String formatString = String.format("您发表的守护动态因%s未通过，请重新发表", message);
+                imService.sendToUser(null, user, formatString);
+            }
+
         }
+
         dynamicRepository.save(dynamic);
 
         return 1;
