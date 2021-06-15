@@ -22,6 +22,27 @@ docker exec -it gtc_cloud_db mysqldump -uroot -pgtc_cloud@123456 gtc-auth-db > /
 ############################## mysql
 sudo docker run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=gtc_cloud@123456 --name gtc_cloud_db -d mysql:5.7
 
+# 开启 bin log
+docker exec -it gtc_cloud_db /bin/bash
+
+vim /etc/mysql/mysql.conf.d/mysqld.cnf
+[mysqld]
+log-bin=mysql-bin
+server-id=99
+binlog_format=ROW
+
+# 查看是否已开启
+show variables like 'log_%';
+
+# 修改数据包
+vim /etc/mysql/mysql.conf.d/mysqld.cnf
+
+[mysqld]
+max_allowed_packet = 20M
+
+# 查看数据包修改后大小
+show VARIABLES like '%max_allowed_packet%';
+
 ############################## rabbit
 sudo docker run -p 15672:15672 -p 5672:5672 -e RABBITMQ_DEFAULT_USER=root -e RABBITMQ_DEFAULT_PASS=gtc_cloud@123456 --name gtc_cloud_mq -d rabbitmq:management
 
