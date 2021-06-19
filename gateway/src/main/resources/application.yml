@@ -101,7 +101,7 @@ hystrix:
 #          semaphore:
 #            maxConcurrentRequests: 200
           thread:
-            timeoutInMilliseconds: 10000
+            timeoutInMilliseconds: 60000
   threadpool:
     default:
       coreSize: 200
