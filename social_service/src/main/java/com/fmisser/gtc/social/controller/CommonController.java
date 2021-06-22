@@ -146,15 +146,15 @@ public class CommonController {
 //        List<BigDecimal> msgPrice = Arrays.asList(BigDecimal.ZERO, BigDecimal.ONE);
         List<BigDecimal> msgPrice = Arrays.asList(BigDecimal.valueOf(5), BigDecimal.valueOf(10));
         List<BigDecimal> callPrice = Arrays.asList(
-                BigDecimal.valueOf(100),
-                BigDecimal.valueOf(150),
-                BigDecimal.valueOf(200),
-                BigDecimal.valueOf(250),
                 BigDecimal.valueOf(300),
-                BigDecimal.valueOf(350),
-                BigDecimal.valueOf(400),
-                BigDecimal.valueOf(450),
-                BigDecimal.valueOf(500)
+                BigDecimal.valueOf(500),
+                BigDecimal.valueOf(800),
+                BigDecimal.valueOf(1000)
+//                BigDecimal.valueOf(300),
+//                BigDecimal.valueOf(350),
+//                BigDecimal.valueOf(400),
+//                BigDecimal.valueOf(450),
+//                BigDecimal.valueOf(500)
 //                BigDecimal.valueOf(600),
 //                BigDecimal.valueOf(700),
 //                BigDecimal.valueOf(800)

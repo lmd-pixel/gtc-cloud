@@ -92,7 +92,7 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
 //            "LEFT JOIN t_follow tf ON tf.user_id_from = ?1 AND tf.user_id_to = td.user_id AND tf.status = 1 " +
             "WHERE td.is_delete = 0 AND td.status = 10 AND " +
             "(?2 IS NULL OR td.create_time < ?2) " +
-            "AND tb.id IS NULL " +
+//            "AND tb.id IS NULL " +
             "GROUP BY td.id " +
             "ORDER BY td.id DESC",
             nativeQuery = true)

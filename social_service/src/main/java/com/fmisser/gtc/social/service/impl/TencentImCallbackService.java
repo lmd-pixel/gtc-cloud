@@ -133,7 +133,7 @@ public class TencentImCallbackService implements ImCallbackService {
             }
         }
 
-        if (sysConfigService.isAppAudit()) {
+        if (sysConfigService.isMsgFee()) {
             // 审核中，消息聊天不扣费
             return resp;
         }
@@ -243,7 +243,7 @@ public class TencentImCallbackService implements ImCallbackService {
 //        String redisKey = String.format("social:im:after:touser:%s", imAfterSendMsgDto.getFrom_Account());
 //        redisService.set(redisKey, originContent, 7 * 24 * 3600);
 
-        if (sysConfigService.isAppAudit()) {
+        if (sysConfigService.isMsgFee()) {
             // 审核中消息聊天不扣费
             return resp;
         }

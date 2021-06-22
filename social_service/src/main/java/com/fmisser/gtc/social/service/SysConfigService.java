@@ -14,6 +14,9 @@ public interface SysConfigService {
     // 获取 app 审核的版本号
     String getAppAuditVersion() throws ApiException;
 
+    // 消息是否免费
+    boolean isMsgFee() throws ApiException;
+
     // 只有在审核并且版本号等于审核版本号才返回日期
     Date getAppAuditDynamicDateLimit(String version) throws ApiException;
 

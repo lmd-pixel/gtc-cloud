@@ -90,8 +90,8 @@ public interface CallBillRepository extends JpaRepository<CallBill, Long> {
             "SUM(tcb.origin_coin) AS consume, " +
             "SUM(tcb.profit_coin) AS profit, " +
             "SUM(tcb.commission_coin) AS commission, " +
-            "SUM(DISTINCT tc.user_id_from) AS users, " +
-            "SUM(DISTINCT tc.user_id_to) AS anchors " +
+            "COUNT(DISTINCT tc.user_id_from) AS users, " +
+            "COUNT(DISTINCT tc.user_id_to) AS anchors " +
             "FROM t_call tc " +
             "INNER JOIN t_user tu ON tu.id = tc.user_id_from AND " +
             "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +

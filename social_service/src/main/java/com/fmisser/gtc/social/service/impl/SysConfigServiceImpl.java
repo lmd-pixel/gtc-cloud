@@ -46,6 +46,15 @@ public class SysConfigServiceImpl implements SysConfigService {
     }
 
     @Override
+    public boolean isMsgFee() throws ApiException {
+        SysConfig sysConfig = sysConfigRepository.findByName("ios_audit");
+        if (Objects.isNull(sysConfig)) {
+            return false;
+        }
+        return sysConfig.getValue4().equals("0");
+    }
+
+    @Override
     public Date getAppAuditDynamicDateLimit(String version) throws ApiException {
         SysConfig sysConfig = sysConfigRepository.findByName("ios_audit");
         if (Objects.isNull(sysConfig)) {
