@@ -20,7 +20,9 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "t_call_bill",
-        indexes = {@Index(columnList = "userIdFrom,creatTime"), @Index(columnList = "userIdTo,creatTime")})
+        indexes = {@Index(columnList = "userIdFrom,creatTime"),
+                @Index(columnList = "userIdTo,creatTime"),
+                @Index(columnList = "callId")})
 @Data
 @EntityListeners(AuditingEntityListener.class)
 @DynamicInsert

@@ -6,7 +6,9 @@ import com.fmisser.gtc.social.domain.Banner;
 import com.fmisser.gtc.social.domain.SysConfig;
 import com.fmisser.gtc.social.repository.BannerRepository;
 import com.fmisser.gtc.social.service.BannerService;
+import com.fmisser.gtc.social.service.CommonService;
 import com.fmisser.gtc.social.service.SysConfigService;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -15,16 +17,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class BannerServiceImpl implements BannerService {
 
-    @Autowired
-    private BannerRepository bannerRepository;
-
-    @Autowired
-    private OssConfProp ossConfProp;
-
-    @Autowired
-    private SysConfigService sysConfigService;
+    private final BannerRepository bannerRepository;
+    private final OssConfProp ossConfProp;
+    private final SysConfigService sysConfigService;
+    private final CommonService commonService;
 
     @Override
     public List<Banner> getBannerList(String lang) throws ApiException {
@@ -56,10 +55,7 @@ public class BannerServiceImpl implements BannerService {
     private List<Banner> _prepareBannerResponse(List<Banner> bannerList) {
         for (Banner banner: bannerList) {
             if (!StringUtils.isEmpty(banner.getImage())) {
-                String imageUrl = String.format("%s/%s/%s",
-                        ossConfProp.getMinioVisitUrl(),
-                        ossConfProp.getSystemConfigBucket(),
-                        banner.getImage());
+                String imageUrl = commonService.getSysImageCompleteUrl(banner.getImage());
                 banner.setImageUrl(imageUrl);
             }
         }

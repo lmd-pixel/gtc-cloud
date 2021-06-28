@@ -1,18 +1,16 @@
 package com.fmisser.gtc.social.service.impl;
 
-import com.fmisser.gtc.base.dto.social.FansDto;
 import com.fmisser.gtc.base.dto.social.GuardDto;
 import com.fmisser.gtc.base.exception.ApiException;
-import com.fmisser.gtc.base.prop.OssConfProp;
 import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.Guard;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.repository.GuardRepository;
+import com.fmisser.gtc.social.service.CommonService;
 import com.fmisser.gtc.social.service.GuardService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +26,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class GuardServiceImpl implements GuardService {
     private final GuardRepository guardRepository;
-    private final OssConfProp ossConfProp;
+    private final CommonService commonService;
 
     @Override
     public List<GuardDto> getAnchorGuardList(User user) throws ApiException {
@@ -76,18 +74,11 @@ public class GuardServiceImpl implements GuardService {
                 guardDto.setAge(DateUtils.getAgeFromBirth(guardDto.getBirth()));
             }
 
-            if (!StringUtils.isEmpty(guardDto.getHead())) {
-                String headUrl = String.format("%s/%s/%s",
-                        ossConfProp.getMinioVisitUrl(),
-                        ossConfProp.getUserProfileBucket(),
-                        guardDto.getHead());
-                String headThumbnailUrl = String.format("%s/%s/thumbnail_%s",
-                        ossConfProp.getMinioVisitUrl(),
-                        ossConfProp.getUserProfileBucket(),
-                        guardDto.getHead());
-                guardDto.setHeadUrl(headUrl);
-                guardDto.setHeadThumbnailUrl(headThumbnailUrl);
-            }
+            commonService.getUserProfileHeadCompleteUrl(guardDto.getHead())
+                    .ifPresent(v -> {
+                        guardDto.setHeadUrl(v.getFirst());
+                        guardDto.setHeadThumbnailUrl(v.getSecond());
+                    });
         }
 
         return guardDtos;

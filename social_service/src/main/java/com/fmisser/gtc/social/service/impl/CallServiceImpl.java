@@ -2,32 +2,26 @@ package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.dto.social.UserCallDto;
 import com.fmisser.gtc.base.exception.ApiException;
-import com.fmisser.gtc.base.prop.OssConfProp;
 import com.fmisser.gtc.social.domain.Call;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.repository.CallRepository;
 import com.fmisser.gtc.social.service.CallService;
+import com.fmisser.gtc.social.service.CommonService;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
 @Service
+@AllArgsConstructor
 public class CallServiceImpl implements CallService {
-
     private final CallRepository callRepository;
-    private final OssConfProp ossConfProp;
-
-    public CallServiceImpl(CallRepository callRepository,
-                           OssConfProp ossConfProp) {
-        this.callRepository = callRepository;
-        this.ossConfProp = ossConfProp;
-    }
+    private final CommonService commonService;
 
     @Override
     public List<UserCallDto> getCallList(User user, int pageIndex, int pageSize) throws ApiException {
@@ -57,18 +51,11 @@ public class CallServiceImpl implements CallService {
                         }
                     }
 
-                    if (!StringUtils.isEmpty(userCallDto.getHead())) {
-                        String headUrl = String.format("%s/%s/%s",
-                                ossConfProp.getMinioVisitUrl(),
-                                ossConfProp.getUserProfileBucket(),
-                                userCallDto.getHead());
-                        String headThumbnailUrl = String.format("%s/%s/thumbnail_%s",
-                                ossConfProp.getMinioVisitUrl(),
-                                ossConfProp.getUserProfileBucket(),
-                                userCallDto.getHead());
-                        userCallDto.setHeadUrl(headUrl);
-                        userCallDto.setHeadThumbnailUrl(headThumbnailUrl);
-                    }
+                    commonService.getUserProfileHeadCompleteUrl(userCallDto.getHead())
+                            .ifPresent(v -> {
+                                userCallDto.setHeadUrl(v.getFirst());
+                                userCallDto.setHeadThumbnailUrl(v.getSecond());
+                            });
                 });
 
         return userCallDtoList;

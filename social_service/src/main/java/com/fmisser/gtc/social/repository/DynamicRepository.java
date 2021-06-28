@@ -66,8 +66,8 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
             "(:createTime IS NULL OR td.createTime < :createTime) AND " +
             "tb.id IS NULL " +
 //            "AND tb2.id IS NULL " +
-            "GROUP BY td.id " +
-            "ORDER BY td.id DESC")
+            "GROUP BY td.id, td.modifyTime " +
+            "ORDER BY td.modifyTime DESC")
     Page<DynamicDto> getLatestDynamicList(@Param("selfUserId") Long selfUserId,
                                           @Param("createTime") Date createTime,
                                           Pageable pageable);
@@ -92,9 +92,9 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
 //            "LEFT JOIN t_follow tf ON tf.user_id_from = ?1 AND tf.user_id_to = td.user_id AND tf.status = 1 " +
             "WHERE td.is_delete = 0 AND td.status = 10 AND " +
             "(?2 IS NULL OR td.create_time < ?2) " +
-//            "AND tb.id IS NULL " +
-            "GROUP BY td.id " +
-            "ORDER BY td.id DESC",
+            "AND tb.id IS NULL " +
+            "GROUP BY td.id, td.modify_time " +
+            "ORDER BY td.modify_time DESC",
             nativeQuery = true)
     Page<DynamicDto> getLatestDynamicListEx(Long selfUserId, Date createTime, Pageable pageable);
 

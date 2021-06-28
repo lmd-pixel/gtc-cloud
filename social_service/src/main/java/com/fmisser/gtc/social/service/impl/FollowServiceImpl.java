@@ -1,44 +1,32 @@
 package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.dto.social.ConcernDto;
-import com.fmisser.gtc.base.dto.social.DynamicDto;
 import com.fmisser.gtc.base.dto.social.FansDto;
 import com.fmisser.gtc.base.dto.social.FollowDto;
 import com.fmisser.gtc.base.exception.ApiException;
-import com.fmisser.gtc.base.prop.OssConfProp;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.Follow;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.repository.FollowRepository;
 import com.fmisser.gtc.social.repository.UserRepository;
+import com.fmisser.gtc.social.service.CommonService;
 import com.fmisser.gtc.social.service.FollowService;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static com.fmisser.gtc.social.service.impl.UserServiceImpl.changePhotosToList;
 
 @Service
+@AllArgsConstructor
 public class FollowServiceImpl implements FollowService {
 
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
-    private final OssConfProp ossConfProp;
-
-    public FollowServiceImpl(FollowRepository followRepository,
-                             UserRepository userRepository,
-                             OssConfProp ossConfProp) {
-        this.followRepository = followRepository;
-        this.userRepository = userRepository;
-        this.ossConfProp = ossConfProp;
-    }
+    private final CommonService commonService;
 
     @Override
     public ApiResp<List<FollowDto>> getFollowsFrom(Long userId) throws ApiException {
@@ -122,18 +110,11 @@ public class FollowServiceImpl implements FollowService {
                 concernDto.setAge(DateUtils.getAgeFromBirth(concernDto.getBirth()));
             }
 
-            if (!StringUtils.isEmpty(concernDto.getHead())) {
-                String headUrl = String.format("%s/%s/%s",
-                        ossConfProp.getMinioVisitUrl(),
-                        ossConfProp.getUserProfileBucket(),
-                        concernDto.getHead());
-                String headThumbnailUrl = String.format("%s/%s/thumbnail_%s",
-                        ossConfProp.getMinioVisitUrl(),
-                        ossConfProp.getUserProfileBucket(),
-                        concernDto.getHead());
-                concernDto.setHeadUrl(headUrl);
-                concernDto.setHeadThumbnailUrl(headThumbnailUrl);
-            }
+            commonService.getUserProfileHeadCompleteUrl(concernDto.getHead())
+                    .ifPresent(v -> {
+                        concernDto.setHeadUrl(v.getFirst());
+                        concernDto.setHeadThumbnailUrl(v.getSecond());
+                    });
         }
 
         return concernDtos;
@@ -149,18 +130,11 @@ public class FollowServiceImpl implements FollowService {
                 fansDto.setAge(DateUtils.getAgeFromBirth(fansDto.getBirth()));
             }
 
-            if (!StringUtils.isEmpty(fansDto.getHead())) {
-                String headUrl = String.format("%s/%s/%s",
-                        ossConfProp.getMinioVisitUrl(),
-                        ossConfProp.getUserProfileBucket(),
-                        fansDto.getHead());
-                String headThumbnailUrl = String.format("%s/%s/thumbnail_%s",
-                        ossConfProp.getMinioVisitUrl(),
-                        ossConfProp.getUserProfileBucket(),
-                        fansDto.getHead());
-                fansDto.setHeadUrl(headUrl);
-                fansDto.setHeadThumbnailUrl(headThumbnailUrl);
-            }
+            commonService.getUserProfileHeadCompleteUrl(fansDto.getHead())
+                    .ifPresent(v -> {
+                        fansDto.setHeadUrl(v.getFirst());
+                        fansDto.setHeadThumbnailUrl(v.getSecond());
+                    });
         }
 
         return fansDtos;

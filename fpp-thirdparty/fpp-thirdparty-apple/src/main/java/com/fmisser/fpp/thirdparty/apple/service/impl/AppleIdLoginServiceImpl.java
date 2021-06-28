@@ -99,9 +99,9 @@ public class AppleIdLoginServiceImpl implements AppleIdLoginService {
 
         // 创建公钥
         BigInteger modules =
-                new BigInteger(1, Base64Utils.decodeFromString(n));
+                new BigInteger(1, Base64Utils.decodeFromUrlSafeString(n));
         BigInteger publicExponent =
-                new BigInteger(1, Base64Utils.decodeFromString(e));
+                new BigInteger(1, Base64Utils.decodeFromUrlSafeString(e));
         RSAPublicKeySpec rsaPublicKeySpec = new RSAPublicKeySpec(modules, publicExponent);
 
         KeyFactory keyFactory;

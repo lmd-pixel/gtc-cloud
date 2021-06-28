@@ -2,12 +2,15 @@ package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.dto.social.RecvGiftDto;
 import com.fmisser.gtc.base.exception.ApiException;
-import com.fmisser.gtc.base.prop.OssConfProp;
-import com.fmisser.gtc.social.domain.*;
+import com.fmisser.gtc.social.domain.Asset;
+import com.fmisser.gtc.social.domain.Gift;
+import com.fmisser.gtc.social.domain.GiftBill;
+import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.feign.PushFeign;
 import com.fmisser.gtc.social.repository.AssetRepository;
 import com.fmisser.gtc.social.repository.GiftBillRepository;
 import com.fmisser.gtc.social.repository.GiftRepository;
+import com.fmisser.gtc.social.service.CommonService;
 import com.fmisser.gtc.social.service.GiftService;
 import com.fmisser.gtc.social.service.GuardService;
 import com.fmisser.gtc.social.service.ImService;
@@ -34,9 +37,9 @@ public class GiftServiceImpl implements GiftService {
     private final GiftBillRepository giftBillRepository;
     private final AssetRepository assetRepository;
     private final ImService imService;
-    private final OssConfProp ossConfProp;
     private final GuardService guardService;
     private final PushFeign pushFeign;
+    private final CommonService commonService;
 
     @Override
     public List<Gift> getGiftList() throws ApiException {
@@ -97,13 +100,11 @@ public class GiftServiceImpl implements GiftService {
         giftBillRepository.save(giftBill);
 
 
-        String headThumbnailUrl = null;
-        if (!StringUtils.isEmpty(fromUser.getHead())) {
-            headThumbnailUrl = String.format("%s/%s/thumbnail_%s",
-                    ossConfProp.getMinioVisitUrl(),
-                    ossConfProp.getUserProfileBucket(),
-                    fromUser.getHead());
-        }
+        final String[] headThumbnailUrl = new String[1];
+        commonService.getUserProfileHeadCompleteUrl(fromUser.getHead())
+                .ifPresent(v -> {
+                    headThumbnailUrl[0] = v.getSecond();
+                });
 
         // 守护判断
         if (isGuardGift(gift)) {
@@ -111,13 +112,13 @@ public class GiftServiceImpl implements GiftService {
 
             // 发送成为守护的消息
             String msgData = String.format("{\"tag\":%d,\"giftId\":%d,\"giftCount\":%d,\"giftName\":\"%s\",\"recvNick\":\"%s\",\"sendHead\":\"%s\",\"sendNick\":\"%s\"}",
-                    1, giftId, count, gift.getName(), toUser.getNick(), headThumbnailUrl, fromUser.getNick());
+                    1, giftId, count, gift.getName(), toUser.getNick(), headThumbnailUrl[0], fromUser.getNick());
             pushFeign.broadcast(msgData);
         }
 
         // 发送礼物的消息
         String msgData = String.format("{\"tag\":%d,\"giftId\":%d,\"giftCount\":%d,\"giftName\":\"%s\",\"recvNick\":\"%s\",\"sendHead\":\"%s\",\"sendNick\":\"%s\"}",
-                2, giftId, count, gift.getName(), toUser.getNick(), headThumbnailUrl, fromUser.getNick());
+                2, giftId, count, gift.getName(), toUser.getNick(), headThumbnailUrl[0], fromUser.getNick());
         pushFeign.broadcast(msgData);
 
         // 发送通知消息
@@ -141,10 +142,7 @@ public class GiftServiceImpl implements GiftService {
     private List<Gift> _prepareGiftResponse(List<Gift> giftList) {
         for (Gift gift: giftList) {
             if (!StringUtils.isEmpty(gift.getImage())) {
-                String imageUrl = String.format("%s/%s/%s",
-                        ossConfProp.getMinioVisitUrl(),
-                        ossConfProp.getSystemConfigBucket(),
-                        gift.getImage());
+                String imageUrl = commonService.getSysImageCompleteUrl(gift.getImage());
                 gift.setImageUrl(imageUrl);
             }
         }
@@ -154,10 +152,7 @@ public class GiftServiceImpl implements GiftService {
     private List<RecvGiftDto> _prepareRecvGiftResponse(List<RecvGiftDto> recvGiftDtoList) {
         for (RecvGiftDto recvGiftDto: recvGiftDtoList) {
             if (!StringUtils.isEmpty(recvGiftDto.getGiftImage())) {
-                String imageUrl = String.format("%s/%s/%s",
-                        ossConfProp.getMinioVisitUrl(),
-                        ossConfProp.getSystemConfigBucket(),
-                        recvGiftDto.getGiftImage());
+                String imageUrl = commonService.getSysImageCompleteUrl(recvGiftDto.getGiftImage());
                 recvGiftDto.setGiftImageUrl(imageUrl);
             }
         }

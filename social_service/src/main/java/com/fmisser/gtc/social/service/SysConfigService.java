@@ -46,4 +46,6 @@ public interface SysConfigService {
     BigDecimal getRechargeInviterRewardRatio() throws ApiException;
 
     Integer getDynamicDailyCountLimit() throws ApiException;
+
+    Pair<Integer, Integer> getRegDailyCountLimit() throws ApiException;
 }

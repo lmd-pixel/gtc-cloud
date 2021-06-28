@@ -15,7 +15,8 @@ import java.util.Date;
  * @description 用户设备信息
  */
 @Entity
-@Table(name = "t_user_device", indexes = {@Index(columnList = "createTime")})
+@Table(name = "t_user_device", indexes =
+        {@Index(columnList = "createTime"), @Index(columnList = "userId")})
 @Data
 @EntityListeners(AuditingEntityListener.class)
 public class UserDevice {

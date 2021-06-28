@@ -1,37 +1,27 @@
 package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.dto.social.RecommendAnchorDto;
-import com.fmisser.gtc.base.dto.social.RecommendDto;
 import com.fmisser.gtc.base.exception.ApiException;
-import com.fmisser.gtc.base.prop.OssConfProp;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.repository.RecommendRepository;
 import com.fmisser.gtc.social.repository.UserRepository;
+import com.fmisser.gtc.social.service.CommonService;
 import com.fmisser.gtc.social.service.RecommendService;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class RecommendServiceImpl implements RecommendService {
 
     private final RecommendRepository recommendRepository;
     private final UserRepository userRepository;
-    private final OssConfProp ossConfProp;
-
-    public RecommendServiceImpl(RecommendRepository recommendRepository,
-                                UserRepository userRepository,
-                                OssConfProp ossConfProp) {
-        this.recommendRepository = recommendRepository;
-        this.userRepository = userRepository;
-        this.ossConfProp = ossConfProp;
-    }
+    private final CommonService commonService;
 
     @SneakyThrows
     @Override
@@ -99,13 +89,11 @@ public class RecommendServiceImpl implements RecommendService {
 
     private List<RecommendAnchorDto> _prepareRecommendDtoResponse(List<RecommendAnchorDto> recommendAnchorDtoList) throws ApiException {
         for (RecommendAnchorDto recommendAnchorDto: recommendAnchorDtoList) {
-            if (!StringUtils.isEmpty(recommendAnchorDto.getHead())) {
-                String headUrl = String.format("%s/%s/thumbnail_%s",
-                        ossConfProp.getMinioVisitUrl(),
-                        ossConfProp.getUserProfileBucket(),
-                        recommendAnchorDto.getHead());
-                recommendAnchorDto.setHeadUrl(headUrl);
-            }
+            commonService.getUserProfileHeadCompleteUrl(recommendAnchorDto.getHead())
+                    .ifPresent(v -> {
+                        // 使用缩略图
+                        recommendAnchorDto.setHeadUrl(v.getSecond());
+                    });
         }
         return recommendAnchorDtoList;
     }

@@ -1,14 +1,12 @@
 package com.fmisser.gtc.social.service.impl;
 
-import brave.internal.collect.Lists;
 import com.fmisser.fpp.oss.abs.service.OssService;
-import com.fmisser.fpp.oss.minio.service.MinioService;
+import com.fmisser.fpp.oss.cos.service.CosService;
 import com.fmisser.gtc.base.dto.im.ImQueryStateResp;
 import com.fmisser.gtc.base.dto.social.ProfitConsumeDetail;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.i18n.SystemTips;
 import com.fmisser.gtc.base.prop.OssConfProp;
-import com.fmisser.gtc.base.utils.ArrayUtils;
 import com.fmisser.gtc.base.utils.CryptoUtils;
 import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.*;
@@ -16,10 +14,8 @@ import com.fmisser.gtc.social.mq.GreetDelayedBinding;
 import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
-import org.apache.commons.lang.SerializationUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,7 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -44,7 +43,6 @@ import java.util.stream.Stream;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-//    private final MinioUtils minioUtils;
     private final LabelRepository labelRepository;
     private final OssConfProp ossConfProp;
     private final IdentityAuditService identityAuditService;
@@ -57,14 +55,12 @@ public class UserServiceImpl implements UserService {
     private final GreetDelayedBinding greetDelayedBinding;
     private final SysConfigService sysConfigService;
     private final IdentityAuditRepository identityAuditRepository;
-//    private final ImFeign imFeign;
-//    private final ImConfProp imConfProp;
     private final ImService imService;
-//    private final OssService ossService;
-    private final MinioService minioService;
+    private final CosService cosService;
     private final AsyncService asyncService;
     private final UserMaterialService userMaterialService;
     private final GuardService guardService;
+    private final CommonService commonService;
 
     @Transactional
     @Override
@@ -80,18 +76,11 @@ public class UserServiceImpl implements UserService {
         user.setUsername(phone);
         user.setPhone(phone);
 
-//        LocalDateTime dateTime = LocalDateTime.now(ZoneId.systemDefault());
-//        Date startHour = Date.from(DateUtils.getHourStart(dateTime).atZone(ZoneId.systemDefault()).toInstant());
-//        Date endHour = Date.from(DateUtils.getHourEnd(dateTime).atZone(ZoneId.systemDefault()).toInstant());
         Date date = new Date();
         Date startHour = DateUtils.getHourStart(date);
         Date endHour = DateUtils.getHourEnd(date);
         long count = userRepository.countByCreateTimeBetween(startHour, endHour);
         String digitId = calcDigitId(date, count + 1);
-//        Date startDay = DateUtils.getDayStart(date);
-//        Date endDay = DateUtils.getDayEnd(date);
-//        Long count = userRepository.countByCreateTimeBetween(startDay, endDay);
-//        String digitId = calcDigitIdV2(date, count + 1);
         user.setDigitId(digitId);
 
         if (StringUtils.isEmpty(nick)) {
@@ -152,7 +141,6 @@ public class UserServiceImpl implements UserService {
 
 
         // 新用户注册欢迎消息
-//        imService.sendToUser(null, user, systemTips.assistNewUserMsg(user.getNick()));
         // 放到消息队列去调用，这时候可能用户还没登录到腾讯im，直接发消息会报错，也可以在后台直接注册到腾讯im再调用
         // 发送消息加入队列, 5秒后发送
         String sendMsgPayload = String
@@ -493,21 +481,18 @@ public class UserServiceImpl implements UserService {
 
                 // object name 格式： prefix/username_date_randomUUID.xxx
                 String objectName = String.format("%s%s_%s_%s%s",
-                        ossConfProp.getUserProfileVoicePrefix(),
+                        ossConfProp.getCosUserProfileVoicePrefix(),
                         CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
                         new Date().getTime(),
                         randomUUID,
                         suffixName);
-                String response = minioService.putObject(ossConfProp.getUserProfileBucket(), objectName,
+                cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
+                        ossConfProp.getCosUserProfileRootPath() + objectName,
                         inputStream, file.getSize(), "audio/mpeg");
 
-                if (response.isEmpty()) {
-                    throw new ApiException(-1, "存储语音文件失败!");
-                }
-
-                user.setVoice(response);
+                user.setVoice(objectName);
                 if (optionType == 2 || optionType == 3) {
-                    audit.setVoice(response);
+                    audit.setVoice(objectName);
                 }
 
             } else if (name.equals("head")) {
@@ -520,19 +505,19 @@ public class UserServiceImpl implements UserService {
 
                 // 存储原始图片
                 String objectName = String.format("%s%s_%s_%s%s",
-                        ossConfProp.getUserProfileHeadPrefix(),
+                        ossConfProp.getCosUserProfileHeadPrefix(),
                         CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
                         new Date().getTime(),
                         randomUUID,
                         suffixName);
 
-                String response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
-                                objectName, inputStream, file.getSize(), "image/png",
-                        minioService);
+                cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
+                        ossConfProp.getCosUserProfileRootPath() + objectName,
+                        inputStream, file.getSize(), "image/png");
 
-                user.setHead(response);
+                user.setHead(objectName);
                 if (optionType == 2 || optionType == 3) {
-                    audit.setHead(response);
+                    audit.setHead(objectName);
                 }
             }
         }
@@ -608,21 +593,18 @@ public class UserServiceImpl implements UserService {
             }
 
             String objectName = String.format("%s%s_%s_%s%s",
-                    ossConfProp.getUserProfilePhotoPrefix(),
+                    ossConfProp.getCosUserProfilePhotoPrefix(),
                     CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
                     new Date().getTime(),
                     randomUUID,
                     suffixName);
 
-            String response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
-                    objectName,
-                    inputStream,
-                    file.getSize(),
-                    "image/png",
-                    minioService);
+            cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
+                    ossConfProp.getCosUserProfileRootPath() + objectName,
+                    inputStream, file.getSize(), "image/png");
 
-            if (!StringUtils.isEmpty(response)) {
-                photoList.add(response);
+            if (!StringUtils.isEmpty(objectName)) {
+                photoList.add(objectName);
             }
         }
 
@@ -699,20 +681,17 @@ public class UserServiceImpl implements UserService {
             }
 
             String objectName = String.format("%s%s_%s_%s%s",
-                    ossConfProp.getUserProfileVerifyImagePrefix(),
+                    ossConfProp.getCosUserProfileVerifyImagePrefix(),
                     CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
                     new Date().getTime(),
                     randomUUID,
                     suffixName);
 
-            String response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
-                    objectName,
-                    inputStream,
-                    file.getSize(),
-                    "image/png",
-                    minioService);
+            cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
+                    ossConfProp.getCosUserProfileRootPath() + objectName,
+                    inputStream, file.getSize(), "image/png");
 
-            user.setSelfie(response);
+            user.setSelfie(objectName);
 
             // 只处理第一张能处理的照片
             break;
@@ -782,18 +761,19 @@ public class UserServiceImpl implements UserService {
 
             // 视频暂不提供压缩
             String objectName = String.format("%s%s_%s_%s%s",
-                    ossConfProp.getUserProfileVideoPrefix(),
+                    ossConfProp.getCosUserProfileVideoPrefix(),
                     CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
                     new Date().getTime(),
                     randomUUID,
                     suffixName);
 
-            String response = minioService.putObject(ossConfProp.getUserProfileBucket(), objectName,
+            cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
+                    ossConfProp.getCosUserProfileRootPath() + objectName,
                     inputStream, file.getSize(), "video/mp4");
 
-            user.setVideo(response);
+            user.setVideo(objectName);
             if (optionType == 2 || optionType == 3) {
-                audit.setVideo(response);
+                audit.setVideo(objectName);
             }
 
             // 只处理第一个能处理的视频
@@ -1102,6 +1082,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Deprecated
     @SneakyThrows
     @Override
     public User updatePhotosEx(User user, Integer updateType, String existsNames, String coverName,
@@ -1147,24 +1128,21 @@ public class UserServiceImpl implements UserService {
             }
 
             String objectName = String.format("%s%s_%s_%s%s",
-                    ossConfProp.getUserProfilePhotoPrefix(),
+                    ossConfProp.getCosUserProfilePhotoPrefix(),
                     CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
                     new Date().getTime(),
                     randomUUID,
                     suffixName);
 
-            String response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
-                    objectName,
-                    inputStream,
-                    file.getSize(),
-                    "image/png",
-                    minioService);
+            cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
+                    ossConfProp.getCosUserProfileRootPath() + objectName,
+                    inputStream, file.getSize(), "image/png");
 
-            if (!StringUtils.isEmpty(response)) {
+            if (!StringUtils.isEmpty(objectName)) {
                 // 创建新的
                 UserMaterial userMaterial = new UserMaterial();
                 userMaterial.setUserId(userId);
-                userMaterial.setName(response);
+                userMaterial.setName(objectName);
                 if (updateType == 1) {
                     userMaterial.setType(11);
                 } else {
@@ -1308,26 +1286,23 @@ public class UserServiceImpl implements UserService {
             }
 
             String objectName = String.format("%s%s_%s_%s%s",
-                    ossConfProp.getUserProfilePhotoPrefix(),
+                    ossConfProp.getCosUserProfilePhotoPrefix(),
                     CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
                     new Date().getTime(),
                     randomUUID,
                     suffixName);
 
-            String response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
-                    objectName,
-                    inputStream,
-                    file.getSize(),
-                    "image/png",
-                    minioService);
+            cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
+                    ossConfProp.getCosUserProfileRootPath() + objectName,
+                    inputStream, file.getSize(), "image/png");
 
-            if (!StringUtils.isEmpty(response)) {
+            if (!StringUtils.isEmpty(objectName)) {
 
                 if (key.equals(coverName)) {
                     // 如果是封面则放到第一位
-                    photoList.add(0, response);
+                    photoList.add(0, objectName);
                 } else {
-                    photoList.add(response);
+                    photoList.add(objectName);
                 }
             }
         }
@@ -1425,21 +1400,18 @@ public class UserServiceImpl implements UserService {
             }
 
             String objectName = String.format("%s%s_%s_%s%s",
-                    ossConfProp.getUserProfilePhotoPrefix(),
+                    ossConfProp.getCosUserProfilePhotoPrefix(),
                     CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
                     new Date().getTime(),
                     randomUUID,
                     suffixName);
 
-            String response = minioPutImageAndThumbnail(ossConfProp.getUserProfileBucket(),
-                    objectName,
-                    inputStream,
-                    file.getSize(),
-                    "image/png",
-                    minioService);
+            cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
+                    ossConfProp.getCosUserProfileRootPath() + objectName,
+                    inputStream, file.getSize(), "image/png");
 
-            if (!StringUtils.isEmpty(response)) {
-                photoList.add(response);
+            if (!StringUtils.isEmpty(objectName)) {
+                photoList.add(objectName);
             }
         }
 
@@ -1489,6 +1461,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Deprecated
     @SneakyThrows
     @Override
     public User updateVerifyVideo(User user, Integer code,
@@ -1515,13 +1488,14 @@ public class UserServiceImpl implements UserService {
 
             // 视频暂不提供压缩
             String objectName = String.format("%s%s_%s_%s%s",
-                    ossConfProp.getUserProfileVideoPrefix(),
+                    ossConfProp.getCosUserProfileVideoPrefix(),
                     CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
                     new Date().getTime(),
                     randomUUID,
                     suffixName);
 
-            String response = minioService.putObject(ossConfProp.getUserProfileBucket(), objectName,
+            cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
+                    ossConfProp.getCosUserProfileRootPath() + objectName,
                     inputStream, file.getSize(), "video/mp4");
 
             // 删除老的
@@ -1583,19 +1557,20 @@ public class UserServiceImpl implements UserService {
 
             // 视频暂不提供压缩
             String objectName = String.format("%s%s_%s_%s%s",
-                    ossConfProp.getUserProfileVideoPrefix(),
+                    ossConfProp.getCosUserProfileVideoPrefix(),
                     CryptoUtils.base64AesSecret(user.getUsername(), ossConfProp.getObjectAesKey()),
                     new Date().getTime(),
                     randomUUID,
                     suffixName);
 
-            String response = minioService.putObject(ossConfProp.getUserProfileBucket(), objectName,
+            cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
+                    ossConfProp.getCosUserProfileRootPath() + objectName,
                     inputStream, file.getSize(), "video/mp4");
 
-            user.setAuditVideo(response);
+            user.setAuditVideo(objectName);
             user.setVideoAuditCode(code);
             if (updateType == 1) {
-                audit.setAuditVideo(response);
+                audit.setAuditVideo(objectName);
                 audit.setAuditVideoCode(code);
             }
 
@@ -1618,6 +1593,7 @@ public class UserServiceImpl implements UserService {
 
     // TODO: 2020/12/30 整理到其他地方
     // minio 存储原始图片和缩略图
+    @Deprecated
     @SneakyThrows
     public static String minioPutImageAndThumbnail(String bucketName,
                                                                 String objectName,
@@ -1683,40 +1659,23 @@ public class UserServiceImpl implements UserService {
         // 返回完整的照片的链接和缩略图的链接
         if (user.getPhotos() != null) {
             List<String> photosNameList = changePhotosToList(user.getPhotos());
-            List<String> photosUrlList = photosNameList.stream()
-                    .map( name -> String.format("%s/%s/%s",
-                            ossConfProp.getMinioVisitUrl(), ossConfProp.getUserProfileBucket(), name))
-                    .collect(Collectors.toList());
-            List<String> photosThumbnailUrlList = photosNameList.stream()
-                    .map( name -> String.format("%s/%s/thumbnail_%s",
-                            ossConfProp.getMinioVisitUrl(), ossConfProp.getUserProfileBucket(), name))
-                    .collect(Collectors.toList());
-            user.setPhotoUrlList(photosUrlList);
-            user.setPhotoThumbnailUrlList(photosThumbnailUrlList);
+            commonService.getUserProfilePhotosCompleteUrl(photosNameList)
+                    .ifPresent(v -> {
+                        user.setPhotoUrlList(v.getFirst());
+                        user.setPhotoThumbnailUrlList(v.getSecond());
+                    });
         }
 
         // 返回完整的头像的链接和缩略图的链接
-        if (user.getHead() != null && !user.getHead().isEmpty()) {
-            String headUrl = String.format("%s/%s/%s",
-                    ossConfProp.getMinioVisitUrl(),
-                    ossConfProp.getUserProfileBucket(),
-                    user.getHead());
-            String headThumbnailUrl = String.format("%s/%s/thumbnail_%s",
-                    ossConfProp.getMinioVisitUrl(),
-                    ossConfProp.getUserProfileBucket(),
-                    user.getHead());
-            user.setHeadUrl(headUrl);
-            user.setHeadThumbnailUrl(headThumbnailUrl);
-        }
+        commonService.getUserProfileHeadCompleteUrl(user.getHead())
+                .ifPresent(v -> {
+                    user.setHeadUrl(v.getFirst());
+                    user.setHeadThumbnailUrl(v.getSecond());
+                });
 
         // 返回完整的语音介绍的链接
-        if (user.getVoice() != null && !user.getVoice().isEmpty()) {
-            String voiceUrl = String.format("%s/%s/%s",
-                    ossConfProp.getMinioVisitUrl(),
-                    ossConfProp.getUserProfileBucket(),
-                    user.getVoice());
-            user.setVoiceUrl(voiceUrl);
-        }
+        commonService.getUserProfileVoiceCompleteUrl(user.getVoice())
+                .ifPresent(user::setVoiceUrl);
 
         // 返回完整的认证图片链接和缩略图的链接
 //        if (user.getSelfie() != null && !user.getSelfie().isEmpty()) {
@@ -1727,13 +1686,8 @@ public class UserServiceImpl implements UserService {
 //        }
 
         // 返回完整的视频链接
-        if (user.getVideo() != null && !user.getVideo().isEmpty()) {
-            String videoUrl = String.format("%s/%s/%s",
-                    ossConfProp.getMinioVisitUrl(),
-                    ossConfProp.getUserProfileBucket(),
-                    user.getVideo());
-            user.setVideoUrl(videoUrl);
-        }
+        commonService.getUserProfileVideoCompleteUrl(user.getVideo())
+                .ifPresent(user::setVideoUrl);
 
         if (Objects.nonNull(user.getVideoPrice())) {
             user.setVideoPrice(user.getVideoPrice().setScale(2, BigDecimal.ROUND_HALF_UP));
@@ -1766,26 +1720,16 @@ public class UserServiceImpl implements UserService {
         // 审核照片
         if (user.getGuardPhotos() != null) {
             List<String> photosNameList = changePhotosToList(user.getGuardPhotos());
-            List<String> photosUrlList = photosNameList.stream()
-                    .map( name -> String.format("%s/%s/%s",
-                            ossConfProp.getMinioVisitUrl(), ossConfProp.getUserProfileBucket(), name))
-                    .collect(Collectors.toList());
-            List<String> photosThumbnailUrlList = photosNameList.stream()
-                    .map( name -> String.format("%s/%s/thumbnail_%s",
-                            ossConfProp.getMinioVisitUrl(), ossConfProp.getUserProfileBucket(), name))
-                    .collect(Collectors.toList());
-            user.setGuardPhotosUrlList(photosUrlList);
-            user.setThumbnailGuardPhotosUrlList(photosThumbnailUrlList);
+            commonService.getUserProfilePhotosCompleteUrl(photosNameList)
+                    .ifPresent(v -> {
+                        user.setGuardPhotosUrlList(v.getFirst());
+                        user.setThumbnailGuardPhotosUrlList(v.getSecond());
+                    });
         }
 
         // 审核视频
-        if (!StringUtils.isEmpty(user.getAuditVideo())) {
-            String videoUrl = String.format("%s/%s/%s",
-                    ossConfProp.getMinioVisitUrl(),
-                    ossConfProp.getUserProfileBucket(),
-                    user.getAuditVideo());
-            user.setVideoAuditUrl(videoUrl);
-        }
+        commonService.getUserProfileVideoCompleteUrl(user.getAuditVideo())
+                .ifPresent(user::setVideoAuditUrl);
 
         // 守护版本照片判断
 //        List<UserMaterial> lastPhotos;

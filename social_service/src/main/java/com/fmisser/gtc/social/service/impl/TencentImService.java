@@ -3,31 +3,22 @@ package com.fmisser.gtc.social.service.impl;
 import com.fmisser.gtc.base.dto.im.*;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.ImConfProp;
-import com.fmisser.gtc.base.prop.OssConfProp;
-import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.*;
 import com.fmisser.gtc.social.feign.ImFeign;
 import com.fmisser.gtc.social.job.CallCalcJobScheduler;
-import com.fmisser.gtc.social.mq.WxWebHookBinding;
 import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.*;
 import com.tencentcloudapi.common.Credential;
 import com.tencentcloudapi.common.profile.ClientProfile;
 import com.tencentcloudapi.common.profile.HttpProfile;
-import com.tencentcloudapi.cvm.v20170312.CvmClient;
 import com.tencentcloudapi.trtc.v20190722.TrtcClient;
 import com.tencentcloudapi.trtc.v20190722.models.DismissRoomRequest;
-import com.tencentcloudapi.trtc.v20190722.models.DismissRoomResponse;
-import lombok.Data;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.jettison.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Base64Utils;
 import org.springframework.util.StringUtils;
 
 import javax.crypto.Mac;
@@ -36,7 +27,6 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Time;
 import java.util.*;
 import java.util.zip.Deflater;
 
@@ -49,49 +39,21 @@ import static com.fmisser.gtc.social.service.impl.TencentImCallbackService.creat
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class TencentImService implements ImService {
-
-    @Autowired
-    private ImConfProp imConfProp;
-
-    @Autowired
-    private ImFeign imFeign;
-
-    @Autowired
-    private CallRepository callRepository;
-
-    @Autowired
-    private CallBillRepository callBillRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private AssetRepository assetRepository;
-
-    @Autowired
-    private CouponService couponService;
-
-    @Autowired
-    private CouponRepository couponRepository;
-
-    @Autowired
-    private SysConfigService sysConfigService;
-
-    @Autowired
-    private OssConfProp ossConfProp;
-
-//    @Autowired
-//    private UserService userService;
-
-    @Autowired
-    private WxWebHookBinding wxWebHookBinding;
-
-    @Autowired
-    private ActiveService activeService;
-
-    @Autowired
-    private CallCalcJobScheduler callCalcJobScheduler;
+    private final ImConfProp imConfProp;
+    private final ImFeign imFeign;
+    private final CallRepository callRepository;
+    private final CallBillRepository callBillRepository;
+    private final UserRepository userRepository;
+    private final AssetRepository assetRepository;
+    private final CouponService couponService;
+    private final CouponRepository couponRepository;
+    private final SysConfigService sysConfigService;
+//    private final WxWebHookBinding wxWebHookBinding;
+    private final ActiveService activeService;
+    private final CallCalcJobScheduler callCalcJobScheduler;
+    private final CommonService commonService;
 
     @Override
     public String login(User user) throws ApiException {
@@ -1357,16 +1319,15 @@ public class TencentImService implements ImService {
 //        ImSendMsgDto msg2To = ImMsgFactory
 //                .buildGiftMsg(null, userFrom.getDigitId(), "赠送礼物成功!", 201, gift.getId(), count, true);
 
-        String headThumbnailUrl = null;
-        if (!StringUtils.isEmpty(userFrom.getHead())) {
-            headThumbnailUrl = String.format("%s/%s/thumbnail_%s",
-                    ossConfProp.getMinioVisitUrl(),
-                    ossConfProp.getUserProfileBucket(),
-                    userFrom.getHead());
-        }
+        final String[] headThumbnailUrl = new String[1];
+        commonService.getUserProfileHeadCompleteUrl(userFrom.getHead())
+                .ifPresent(v -> {
+                    headThumbnailUrl[0] = v.getSecond();
+                });
+
         ImSendMsgDto msgCustom = ImMsgFactory.buildGiftMsg(userFrom.getDigitId(), userTo.getDigitId(),
                 "您收到一个礼物，快去看看吧", 203, gift.getId(), count, gift.getName(),
-                userTo.getNick(), headThumbnailUrl,
+                userTo.getNick(), headThumbnailUrl[0],
                 true);
 
         // 获取管理员的 usersig

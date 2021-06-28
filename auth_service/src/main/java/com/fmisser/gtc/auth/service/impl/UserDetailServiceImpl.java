@@ -1,5 +1,6 @@
 package com.fmisser.gtc.auth.service.impl;
 
+import com.fmisser.fpp.thirdparty.apple.service.AppleIdLoginService;
 import com.fmisser.fpp.thirdparty.jpush.service.JPushService;
 import com.fmisser.gtc.auth.domain.Role;
 import com.fmisser.gtc.auth.domain.User;
@@ -14,6 +15,8 @@ import com.fmisser.gtc.base.dto.auth.TokenDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.OauthConfProp;
 import com.fmisser.gtc.base.utils.AuthUtils;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -25,47 +28,21 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+@Slf4j
 @Service("top")
+@AllArgsConstructor
 public class UserDetailServiceImpl implements UserService {
-    private final Logger logger = LoggerFactory.getLogger(UserDetailServiceImpl.class);
-
     private final UserRepository userRepository;
-
     private final RoleRepository roleRepository;
-
     private final PasswordEncoder passwordEncoder;
-
     private final SmsService smsService;
-
     private final AutoLoginService autoLoginService;
-
     private final OAuthFeign oAuthFeign;
-
     private final ThirdPartyLoginService thirdPartyLoginService;
-
     private final OauthConfProp oauthConfProp;
-
     private final JPushService jPushService;
+    private final AppleIdLoginService appleIdLoginService;
 
-    public UserDetailServiceImpl(UserRepository userRepository,
-                                 RoleRepository roleRepository,
-                                 PasswordEncoder passwordEncoder,
-                                 SmsService smsService,
-                                 AutoLoginService autoLoginService,
-                                 OAuthFeign oAuthFeign,
-                                 ThirdPartyLoginService thirdPartyLoginService,
-                                 OauthConfProp oauthConfProp,
-                                 JPushService jPushService) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.smsService = smsService;
-        this.autoLoginService = autoLoginService;
-        this.oAuthFeign = oAuthFeign;
-        this.thirdPartyLoginService = thirdPartyLoginService;
-        this.oauthConfProp = oauthConfProp;
-        this.jPushService = jPushService;
-    }
 
     @Override
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
@@ -101,7 +78,7 @@ public class UserDetailServiceImpl implements UserService {
         }
 
         User savedUser = userRepository.save(user);
-        logger.info("new user has been created: {}", savedUser.getUsername());
+        log.info("new user has been created: {}", savedUser.getUsername());
         return savedUser;
     }
 
@@ -136,7 +113,7 @@ public class UserDetailServiceImpl implements UserService {
         }
 
         User savedUser = userRepository.save(user);
-        logger.info("user has been updated: {}", savedUser.getUsername());
+        log.info("user has been updated: {}", savedUser.getUsername());
         return savedUser;
     }
 
@@ -258,7 +235,11 @@ public class UserDetailServiceImpl implements UserService {
      * 注册。登录一体
      */
     public UserDetails loadUserByAppleAuto(String subject, String token) {
-        if (!thirdPartyLoginService.checkAppleIdentityToken(token, subject)) {
+//        if (!thirdPartyLoginService.checkAppleIdentityToken(token, subject)) {
+//            return null;
+//        }
+
+        if (!appleIdLoginService.verifyIdentityToken("", subject, token, false)) {
             return null;
         }
 
@@ -306,7 +287,7 @@ public class UserDetailServiceImpl implements UserService {
         newUser.setAuthorities(_innerCreateUserRole());
 
         User savedUser = userRepository.save(newUser);
-        logger.info("new user has been created: {}", savedUser.getUsername());
+        log.info("new user has been created: {}", savedUser.getUsername());
         return savedUser;
     }
 

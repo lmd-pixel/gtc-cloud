@@ -18,7 +18,7 @@ import java.util.Date;
  */
 
 @Entity
-@Table(name = "t_greet")
+@Table(name = "t_greet", indexes = {@Index(columnList = "userId,creatTime")})
 @Data
 @EntityListeners(AuditingEntityListener.class)
 @DynamicInsert

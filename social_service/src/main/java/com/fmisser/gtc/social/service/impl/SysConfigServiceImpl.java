@@ -168,6 +168,15 @@ public class SysConfigServiceImpl implements SysConfigService {
         return Integer.parseInt(sysConfig.getValue1());
     }
 
+    @Override
+    public Pair<Integer, Integer> getRegDailyCountLimit() throws ApiException {
+        SysConfig sysConfig = sysConfigRepository.findByName("reg_device_limit");
+        int ipLimit = Integer.parseInt(sysConfig.getValue1());
+        int deviceLimit = Integer.parseInt(sysConfig.getValue2());
+
+        return Pair.of(ipLimit, deviceLimit);
+    }
+
     @SneakyThrows
     private boolean _commonCheck(SysConfig sysConfig) {
         String value2 = sysConfig.getValue2();
