@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Base64Utils;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -95,7 +96,7 @@ public class TencentImCallbackService implements ImCallbackService {
                 userMessage.setMsgTime(imBeforeSendMsgDto.getMsgTime());
 
                 if (msgbody.getMsgType().equals("TIMTextElem")) {
-                    int ret = textModeration(imBeforeSendMsgDto.getFrom_Account(), msgbody.getMsgContent().getText());
+                    int ret = textModeration(imBeforeSendMsgDto.getFrom_Account(), msgbody.getMsgContent().getText(), "", 0);
 
                     log.info("[imcb] text blocked from: {}, to: {} with content: {}",
                             imBeforeSendMsgDto.getFrom_Account(),
@@ -398,7 +399,7 @@ public class TencentImCallbackService implements ImCallbackService {
 
     @SneakyThrows
     @Override
-    public int textModeration(String userId, String text) {
+    public int textModeration(String userId, String text, String bizType, int moderationType) {
 
         text = Base64Utils.encodeToString(text.getBytes());
 
@@ -414,6 +415,9 @@ public class TencentImCallbackService implements ImCallbackService {
 
         TextModerationRequest req = new TextModerationRequest();
         req.setContent(text);
+        if (!StringUtils.isEmpty(bizType)) {
+            req.setBizType(bizType);
+        }
 //        com.tencentcloudapi.tms.v20201229.models.User user = new com.tencentcloudapi.tms.v20201229.models.User();
 //        user.setUserId(userId);
 //        req.setUser(user);
@@ -421,7 +425,12 @@ public class TencentImCallbackService implements ImCallbackService {
 
         TextModerationResponse resp = client.TextModeration(req);
 
-        List<Moderation> moderationList = moderationService.getModerationList();
+        List<Moderation> moderationList;
+        if (moderationType == 0) {
+            moderationList = moderationService.getModerationList();
+        } else {
+            moderationList = moderationService.getDynamicModerationList(moderationType);
+        }
 
         DetailResults[] detailResults = resp.getDetailResults();
         for (DetailResults result :

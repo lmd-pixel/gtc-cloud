@@ -407,6 +407,20 @@ public class RechargeServiceImpl implements RechargeService {
 
         assetRepository.addCoin(user.getId(), coin);
 
+        // 判断是否是首次充值，首次充值送聊天券和视频卡
+        // 考虑以后退款等操作，都认为是已完成过充值，不再赠送
+        Long count = rechargeRepository.countByUserIdAndStatusGreaterThanEqual(user.getId(), 20);
+        if (count == 1) {
+            // 首充
+            if (sysConfigService.isFirstRechargeFreeMsg()) {
+                couponService.addCommMsgFreeCoupon(user.getId(), 100, 20);
+            }
+
+            if (sysConfigService.isFirstRechargeFreeVideo()) {
+                couponService.addCommVideoCoupon(user.getId(), 1, 20);
+            }
+        }
+
         rechargeRepository.save(recharge);
 
         return 1;

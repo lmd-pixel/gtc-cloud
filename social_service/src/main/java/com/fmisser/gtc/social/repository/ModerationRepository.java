@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface ModerationRepository extends JpaRepository<Moderation, Integer> {
-    @Query(value = "SELECT * FROM t_moderation WHERE disable = 0", nativeQuery = true)
-    List<Moderation> getModerationList();
+    @Query(value = "SELECT * FROM `gtc-social-db`.t_moderation WHERE disable = 0 and type = ?1", nativeQuery = true)
+    List<Moderation> getModerationList(int type);
 }

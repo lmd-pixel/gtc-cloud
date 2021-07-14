@@ -54,6 +54,8 @@ public interface DynamicService {
 
     int auditDynamic(Long dynamicId, int pass, String message) throws ApiException;
 
+    int changeDynamic(Long dynamicId, int isGuard) throws ApiException;
+
     // 兼容旧的
     List<DynamicDto> compat(List<DynamicDto> dynamicDtoList, String version) throws ApiException;
 }

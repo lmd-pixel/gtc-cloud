@@ -213,4 +213,17 @@ public class CommonController {
         extraMap.put("guardList", guardList);
         return ApiResp.succeed(extraMap);
     }
+
+    @ResponseBody
+    @RequestMapping(value="unbundlingWx",method = RequestMethod.POST)
+    public String unbundlingWx( @RequestParam(value = "nickname",required = false) String nickname,
+                                    @RequestParam(value = "mobile",required = false) String mobile,
+                                    @RequestParam(value = "userid",required = false) Long userid) {
+        System.out.println(nickname+mobile+userid);
+        if(nickname == null && mobile == null && userid == null){
+            return "error";
+        }else{
+            return "right";
+        }
+    }
 }

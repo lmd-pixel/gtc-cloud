@@ -1,5 +1,8 @@
 package com.fmisser.fpp.oss.cos.conf;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fmisser.fpp.oss.cos.utils.COSSigner;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
@@ -18,11 +21,27 @@ import org.springframework.context.annotation.Configuration;
 public class CosConfig {
 
     @Bean
-    COSClient cosClient() {
-        COSCredentials credentials = new BasicCOSCredentials(CosDefine.COS_SECRET_ID, CosDefine.COS_SECRET_KEY);
+    COSCredentials credentials() {
+        return new BasicCOSCredentials(CosDefine.COS_SECRET_ID, CosDefine.COS_SECRET_KEY);
+    }
+
+    @Bean
+    COSClient cosClient(COSCredentials cosCredentials) {
         Region region = new Region(CosDefine.COS_REGION);
         ClientConfig clientConfig = new ClientConfig(region);
         clientConfig.setHttpProtocol(HttpProtocol.https);
-        return new COSClient(credentials, clientConfig);
+        return new COSClient(cosCredentials, clientConfig);
+    }
+
+    @Bean
+    COSSigner cosSigner() {
+        return new COSSigner();
+    }
+
+    @Bean
+    XmlMapper xmlMapper() {
+        XmlMapper xmlMapper = new XmlMapper();
+        xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return xmlMapper;
     }
 }

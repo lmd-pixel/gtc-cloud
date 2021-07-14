@@ -16,6 +16,8 @@ import com.fmisser.gtc.social.repository.DynamicRepository;
 import com.fmisser.gtc.social.service.*;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,11 +30,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static com.fmisser.gtc.social.service.impl.UserServiceImpl.*;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class DynamicServiceImpl implements DynamicService {
@@ -49,6 +53,7 @@ public class DynamicServiceImpl implements DynamicService {
     private final ImService imService;
     private final UserService userService;
     private final CommonService commonService;
+    private final AsyncService asyncService;
 
     @Override
     @SneakyThrows
@@ -56,10 +61,10 @@ public class DynamicServiceImpl implements DynamicService {
                              BigDecimal longitude, BigDecimal latitude,
                           Map<String, MultipartFile> multipartFileMap) throws ApiException {
 
-        int ret = imCallbackService.textModeration(user.getDigitId(), content);
-        if (ret == 0) {
-            throw new ApiException(-1, "发现违规内容，发表失败");
-        }
+//        int ret = imCallbackService.textModeration(user.getDigitId(), content, "biz_dymic", 1);
+//        if (ret == 0) {
+//            throw new ApiException(-1, "发现违规内容，发表失败");
+//        }
 
         Date todayStart = DateUtils.getDayStart(new Date());
         Date todayEnd = DateUtils.getDayEnd(new Date());
@@ -73,10 +78,15 @@ public class DynamicServiceImpl implements DynamicService {
         dynamic.setType(type);
         dynamic.setContent(content);
         if (type < 20) {
-            // 直接设置通过
-            dynamic.setStatus(10);
+            // 非守护动态 文本先审核，审核不通过 直接人工审核
+            int ret = imCallbackService.textModeration(user.getDigitId(), content, "biz_dymic", 1);
+            if (ret == 0) {
+                dynamic.setStatus(1);
+            } else {
+                dynamic.setStatus(10);
+            }
         } else {
-            // 守护视频需要审核
+            // 守护动态需要人工审核
             dynamic.setStatus(1);
         }
 
@@ -165,6 +175,48 @@ public class DynamicServiceImpl implements DynamicService {
         }
 
         dynamic = dynamicRepository.save(dynamic);
+
+        final Long dynamicId = dynamic.getId();
+        // 非守护动态，图片审查
+        if (type == 1 || type == 11) {
+            CompletableFuture<Integer> future = asyncService.dynamicPicAuditAsync(dynamicId, photoList);
+            future.thenAccept(integer -> {
+                if (integer == 0) {
+                    log.info("dynamic: {} was blocked.", dynamicId);
+                    // 审核不通过，直接走人工审核
+                    dynamicRepository.findById(dynamicId)
+                            .ifPresent(d -> {
+                                if (d.getStatus() != 1) {
+                                    d.setStatus(1);
+                                    dynamicRepository.save(d);
+                                }
+                            });
+                } else {
+                    log.info("dynamic: {} was pass.", dynamicId);
+                }
+            });
+        }
+
+        // 非守护动态，视频审查
+        if (type == 2 || type == 12) {
+            CompletableFuture<Integer> future = asyncService.dynamicVideoAuditAsync(dynamicId, dynamic.getVideo());
+            future.thenAcceptAsync(integer -> {
+                if (integer == 0) {
+                    log.info("dynamic: {} was blocked.", dynamicId);
+                    // 审核不通过，直接走人工审核
+                    dynamicRepository.findById(dynamicId)
+                            .ifPresent(d -> {
+                                if (d.getStatus() != 1) {
+                                    d.setStatus(1);
+                                    dynamicRepository.save(d);
+                                }
+                            });
+                } else {
+                    log.info("dynamic: {} was pass.", dynamicId);
+                }
+            });
+        }
+
         return _prepareDynamicResponse(dynamic, user);
     }
 
@@ -246,10 +298,10 @@ public class DynamicServiceImpl implements DynamicService {
             throw new ApiException(-1, "动态数据不存在或已删除！");
         }
 
-        int ret = imCallbackService.textModeration(selfUser.getDigitId(), content);
-        if (ret == 0) {
-            throw new ApiException(-1, "发现违规内容，发表失败");
-        }
+//        int ret = imCallbackService.textModeration(selfUser.getDigitId(), content, "", 0);
+//        if (ret == 0) {
+//            throw new ApiException(-1, "发现违规内容，发表失败");
+//        }
 
         Dynamic dynamic = optionalDynamic.get();
 
@@ -262,6 +314,11 @@ public class DynamicServiceImpl implements DynamicService {
             dynamicComment.setUserIdTo(toUser.getId());
         }
         dynamicComment.setContent(content);
+
+        int ret = imCallbackService.textModeration(selfUser.getDigitId(), content, "biz_dymic", 1);
+        if (ret == 0) {
+            dynamicComment.setIsDelete(1);
+        }
 
         dynamicCommentRepository.save(dynamicComment);
 
@@ -434,19 +491,68 @@ public class DynamicServiceImpl implements DynamicService {
         User user = userService.getUserById(dynamic.getUserId());
         if (pass == 1) {
             dynamic.setStatus(10);
-            imService.sendToUser(null, user, "您发表的守护动态已审核通过");
+            if (dynamic.getType() < 20) {
+                imService.sendToUser(null, user, "您发表的动态已审核通过");
+            } else {
+                imService.sendToUser(null, user, "您发表的守护动态已审核通过");
+            }
+
         } else {
             dynamic.setStatus(20);
 
-            if (StringUtils.isEmpty(message)) {
-                imService.sendToUser(null, user, "您发表的守护动态未审核通过");
+            if (dynamic.getType() < 20) {
+                if (StringUtils.isEmpty(message)) {
+                    imService.sendToUser(null, user, "您发表的动态未审核通过");
+                } else {
+                    String formatString = String.format("您发表的动态因%s未通过，请重新发表", message);
+                    imService.sendToUser(null, user, formatString);
+                }
             } else {
-                String formatString = String.format("您发表的守护动态因%s未通过，请重新发表", message);
-                imService.sendToUser(null, user, formatString);
+                if (StringUtils.isEmpty(message)) {
+                    imService.sendToUser(null, user, "您发表的守护动态未审核通过");
+                } else {
+                    String formatString = String.format("您发表的守护动态因%s未通过，请重新发表", message);
+                    imService.sendToUser(null, user, formatString);
+                }
             }
-
         }
 
+        dynamicRepository.save(dynamic);
+
+        return 1;
+    }
+
+    @Override
+    public int changeDynamic(Long dynamicId, int isGuard) throws ApiException {
+        Optional<Dynamic> dynamicOptional = dynamicRepository.findById(dynamicId);
+        if (!dynamicOptional.isPresent()) {
+            throw new ApiException(-1, "动态不存在，无法操作!");
+        }
+
+        Dynamic dynamic = dynamicOptional.get();
+
+        int type = dynamic.getType();
+        if (type == 0 || type == 10 || type == 20) {
+            if (isGuard == 0) {
+                dynamic.setType(10);
+            } else {
+                dynamic.setType(20);
+            }
+        }
+        if (type == 1 || type == 11 || type == 21) {
+            if (isGuard == 0) {
+                dynamic.setType(11);
+            } else {
+                dynamic.setType(21);
+            }
+        }
+        if (type == 2 || type == 12 || type == 22) {
+            if (isGuard == 0) {
+                dynamic.setType(12);
+            } else {
+                dynamic.setType(22);
+            }
+        }
         dynamicRepository.save(dynamic);
 
         return 1;

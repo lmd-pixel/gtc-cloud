@@ -75,4 +75,13 @@ public class DynamicManagerController {
                                   @RequestParam(value = "message", required = false, defaultValue = "") String message) {
         return ApiResp.succeed(dynamicService.auditDynamic(dynamicId, pass, message));
     }
+
+    @ApiOperation(value = "切换守护和非守护动态")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @PostMapping("/guard-change")
+    @PreAuthorize("hasAnyRole('MANAGER')")
+    ApiResp<Integer> dynamicChangeGuard(@RequestParam("dynamicId") Long dynamicId,
+                                  @RequestParam("isGuard") Integer isGuard) {
+        return ApiResp.succeed(dynamicService.changeDynamic(dynamicId, isGuard));
+    }
 }

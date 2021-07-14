@@ -18,7 +18,7 @@ public interface ImCallbackService {
 
     Object afterSendMsg(ImAfterSendMsgDto imAfterSendMsgDto, String originContent);
 
-    int textModeration(String userId, String text);
+    int textModeration(String userId, String text, String bizType, int moderationType);
 
     boolean textNoPrice(String text);
 

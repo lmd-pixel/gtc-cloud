@@ -134,13 +134,13 @@ public class TencentImService implements ImService {
         log.info("[call] user: {} accept with call id: {}, room id: {}, type: {}",
                 userFrom.getDigitId(), call.getId(), call.getRoomId(), call.getType());
 
-        if (call.getIsFinished() == 1) {
-
-            log.info("[call] user: {} accept with call id: {}, room id: {}, type: {} failed, this call is finished.",
-                    userFrom.getDigitId(), call.getId(), call.getRoomId(), call.getType());
-
-            return -2;
-        }
+//        if (call.getIsFinished() == 1) {
+//
+//            log.info("[call] user: {} accept with call id: {}, room id: {}, type: {} failed, this call is finished.",
+//                    userFrom.getDigitId(), call.getId(), call.getRoomId(), call.getType());
+//
+//            return -2;
+//        }
 
         // 设定开始时间
         call.setStartTime(new Date());

@@ -32,7 +32,7 @@ public class ImCallbackController {
     @GetMapping
     public Integer testTextModeration(@RequestParam("userId") String userId,
                                       @RequestParam("content") String content) {
-        return imCallbackService.textModeration(userId, content);
+        return imCallbackService.textModeration(userId, content, "", 0);
     }
 
     @PostMapping("/entry")

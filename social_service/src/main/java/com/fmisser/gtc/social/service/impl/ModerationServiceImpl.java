@@ -20,6 +20,11 @@ public class ModerationServiceImpl implements ModerationService {
 
     @Override
     public List<Moderation> getModerationList() throws ApiException {
-        return moderationRepository.getModerationList();
+        return moderationRepository.getModerationList(0);
+    }
+
+    @Override
+    public List<Moderation> getDynamicModerationList(int type) throws ApiException {
+        return moderationRepository.getModerationList(type);
     }
 }

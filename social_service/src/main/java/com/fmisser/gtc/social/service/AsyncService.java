@@ -2,6 +2,8 @@ package com.fmisser.gtc.social.service;
 
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.User;
+
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -11,4 +13,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface AsyncService {
     CompletableFuture<Integer> setProfileAsync(User user, Long delayMills) throws ApiException;
+    CompletableFuture<Integer> dynamicPicAuditAsync(Long dynamicId, List<String> pics) throws ApiException;
+    CompletableFuture<Integer> dynamicVideoAuditAsync(Long dynamicId, String video) throws ApiException;
 }

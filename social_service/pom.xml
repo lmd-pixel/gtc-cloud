@@ -135,6 +135,11 @@
             <version>3.1.214</version>
         </dependency>
 
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.dataformat</groupId>-->
+<!--            <artifactId>jackson-dataformat-xml</artifactId>-->
+<!--        </dependency>-->
+
         <dependency>
             <groupId>com.fmisser.gtc</groupId>
             <artifactId>base</artifactId>
@@ -182,6 +187,11 @@
             <artifactId>fpp-log-logstash</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.fmisser.fpp</groupId>-->
+<!--            <artifactId>fpp-sql-sharding-jdbc</artifactId>-->
+<!--            <version>1.0-SNAPSHOT</version>-->
+<!--        </dependency>-->
     </dependencies>
 
     <build>

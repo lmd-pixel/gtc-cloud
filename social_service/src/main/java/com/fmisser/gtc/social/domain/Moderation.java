@@ -19,6 +19,16 @@ public class Moderation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    /**
+     * 类型，
+     * 0 通用
+     * 1 动态文本
+     * 2 动态图片
+     * 3 动态视频
+     */
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private Integer type = 0;
+
     @Column(length = 24)
     private String label;
 

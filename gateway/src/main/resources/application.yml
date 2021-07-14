@@ -19,6 +19,7 @@ spring:
         predicates:
         - Path=/api/auth/**
         filters:
+        - AddRequestHeader=Accept,application/json
         - StripPrefix=2
         - name: Hystrix
           args:
@@ -29,6 +30,7 @@ spring:
         predicates:
         - Path=/api/social/**
         filters:
+        - AddRequestHeader=Accept,application/json
         - StripPrefix=2
         - name: Hystrix
           args:
@@ -86,7 +88,7 @@ spring:
         enabled: true
   profiles:
     # 使用测试配置
-    active: hleen
+    active: test
 
 # hystrix 超时设置
 hystrix:
