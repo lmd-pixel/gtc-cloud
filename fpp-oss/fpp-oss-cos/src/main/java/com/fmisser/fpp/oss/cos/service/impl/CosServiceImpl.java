@@ -27,6 +27,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author by fmisser
@@ -108,6 +109,20 @@ public class CosServiceImpl implements CosService {
     }
 
     @Override
+    public String putObject(String bucketName, String objectName, Map<String, String> headers,
+                            InputStream inputStream, Long size, String contentType) throws RuntimeException {
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setHeader("Content-Type", contentType);
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            metadata.setHeader(entry.getKey(), entry.getValue());
+        }
+        metadata.setContentType(contentType);
+        PutObjectRequest request = new PutObjectRequest(bucketName, objectName, inputStream, metadata);
+        PutObjectResult result = cosClient.putObject(request);
+        return objectName;
+    }
+
+    @Override
     public String getDomainName(String cdn, String bucketName) throws RuntimeException {
         // 如果配置了cdn 则直接走cdn域名，没有的话则走cos风格域名
         if (StringUtils.isEmpty(cdn)) {
@@ -131,7 +146,6 @@ public class CosServiceImpl implements CosService {
     public String getCosAuthString(HttpMethodName methodName, String resourcePath, Date expiredTime) throws RuntimeException {
         return cosSigner.buildAuthorizationStr(methodName, resourcePath, cosCredentials, expiredTime);
     }
-
 
     @Override
     public RecognitionResult recognizePicture(String host, String picturePath) throws RuntimeException {

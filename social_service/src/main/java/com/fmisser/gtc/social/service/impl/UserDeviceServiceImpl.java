@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.Objects;
+
 /**
  * @author fmisser
  * @create 2021-04-20 下午4:08
@@ -22,7 +24,9 @@ public class UserDeviceServiceImpl implements UserDeviceService {
 
     @Override
     public int create(User user, int deviceType, String deviceName, String deviceCategory,
-                      String deviceIdfa, String deviceToken, String ipAddr, String lang) throws ApiException {
+                      String idfa, String imei, String androidId, String oaid,
+                      String deviceToken, Integer physicalDevice, String osVersion,
+                      String channel, String deviceDescribe, String ipAddr, String lang) throws ApiException {
         UserDevice userDevice = new UserDevice();
         userDevice.setUserId(user.getId());
         userDevice.setDeviceType(deviceType);
@@ -32,11 +36,32 @@ public class UserDeviceServiceImpl implements UserDeviceService {
         if (!StringUtils.isEmpty(deviceCategory)) {
             userDevice.setDeviceCategory(deviceCategory);
         }
-        if (!StringUtils.isEmpty(deviceIdfa)) {
-            userDevice.setDeviceIdfa(deviceIdfa);
+        if (!StringUtils.isEmpty(idfa)) {
+            userDevice.setDeviceIdfa(idfa);
+        }
+        if (!StringUtils.isEmpty(imei)) {
+            userDevice.setDeviceImei(imei);
+        }
+        if (!StringUtils.isEmpty(androidId)) {
+            userDevice.setDeviceAndroidId(androidId);
+        }
+        if (!StringUtils.isEmpty(oaid)) {
+            userDevice.setDeviceOaid(oaid);
         }
         if (!StringUtils.isEmpty(deviceToken)) {
             userDevice.setDeviceToken(deviceToken);
+        }
+        if (Objects.nonNull(physicalDevice)) {
+            userDevice.setPhysicalDevice(physicalDevice);
+        }
+        if (!StringUtils.isEmpty(osVersion)) {
+            userDevice.setOsVersion(osVersion);
+        }
+        if (!StringUtils.isEmpty(channel)) {
+            userDevice.setChannel(channel);
+        }
+        if (!StringUtils.isEmpty(deviceDescribe)) {
+            userDevice.setDeviceDescribe(deviceDescribe);
         }
         if (!StringUtils.isEmpty(ipAddr)) {
             userDevice.setIpAddr(ipAddr);

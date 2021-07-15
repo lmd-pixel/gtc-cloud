@@ -40,7 +40,28 @@ public class UserDevice {
     private String deviceIdfa;
 
     @Column
+    private String deviceImei;
+
+    @Column
+    private String deviceAndroidId;
+
+    @Column
+    private String deviceOaid;
+
+    @Column
     private String deviceToken;
+
+    @Column
+    private Integer physicalDevice;
+
+    @Column
+    private String osVersion;
+
+    @Column
+    private String channel;
+
+    @Column
+    private String deviceDescribe;
 
     @Column
     private String ipAddr;

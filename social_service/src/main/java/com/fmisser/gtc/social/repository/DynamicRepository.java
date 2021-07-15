@@ -113,8 +113,9 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
             "LEFT JOIN DynamicComment tdc ON tdc.dynamicId = td.id AND tdc.isDelete = 0 " +
             "WHERE tf.status = 1 AND tf.userIdFrom = :selfUserId AND " +
             "(:createTime IS NULL OR td.createTime < :createTime) AND " +
-            "tb.id IS NULL AND tb2.id IS NULL GROUP BY td.id " +
-            "ORDER BY td.id DESC")
+            "tb.id IS NULL AND tb2.id IS NULL " +
+            "GROUP BY td.id, td.modifyTime " +
+            "ORDER BY td.modifyTime DESC")
     Page<DynamicDto> getDynamicListByFollow(@Param("selfUserId") Long selfUserId, @Param("createTime") Date createTime, Pageable pageable);
 
 

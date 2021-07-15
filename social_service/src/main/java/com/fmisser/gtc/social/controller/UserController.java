@@ -419,7 +419,14 @@ public class UserController {
                                       @RequestParam(value = "deviceName", required = false) String deviceName,
                                       @RequestParam(value = "deviceCategory", required = false) String deviceCategory,
                                       @RequestParam(value = "deviceIdfa", required = false) String deviceIdfa,
+                                      @RequestParam(value = "deviceImei", required = false) String deviceImei,
+                                      @RequestParam(value = "deviceAndroidId", required = false) String deviceAndroidId,
+                                      @RequestParam(value = "deviceOaid", required = false) String deviceOaid,
                                       @RequestParam(value = "deviceToken", required = false) String deviceToken,
+                                      @RequestParam(value = "physicalDevice", required = false) Integer physicalDevice,
+                                      @RequestParam(value = "osVersion", required = false) String osVersion,
+                                      @RequestParam(value = "channel", required = false) String channel,
+                                      @RequestParam(value = "deviceDescribe", required = false) String deviceDescribe,
                                       @RequestParam(value = "ipAddr", required = false) String ipAddr,
                                       @RequestParam(value = "lang", required = false) String lang,
                                       HttpServletRequest req) {
@@ -428,7 +435,8 @@ public class UserController {
         User userDo = userService.getUserByUsername(username);
 
         int ret = userDeviceService.create(userDo, deviceType, deviceName, deviceCategory,
-                deviceIdfa, deviceToken, ipAddr, lang);
+                deviceIdfa, deviceImei, deviceAndroidId, deviceOaid, deviceToken,
+                physicalDevice, osVersion, channel, deviceDescribe, ipAddr, lang);
         return ApiResp.succeed(ret);
     }
 

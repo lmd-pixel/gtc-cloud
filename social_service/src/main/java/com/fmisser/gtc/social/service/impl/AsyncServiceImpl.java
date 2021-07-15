@@ -90,6 +90,7 @@ public class AsyncServiceImpl implements AsyncService {
         return CompletableFuture.completedFuture(1);
     }
 
+    @Async
     @Override
     public CompletableFuture<Integer> dynamicVideoAuditAsync(Long dynamicId, String video) throws ApiException {
         String url = cosService.getVideoAuditDomainName(ossConfProp.getUserDynamicCosBucket());

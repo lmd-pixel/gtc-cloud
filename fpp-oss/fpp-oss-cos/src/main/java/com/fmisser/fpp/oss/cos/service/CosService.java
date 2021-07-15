@@ -6,7 +6,9 @@ import com.fmisser.fpp.oss.cos.dto.VideoAuditQueryResponse;
 import com.fmisser.fpp.oss.cos.dto.VideoAuditResponse;
 import com.qcloud.cos.http.HttpMethodName;
 
+import java.io.InputStream;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * @author by fmisser
@@ -14,6 +16,8 @@ import java.util.Date;
  * @description TODO
  */
 public interface CosService extends OssService {
+
+    String putObject(String bucketName, String objectName, Map<String, String> headers, InputStream inputStream, Long size, String contentType) throws RuntimeException;
     // cos的域名
     String getDomainName(String cdn, String bucketName) throws RuntimeException;
 
