@@ -20,6 +20,12 @@ import java.util.List;
 @Configuration
 public class WebConfig extends WebMvcConfigurationSupport {
 
+//    @Override
+//    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+//        // 重新加入Jackson解析json的类，让其顺序排在xml解析的前面
+//        converters.add(new MappingJackson2HttpMessageConverter());
+//    }
+
     @Override
     protected void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.forEach(c -> {

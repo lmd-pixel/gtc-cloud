@@ -38,8 +38,9 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
                 .antMatchers("/dynamic/**").permitAll()
                 .antMatchers("/comm/**").permitAll()
                 .antMatchers("/im_cb/**").permitAll()
+                .antMatchers("/cos_cb/**").permitAll()
                 .antMatchers("/recommend/**").permitAll()
-                .antMatchers("/banner/").permitAll()
+                .antMatchers("/banner/**").permitAll()
 //                swagger
                 .antMatchers("/swagger-ui.html").permitAll()
                 .antMatchers("/webjars/**").permitAll()

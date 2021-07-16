@@ -146,6 +146,12 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
+<!--        <dependency>-->
+<!--            <groupId>com.netflix.feign</groupId>-->
+<!--            <artifactId>feign-jackson</artifactId>-->
+<!--            <version>8.18.0</version>-->
+<!--        </dependency>-->
+
         <!-- 使用 fpp 模块  -->
         <dependency>
             <groupId>com.fmisser.fpp</groupId>

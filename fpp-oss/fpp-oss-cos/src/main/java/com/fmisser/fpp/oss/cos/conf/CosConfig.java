@@ -1,7 +1,7 @@
 package com.fmisser.fpp.oss.cos.conf;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+//import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fmisser.fpp.oss.cos.utils.COSSigner;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
@@ -38,10 +38,10 @@ public class CosConfig {
         return new COSSigner();
     }
 
-    @Bean
-    XmlMapper xmlMapper() {
-        XmlMapper xmlMapper = new XmlMapper();
-        xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return xmlMapper;
-    }
+//    @Bean
+//    XmlMapper xmlMapper() {
+//        XmlMapper xmlMapper = new XmlMapper();
+//        xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+//        return xmlMapper;
+//    }
 }

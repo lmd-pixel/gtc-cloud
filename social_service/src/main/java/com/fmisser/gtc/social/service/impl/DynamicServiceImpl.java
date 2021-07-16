@@ -9,14 +9,16 @@ import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.OssConfProp;
 import com.fmisser.gtc.base.utils.CryptoUtils;
 import com.fmisser.gtc.base.utils.DateUtils;
-import com.fmisser.gtc.social.domain.*;
+import com.fmisser.gtc.social.domain.Dynamic;
+import com.fmisser.gtc.social.domain.DynamicComment;
+import com.fmisser.gtc.social.domain.DynamicHeart;
+import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.repository.DynamicCommentRepository;
 import com.fmisser.gtc.social.repository.DynamicHeartRepository;
 import com.fmisser.gtc.social.repository.DynamicRepository;
 import com.fmisser.gtc.social.service.*;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
@@ -30,7 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -102,6 +103,8 @@ public class DynamicServiceImpl implements DynamicService {
             dynamic.setLatitude(latitude);
         }
 
+        dynamic = dynamicRepository.save(dynamic);
+
         List<String> photoList = new ArrayList<>();
 
         for (MultipartFile file: multipartFileMap.values()) {
@@ -128,8 +131,11 @@ public class DynamicServiceImpl implements DynamicService {
                         randomUUID,
                         suffixName);
 
+                Map<String, String> headers = new HashMap<>(1);
+                headers.put("x-cos-meta-dynamic-id", String.valueOf(dynamic.getId()));
                 cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
                         ossConfProp.getCosUserDynamicRootPath() + objectName,
+                        headers,
                         inputStream, file.getSize(), "image/png");
 
                 if (!StringUtils.isEmpty(objectName)) {
@@ -150,8 +156,11 @@ public class DynamicServiceImpl implements DynamicService {
                         randomUUID,
                         suffixName);
 
+                Map<String, String> headers = new HashMap<>(1);
+                headers.put("x-cos-meta-dynamic-id", String.valueOf(dynamic.getId()));
                 cosService.putObject(ossConfProp.getUserDynamicCosBucket(),
                         ossConfProp.getCosUserDynamicRootPath() + objectName,
+                        headers,
                         inputStream, file.getSize(), "video/mp4");
 
                 dynamic.setVideo(objectName);
@@ -176,46 +185,46 @@ public class DynamicServiceImpl implements DynamicService {
 
         dynamic = dynamicRepository.save(dynamic);
 
-        final Long dynamicId = dynamic.getId();
-        // 非守护动态，图片审查
-        if (type == 1 || type == 11) {
-            CompletableFuture<Integer> future = asyncService.dynamicPicAuditAsync(dynamicId, photoList);
-            future.thenAccept(integer -> {
-                if (integer == 0) {
-                    log.info("dynamic: {} was blocked.", dynamicId);
-                    // 审核不通过，直接走人工审核
-                    dynamicRepository.findById(dynamicId)
-                            .ifPresent(d -> {
-                                if (d.getStatus() != 1) {
-                                    d.setStatus(1);
-                                    dynamicRepository.save(d);
-                                }
-                            });
-                } else {
-                    log.info("dynamic: {} was pass.", dynamicId);
-                }
-            });
-        }
-
-        // 非守护动态，视频审查
-        if (type == 2 || type == 12) {
-            CompletableFuture<Integer> future = asyncService.dynamicVideoAuditAsync(dynamicId, dynamic.getVideo());
-            future.thenAcceptAsync(integer -> {
-                if (integer == 0) {
-                    log.info("dynamic: {} was blocked.", dynamicId);
-                    // 审核不通过，直接走人工审核
-                    dynamicRepository.findById(dynamicId)
-                            .ifPresent(d -> {
-                                if (d.getStatus() != 1) {
-                                    d.setStatus(1);
-                                    dynamicRepository.save(d);
-                                }
-                            });
-                } else {
-                    log.info("dynamic: {} was pass.", dynamicId);
-                }
-            });
-        }
+//        final Long dynamicId = dynamic.getId();
+//        // 非守护动态，图片审查
+//        if (type == 1 || type == 11) {
+//            CompletableFuture<Integer> future = asyncService.dynamicPicAuditAsync(dynamicId, photoList);
+//            future.thenAccept(integer -> {
+//                if (integer == 0) {
+//                    log.info("dynamic: {} was blocked.", dynamicId);
+//                    // 审核不通过，直接走人工审核
+//                    dynamicRepository.findById(dynamicId)
+//                            .ifPresent(d -> {
+//                                if (d.getStatus() != 1) {
+//                                    d.setStatus(1);
+//                                    dynamicRepository.save(d);
+//                                }
+//                            });
+//                } else {
+//                    log.info("dynamic: {} was pass.", dynamicId);
+//                }
+//            });
+//        }
+//
+//        // 非守护动态，视频审查
+//        if (type == 2 || type == 12) {
+//            CompletableFuture<Integer> future = asyncService.dynamicVideoAuditAsync(dynamicId, dynamic.getVideo());
+//            future.thenAcceptAsync(integer -> {
+//                if (integer == 0) {
+//                    log.info("dynamic: {} was blocked.", dynamicId);
+//                    // 审核不通过，直接走人工审核
+//                    dynamicRepository.findById(dynamicId)
+//                            .ifPresent(d -> {
+//                                if (d.getStatus() != 1) {
+//                                    d.setStatus(1);
+//                                    dynamicRepository.save(d);
+//                                }
+//                            });
+//                } else {
+//                    log.info("dynamic: {} was pass.", dynamicId);
+//                }
+//            });
+//        }
 
         return _prepareDynamicResponse(dynamic, user);
     }

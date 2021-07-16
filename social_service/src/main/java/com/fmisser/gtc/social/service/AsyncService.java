@@ -13,6 +13,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface AsyncService {
     CompletableFuture<Integer> setProfileAsync(User user, Long delayMills) throws ApiException;
-    CompletableFuture<Integer> dynamicPicAuditAsync(Long dynamicId, List<String> pics) throws ApiException;
-    CompletableFuture<Integer> dynamicVideoAuditAsync(Long dynamicId, String video) throws ApiException;
+//    CompletableFuture<Integer> dynamicPicAuditAsync(Long dynamicId, List<String> pics) throws ApiException;
+//    CompletableFuture<Integer> dynamicVideoAuditAsync(Long dynamicId, String video) throws ApiException;
 }
