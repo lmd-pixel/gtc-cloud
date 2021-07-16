@@ -5,6 +5,7 @@ import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.Dynamic;
 import com.fmisser.gtc.social.domain.Moderation;
 import com.fmisser.gtc.social.repository.DynamicRepository;
+import com.fmisser.gtc.social.service.AsyncService;
 import com.fmisser.gtc.social.service.DynamicService;
 import com.fmisser.gtc.social.service.ModerationService;
 import io.swagger.annotations.Api;
@@ -33,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class CosCallbackController {
     private final DynamicRepository dynamicRepository;
     private final ModerationService moderationService;
+    private final AsyncService asyncService;
 
     @PostMapping("/audit_result")
     public ApiResp<String> auditResult(@RequestBody(required = false) CosAuditDto cosAuditDto) {
@@ -60,11 +62,12 @@ public class CosCallbackController {
         }
 
         Long dynamicId = Long.parseLong(cosAuditDto.getData().getHeader().getDynamicId());
-        Dynamic dynamic = dynamicRepository.getOne(dynamicId);
-        if (dynamic.getStatus() != 1) {
-            dynamic.setStatus(1);
-            dynamicRepository.save(dynamic);
-        }
+        asyncService.setDynamicStatusAsync(dynamicId, 2000L);
+//        Dynamic dynamic = dynamicRepository.getOne(dynamicId);
+//        if (dynamic.getStatus() != 1) {
+//            dynamic.setStatus(1);
+//            dynamicRepository.save(dynamic);
+//        }
 
 
 //        List<Moderation> moderationList = null;

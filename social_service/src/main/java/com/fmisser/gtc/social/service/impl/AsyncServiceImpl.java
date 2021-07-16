@@ -7,8 +7,10 @@ package com.fmisser.gtc.social.service.impl;
 import com.fmisser.fpp.oss.cos.service.CosService;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.OssConfProp;
+import com.fmisser.gtc.social.domain.Dynamic;
 import com.fmisser.gtc.social.domain.Moderation;
 import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.social.repository.DynamicRepository;
 import com.fmisser.gtc.social.service.AsyncService;
 import com.fmisser.gtc.social.service.ImService;
 import com.fmisser.gtc.social.service.ModerationService;
@@ -38,6 +40,7 @@ public class AsyncServiceImpl implements AsyncService {
     private final CosService cosService;
     private final OssConfProp ossConfProp;
     private final ModerationService moderationService;
+    private final DynamicRepository dynamicRepository;
 
 //    @Async("async-task-exec")
     @Async
@@ -45,7 +48,7 @@ public class AsyncServiceImpl implements AsyncService {
     public CompletableFuture<Integer> setProfileAsync(User user, Long delayMills) throws ApiException {
         if (delayMills > 0) {
             try {
-                Thread.sleep(5000L);
+                Thread.sleep(delayMills);
             } catch (InterruptedException e) {
                 log.error("[async] set profile async exception when thread sleep...");
                 throw new ApiException(-1, "内部异常");
@@ -55,7 +58,30 @@ public class AsyncServiceImpl implements AsyncService {
         return CompletableFuture.completedFuture(imService.setProfile(user));
     }
 
-//    @Async
+    @Async
+    @Override
+    public CompletableFuture<Integer> setDynamicStatusAsync(Long dynamicId, Long delayMills) throws ApiException {
+        if (delayMills > 0) {
+            try {
+                Thread.sleep(delayMills);
+            } catch (InterruptedException e) {
+                log.error("[async] set profile async exception when thread sleep...");
+                throw new ApiException(-1, "内部异常");
+            }
+        }
+
+        dynamicRepository.findById(dynamicId)
+                .ifPresent(dynamic -> {
+                    if (dynamic.getStatus() != 1) {
+                        dynamic.setStatus(1);
+                        dynamicRepository.save(dynamic);
+                    }
+                });
+
+        return CompletableFuture.completedFuture(1);
+    }
+
+    //    @Async
 //    @Override
 //    public CompletableFuture<Integer> dynamicPicAuditAsync(Long dynamicId, List<String> pics) throws ApiException {
 //
