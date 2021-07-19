@@ -26,7 +26,7 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
 
     // 获取某个人的动态列表
     @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.DynamicDto" +
-            "(td.id, td.userId, tu.digitId, td.content, td.city, td.type, td.video, td.pictures, " +
+            "(td.id, td.userId, tu.digitId, tu.identity,td.content, td.city, td.type, td.video, td.pictures, " +
             "td.createTime, td.modifyTime, td.longitude, td.latitude, " +
             "COUNT(DISTINCT tdh.id), COUNT(DISTINCT tdh2.id), COUNT(DISTINCT tdc.id), COUNT(DISTINCT tf.id), " +
             "tu.nick, tu.birth, tu.gender, tu.head) FROM Dynamic td " +
@@ -49,7 +49,7 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
 
     // 获取最新的动态列表
     @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.DynamicDto" +
-            "(td.id, td.userId, tu.digitId, td.content, td.city, td.type, td.video, td.pictures, " +
+            "(td.id, td.userId, tu.digitId, tu.identity,td.content, td.city, td.type, td.video, td.pictures, " +
             "td.createTime, td.modifyTime, td.longitude, td.latitude, " +
             "COUNT(DISTINCT tdh.id), COUNT(DISTINCT tdh2.id), COUNT(DISTINCT tdc.id), COUNT(DISTINCT tf.id), " +
             "tu.nick, tu.birth, tu.gender, tu.head) FROM Dynamic td " +
@@ -121,7 +121,7 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
 
     // 查询动态列表（管理接口）
     @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.DynamicDto" +
-            "(td.id, td.userId, tu.digitId, td.content, td.city, td.type, td.video, td.pictures, " +
+            "(td.id, td.userId, tu.digitId,tu.identity, td.content, td.city, td.type, td.video, td.pictures, " +
             "td.createTime, td.modifyTime, td.longitude, td.latitude, " +
             "COUNT(DISTINCT tdh.id), COUNT(DISTINCT tdc.id), " +
             "tu.nick, tu.birth, tu.gender, tu.head, td.message, td.status) FROM Dynamic td " +
@@ -143,7 +143,7 @@ public interface DynamicRepository extends JpaRepository<Dynamic, Long> {
                                            Pageable pageable);
 
     @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.DynamicDto" +
-            "(td.id, td.userId, tu.digitId, td.content, td.city, td.type, td.video, td.pictures, " +
+            "(td.id, td.userId, tu.digitId,tu.identity, td.content, td.city, td.type, td.video, td.pictures, " +
             "td.createTime, td.modifyTime, td.longitude, td.latitude, " +
             "COUNT(DISTINCT tdh.id), COUNT(DISTINCT tdc.id), " +
             "tu.nick, tu.birth, tu.gender, tu.head, td.message, td.status) FROM Dynamic td " +

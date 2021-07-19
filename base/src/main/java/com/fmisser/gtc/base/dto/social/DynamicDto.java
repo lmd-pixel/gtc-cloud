@@ -18,7 +18,7 @@ public class DynamicDto {
 
     }
 
-    public DynamicDto(Long id, Long userId, String digitId, String content, String city,
+    public DynamicDto(Long id, Long userId, String digitId,int identity, String content, String city,
                       int type, String video, String pictures,
                       Date createTime, Date modifyTime, BigDecimal longitude, BigDecimal latitude,
                       Long heartCount, Long commentCount,
@@ -27,6 +27,7 @@ public class DynamicDto {
         this.id = id;
         this.userId = userId;
         this.digitId = digitId;
+        this.identity = identity;
         this.content = content;
         this.city = city;
         this.type = type;
@@ -77,7 +78,7 @@ public class DynamicDto {
         this.selfIsGuard = 0L;
     }
 
-    public DynamicDto(Long id, Long userId, String digitId, String content, String city,
+    public DynamicDto(Long id, Long userId, String digitId,int identity, String content, String city,
                       int type, String video, String pictures,
                       Date createTime, Date modifyTime, BigDecimal longitude, BigDecimal latitude,
                       Long heartCount, Long selfHeart, Long commentCount, Long follow,
@@ -85,6 +86,7 @@ public class DynamicDto {
         this.id = id;
         this.userId = userId;
         this.digitId = digitId;
+        this.identity=identity;
         this.content = content;
         this.city = city;
         this.type = type;
@@ -108,6 +110,7 @@ public class DynamicDto {
     private Long id;
     private Long userId;
     private String digitId;
+    private int identity;
     private String content;
     private String city;
     private int type;
