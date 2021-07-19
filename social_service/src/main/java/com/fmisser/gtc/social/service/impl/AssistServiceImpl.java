@@ -46,16 +46,16 @@ public class AssistServiceImpl implements AssistService {
             }
 
             // 第二条消息
-            sendMsgPayload = String
-                    .format("3,%s,%s,%s", "", user.getId(), systemTips.recharge2Msg());
-            rechargeDelayedMessage = MessageBuilder
-                    .withPayload(sendMsgPayload).setHeader("x-delay", 6 * 1000).build();
-            ret = greetDelayedBinding.greetDelayedOutputChannel().send(rechargeDelayedMessage);
+//            sendMsgPayload = String
+//                    .format("3,%s,%s,%s", "", user.getId(), systemTips.recharge2Msg());
+//            rechargeDelayedMessage = MessageBuilder
+//                    .withPayload(sendMsgPayload).setHeader("x-delay", 6 * 1000).build();
+//            ret = greetDelayedBinding.greetDelayedOutputChannel().send(rechargeDelayedMessage);
 
-            if (!ret) {
-                log.error("send recharge msg part 2 failed!");
-                return;
-            }
+//            if (!ret) {
+//                log.error("send recharge msg part 2 failed!");
+//                return;
+//            }
 
             Date now = new Date();
             redisService.set(key, now.getTime(), 24 * 3600);
