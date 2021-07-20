@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.controller;
 
+import com.fmisser.gtc.base.dto.social.AnchorCallStatusDto;
 import com.fmisser.gtc.base.dto.social.GuardDto;
 import com.fmisser.gtc.base.dto.social.RecvGiftDto;
 import com.fmisser.gtc.base.response.ApiResp;
@@ -32,6 +33,11 @@ public class CommonController {
     private final GiftService giftService;
     private final SysConfigService sysConfigService;
     private final GuardService guardService;
+
+    ApiResp<List<AnchorCallStatusDto>> getAnchorStatusList(@RequestParam(value = "anchors") String anchors) {
+        List<String> anchorList = Arrays.asList(anchors.split(","));
+        return ApiResp.succeed(userService.getAnchorStatusList(anchorList));
+    }
 
     @ApiOperation(value = "获取主播列表")
     @GetMapping(value = "/list-anchor")

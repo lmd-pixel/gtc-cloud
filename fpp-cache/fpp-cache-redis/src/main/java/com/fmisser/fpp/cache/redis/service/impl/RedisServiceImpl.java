@@ -3,8 +3,15 @@ package com.fmisser.fpp.cache.redis.service.impl;
 import com.fmisser.fpp.cache.redis.service.RedisService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -107,5 +114,27 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public Object listRightPop(String key) throws RuntimeException {
         return redisTemplate.opsForList().rightPop(key);
+    }
+
+    @Override
+    public List<Pair<String, String>> getList(List<String> keys) throws RuntimeException {
+        // TODO: 2021/7/20 测试xia
+        List<Object> results = redisTemplate.executePipelined(new RedisCallback<String>() {
+            @Override
+            public String doInRedis(RedisConnection connection) throws DataAccessException {
+                for (String s: keys) {
+                    connection.get(s.getBytes(StandardCharsets.UTF_8));
+                }
+                return null;
+            }
+        });
+
+        List<Pair<String, String>> lists = new ArrayList<>(results.size());
+
+        for (int i = 0; i < results.size(); i++) {
+            lists.add(Pair.of(keys.get(i), (String) results.get(i)));
+        }
+
+        return lists;
     }
 }

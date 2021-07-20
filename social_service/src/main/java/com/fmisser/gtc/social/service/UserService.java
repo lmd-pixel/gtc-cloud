@@ -1,8 +1,10 @@
 package com.fmisser.gtc.social.service;
 
+import com.fmisser.gtc.base.dto.social.AnchorCallStatusDto;
 import com.fmisser.gtc.base.dto.social.ProfitConsumeDetail;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.domain.User;
+import io.swagger.annotations.Api;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -87,4 +89,6 @@ public interface UserService {
 
     User updateAuditVideo(User user, Integer updateType, Integer code,
                           Map<String, MultipartFile> multipartFileMap) throws ApiException;
+
+    List<AnchorCallStatusDto> getAnchorStatusList(List<String> anchorList) throws ApiException;
 }

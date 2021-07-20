@@ -1,5 +1,7 @@
 package com.fmisser.fpp.cache.redis.service;
 
+import org.springframework.data.util.Pair;
+
 import java.util.List;
 
 /**
@@ -18,4 +20,5 @@ public interface RedisService {
     boolean set(String key, Object value, long ttl) throws RuntimeException;
     long listLeftPush(String key, Object... values) throws RuntimeException;
     Object listRightPop(String key) throws RuntimeException;
+    List<Pair<String, String>> getList(List<String> keys) throws RuntimeException;
 }

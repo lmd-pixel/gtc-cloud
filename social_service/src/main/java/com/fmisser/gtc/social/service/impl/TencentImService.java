@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.service.impl;
 
+import com.fmisser.fpp.cache.redis.service.RedisService;
 import com.fmisser.gtc.base.dto.im.*;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.ImConfProp;
@@ -55,6 +56,7 @@ public class TencentImService implements ImService {
     private final ActiveService activeService;
     private final CallCalcJobScheduler callCalcJobScheduler;
     private final CommonService commonService;
+    private final RedisService redisService;
 
     @Override
     public String login(User user) throws ApiException {
@@ -146,11 +148,22 @@ public class TencentImService implements ImService {
         // 设定开始时间
         call.setStartTime(new Date());
 
+        if (call.getCallMode() == 0) {
+            redisService.set(userTo.getDigitId(), "1", 65);
+        } else {
+            redisService.set(userFrom.getDigitId(), "1", 65);
+        }
+
         return 1;
     }
 
     @Override
     public Map<String, Object> hangup(User user, Long roomId, String version) throws ApiException {
+
+        if (user.getIdentity() == 1) {
+            redisService.set(user.getDigitId(), "0", 65);
+        }
+
 
         // 解散房间
 //        trtcDismissRoom(roomId);
@@ -433,6 +446,12 @@ public class TencentImService implements ImService {
             if (assetFromLatest.getCoin().compareTo(totalPrice) < 0) {
                 resultMap.put("need_recharge", 1);
             }
+        }
+
+        if (call.getCallMode() == 0) {
+            redisService.set(user.getDigitId(), "1", 65);
+        } else {
+            redisService.set(userFrom.getDigitId(), "1", 65);
         }
 
         return resultMap;

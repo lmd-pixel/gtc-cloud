@@ -50,7 +50,7 @@ public class Call {
      * 0：用户给主播拨打
      * 1：主播给用户拨打
      * 3：用户给用户拨打, 暂时不允许
-     * 4：主播给主播拨打
+     * 4：主播给主播拨打, 不允许
      */
     @Column(nullable = false, columnDefinition = "int default 0")
     private int callMode = 0;

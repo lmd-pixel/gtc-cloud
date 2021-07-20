@@ -1,8 +1,10 @@
 package com.fmisser.gtc.social.service.impl;
 
+import com.fmisser.fpp.cache.redis.service.RedisService;
 import com.fmisser.fpp.oss.abs.service.OssService;
 import com.fmisser.fpp.oss.cos.service.CosService;
 import com.fmisser.gtc.base.dto.im.ImQueryStateResp;
+import com.fmisser.gtc.base.dto.social.AnchorCallStatusDto;
 import com.fmisser.gtc.base.dto.social.ProfitConsumeDetail;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.i18n.SystemTips;
@@ -19,6 +21,7 @@ import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
@@ -61,6 +64,7 @@ public class UserServiceImpl implements UserService {
     private final UserMaterialService userMaterialService;
     private final GuardService guardService;
     private final CommonService commonService;
+    private final RedisService redisService;
 
     @Transactional
     @Override
@@ -1589,6 +1593,28 @@ public class UserServiceImpl implements UserService {
             user = userRepository.save(user);
             return _prepareResponse(user);
         }
+    }
+
+    @Override
+    public List<AnchorCallStatusDto> getAnchorStatusList(List<String> anchorList) throws ApiException {
+        // TODO: 2021/7/20 测试正确性
+        List<Pair<String, String>> pairs = redisService.getList(anchorList);
+
+        List<AnchorCallStatusDto> dtoList = new ArrayList<>();
+
+        for (Pair pair: pairs) {
+            AnchorCallStatusDto dto = new AnchorCallStatusDto();
+            dto.setDigitId((String) pair.getFirst());
+            if (Objects.isNull(pair.getSecond())) {
+                dto.setStatus(0);
+            } else {
+                dto.setStatus((Integer) pair.getSecond());
+            }
+
+            dtoList.add(dto);
+        }
+
+        return dtoList;
     }
 
     // TODO: 2020/12/30 整理到其他地方
