@@ -5,6 +5,7 @@ import com.fmisser.fpp.oss.abs.service.OssService;
 //import com.fmisser.fpp.oss.cos.dto.VideoAuditQueryResponse;
 //import com.fmisser.fpp.oss.cos.dto.VideoAuditResponse;
 import com.qcloud.cos.http.HttpMethodName;
+import com.qcloud.cos.model.AccessControlList;
 
 import java.io.InputStream;
 import java.util.Date;
@@ -26,6 +27,9 @@ public interface CosService extends OssService {
     String getVideoAuditDomainName(String bucketName) throws RuntimeException;
 
     String getCosAuthString(HttpMethodName methodName, String resourcePath, Date expiredTime) throws RuntimeException;
+
+    AccessControlList getObjectAcl(String bucketName, String objectName) throws RuntimeException;
+    Integer setObjectAcl(String bucketName, String objectName, AccessControlList acl) throws RuntimeException;
 
 //    RecognitionResult recognizePicture(String host, String picturePath) throws RuntimeException;
 //

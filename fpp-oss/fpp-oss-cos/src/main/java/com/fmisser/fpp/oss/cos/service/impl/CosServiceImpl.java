@@ -147,7 +147,17 @@ public class CosServiceImpl implements CosService {
         return cosSigner.buildAuthorizationStr(methodName, resourcePath, cosCredentials, expiredTime);
     }
 
-//    @Override
+    @Override
+    public AccessControlList getObjectAcl(String bucketName, String objectName) throws RuntimeException {
+        return null;
+    }
+
+    @Override
+    public Integer setObjectAcl(String bucketName, String objectName, AccessControlList acl) throws RuntimeException {
+        return null;
+    }
+
+    //    @Override
 //    public RecognitionResult recognizePicture(String host, String picturePath) throws RuntimeException {
 //        // TODO: 2021/7/14 配置相关引用的变量值，或改成参数由外部配置并传入
 //        String url = String.format("%s/%s?ci-process=sensitive-content-recognition&detect-type=porn,politics,ads" +
