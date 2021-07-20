@@ -50,7 +50,7 @@
         <module>social_service</module>
 <!--        <module>push_service</module>-->
 <!--        <module>registry</module>-->
-<!--        <module>gateway</module>-->
+        <module>gateway</module>
         <!--        <module>monitor</module>-->
 <!--        <module>notice_service</module>-->
 <!--        <module>im_service</module>-->
