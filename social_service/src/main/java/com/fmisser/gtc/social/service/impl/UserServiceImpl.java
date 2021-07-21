@@ -1599,16 +1599,17 @@ public class UserServiceImpl implements UserService {
     public List<AnchorCallStatusDto> getAnchorStatusList(List<String> anchorList) throws ApiException {
         // TODO: 2021/7/20 测试正确性
         List<Pair<String, String>> pairs = redisService.getList(anchorList);
-
+        System.out.println(pairs.size());
         List<AnchorCallStatusDto> dtoList = new ArrayList<>();
 
         for (Pair pair: pairs) {
             AnchorCallStatusDto dto = new AnchorCallStatusDto();
-            dto.setDigitId((String) pair.getFirst());
+            dto.setDigitId( pair.getFirst()+"");
             if (Objects.isNull(pair.getSecond())) {
                 dto.setStatus(0);
             } else {
-                dto.setStatus((Integer) pair.getSecond());
+                String val=pair.getSecond()+"";
+                dto.setStatus(Integer.valueOf(val));
             }
 
             dtoList.add(dto);

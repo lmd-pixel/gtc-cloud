@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -129,10 +130,15 @@ public class RedisServiceImpl implements RedisService {
             }
         });
 
-        List<Pair<String, String>> lists = new ArrayList<>(results.size());
+        List<Pair<String, String>> lists = new ArrayList<>();
 
         for (int i = 0; i < results.size(); i++) {
-            lists.add(Pair.of(keys.get(i), (String) results.get(i)));
+            if (Objects.isNull(results.get(i))){
+                lists.add(Pair.of(keys.get(i).toString(), "0"));
+            }else{
+                lists.add(Pair.of(keys.get(i).toString(), results.get(i).toString()));
+            }
+
         }
 
         return lists;

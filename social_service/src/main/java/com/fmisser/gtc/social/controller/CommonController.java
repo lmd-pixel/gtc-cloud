@@ -34,6 +34,10 @@ public class CommonController {
     private final SysConfigService sysConfigService;
     private final GuardService guardService;
 
+
+
+    @ApiOperation(value = "获取主播的是否在线")
+    @GetMapping(value = "/getAnchorStatus-list")
     ApiResp<List<AnchorCallStatusDto>> getAnchorStatusList(@RequestParam(value = "anchors") String anchors) {
         List<String> anchorList = Arrays.asList(anchors.split(","));
         return ApiResp.succeed(userService.getAnchorStatusList(anchorList));
