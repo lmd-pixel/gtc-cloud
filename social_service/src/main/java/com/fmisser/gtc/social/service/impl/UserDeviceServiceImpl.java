@@ -26,7 +26,9 @@ public class UserDeviceServiceImpl implements UserDeviceService {
     public int create(User user, int deviceType, String deviceName, String deviceCategory,
                       String idfa, String imei, String androidId, String oaid,
                       String deviceToken, Integer physicalDevice, String osVersion,
-                      String channel, String deviceDescribe, String ipAddr, String lang) throws ApiException {
+                      String channel, String deviceDescribe, String ipAddr, String lang,
+                      String appVersion, String sysVersion, String deviceBrand, String deviceIfv,String localizedmodel
+                      ) throws ApiException {
         UserDevice userDevice = new UserDevice();
         userDevice.setUserId(user.getId());
         userDevice.setDeviceType(deviceType);
@@ -69,6 +71,26 @@ public class UserDeviceServiceImpl implements UserDeviceService {
         if (!StringUtils.isEmpty(lang)) {
             userDevice.setLang(lang);
         }
+        if (!StringUtils.isEmpty(appVersion)){
+            userDevice.setAppVersion(appVersion);
+        }
+
+        if (!StringUtils.isEmpty(sysVersion)){
+            userDevice.setSysVersion(sysVersion);
+        }
+
+        if (!StringUtils.isEmpty(deviceBrand)){
+            userDevice.setDeviceBrand(deviceBrand);
+        }
+
+        if (!StringUtils.isEmpty(deviceIfv)){
+            userDevice.setDeviceIfv(deviceIfv);
+        }
+
+        if (!StringUtils.isEmpty(localizedmodel)){
+            userDevice.setLocalizedmodel(localizedmodel);
+        }
+
 
         userDeviceRepository.save(userDevice);
 

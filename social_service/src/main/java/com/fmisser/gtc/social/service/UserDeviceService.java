@@ -13,6 +13,7 @@ public interface UserDeviceService {
     int create(User user, int deviceType, String deviceName, String deviceCategory,
                String idfa, String imei, String androidId, String oaid,
                String deviceToken, Integer physicalDevice, String osVersion,
-               String channel, String deviceDescribe, String ipAddr, String lang) throws ApiException;
+               String channel, String deviceDescribe, String ipAddr, String lang,
+               String appVersion, String sysVersion, String deviceBrand, String deviceIfv,String localizedmodel) throws ApiException;
     UserDevice getRecentUserDevice(User user) throws ApiException;
 }

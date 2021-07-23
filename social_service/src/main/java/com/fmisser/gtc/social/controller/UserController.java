@@ -429,6 +429,11 @@ public class UserController {
                                       @RequestParam(value = "deviceDescribe", required = false) String deviceDescribe,
                                       @RequestParam(value = "ipAddr", required = false) String ipAddr,
                                       @RequestParam(value = "lang", required = false) String lang,
+                                      @RequestParam(value = "appVersion", required = false) String appVersion,
+                                      @RequestParam(value = "sysVersion", required = false) String sysVersion,
+                                      @RequestParam(value = "deviceBrand", required = false) String deviceBrand,
+                                      @RequestParam(value = "deviceIfv", required = false) String deviceIfv,
+                                      @RequestParam(value = "localizedmodel", required = false) String localizedmodel,
                                       HttpServletRequest req) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
@@ -436,7 +441,8 @@ public class UserController {
 
         int ret = userDeviceService.create(userDo, deviceType, deviceName, deviceCategory,
                 deviceIdfa, deviceImei, deviceAndroidId, deviceOaid, deviceToken,
-                physicalDevice, osVersion, channel, deviceDescribe, ipAddr, lang);
+                physicalDevice, osVersion, channel, deviceDescribe, ipAddr, lang,
+                appVersion,sysVersion,deviceBrand,deviceIfv,localizedmodel);
         return ApiResp.succeed(ret);
     }
 

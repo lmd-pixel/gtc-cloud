@@ -28,46 +28,68 @@ public class UserDevice {
     private Long userId;
 
     @Column
-    private int deviceType;
+    private int deviceType;//区分苹果，安卓，华为
 
     @Column
-    private String deviceName;
+    private String deviceName;//设备名称
+
 
     @Column
-    private String deviceCategory;
+    private String deviceCategory; //设备型号
+
 
     @Column
-    private String deviceIdfa;
+    private String deviceIdfa; //苹果广告标识
 
     @Column
     private String deviceImei;
 
     @Column
-    private String deviceAndroidId;
+    private String deviceAndroidId;//唯一Id
 
     @Column
     private String deviceOaid;
 
-    @Column
-    private String deviceToken;
 
     @Column
-    private Integer physicalDevice;
+    private String deviceToken; //用户或者厂商推送的token
+
+    @Column
+    private Integer physicalDevice;//是否是虚拟机
 
     @Column
     private String osVersion;
 
-    @Column
-    private String channel;
 
     @Column
-    private String deviceDescribe;
+    private String channel; //打包出来的渠道编号
 
     @Column
-    private String ipAddr;
+    private String deviceDescribe;//设备描述
+
 
     @Column
-    private String lang;
+    private String ipAddr;//设备ip
+
+/*新加字段*/
+    @Column
+    private String appVersion;//使用的app版本
+
+    @Column
+    private String sysVersion;//系统版本
+
+    @Column
+    private String deviceBrand;//用户设备品牌（vivo，oppo,华为等）
+
+    @Column
+    private String deviceIfv;//苹果设备唯一标识(identifilterForVendor)
+
+    @Column
+    private String localizedmodel;
+
+
+    @Column
+    private String lang;//语言
 
     @CreatedDate
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
