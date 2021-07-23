@@ -17,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.util.*;
 
 @Slf4j
@@ -33,6 +34,7 @@ public class CommonController {
     private final GiftService giftService;
     private final SysConfigService sysConfigService;
     private final GuardService guardService;
+    private final  SysAppConfigService sysAppConfigService;
 
 
 
@@ -134,6 +136,16 @@ public class CommonController {
             return ApiResp.succeed(0);
         }
     }
+
+
+    @ApiOperation(value = "判断当前版本是否是审核版本")
+    @GetMapping(value = "/audit-versionEx")
+    ApiResp<String> getAppAuditVersionEx(
+            @RequestHeader(value = "channelId",required = false,defaultValue = "") String channelId,
+            @RequestHeader(value = "version", required = false, defaultValue = "v1") String version) throws ParseException {
+        return  ApiResp.succeed(sysAppConfigService.getAppAuditVersionEx(channelId,version));
+    }
+
 
     @ApiOperation(value = "获取城市数据")
     @GetMapping(value = "/district")

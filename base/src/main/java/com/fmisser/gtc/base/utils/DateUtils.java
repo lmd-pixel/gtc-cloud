@@ -67,6 +67,14 @@ public class DateUtils {
         gregorianCalendar.set(Calendar.MILLISECOND, 0);
         return gregorianCalendar.getTime();
     }
+//获取当天是周几 1=周日 2=周一 3=周二 4=周三 5=周四 6=周五 7=周六
+    public static int getWeek(){
+        Date today = new Date();
+        Calendar c=Calendar.getInstance();
+        c.setTime(today);
+        int weekday=c.get(Calendar.DAY_OF_WEEK);
+        return weekday;
+    }
 
     public static Date getDayEnd(Date date) {
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
@@ -122,4 +130,10 @@ public class DateUtils {
 
         return false;
     }
+
+
+
+
+
+
 }
