@@ -12,6 +12,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,7 @@ public interface DynamicService {
     // 获取评论数据
     List<DynamicCommentDto> getDynamicCommentList(Long dynamicId, User selfUser, int pageIndex, int pageSize) throws ApiException;
     // 获取最新动态
-    List<DynamicDto> getLatestDynamicList(User selfUser, int pageIndex, int pageSize, String version) throws ApiException;
+    List<DynamicDto> getLatestDynamicList(User selfUser, int pageIndex, int pageSize, String version) throws ApiException, ParseException;
     // 获取关注的人的最新动态
     List<DynamicDto> getFollowLatestDynamicList(User selfUser, int pageIndex, int pageSize, String version) throws ApiException;
     // 删除动态

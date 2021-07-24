@@ -31,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -55,6 +56,7 @@ public class DynamicServiceImpl implements DynamicService {
     private final UserService userService;
     private final CommonService commonService;
     private final AsyncService asyncService;
+    private final SysAppConfigService sysAppConfigService;
 
     @Override
     @SneakyThrows
@@ -375,7 +377,7 @@ public class DynamicServiceImpl implements DynamicService {
     }
 
     @Override
-    public List<DynamicDto> getLatestDynamicList(User selfUser, int pageIndex, int pageSize, String version) throws ApiException {
+    public List<DynamicDto> getLatestDynamicList(User selfUser, int pageIndex, int pageSize, String version) throws ApiException, ParseException {
         // 如果不提供自己的 user id 则默认设置为0
         Long selfUserId = 0L;
         if (selfUser != null) {
@@ -383,7 +385,8 @@ public class DynamicServiceImpl implements DynamicService {
         }
 
         // 审核控制
-        Date dateLimit = sysConfigService.getAppAuditDynamicDateLimit(version);
+        Date dateLimit = sysAppConfigService.getAppAuditDynamicDateLimit("",version);
+                //sysConfigService.getAppAuditDynamicDateLimit(version);
 
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
         List<DynamicDto> dynamicDtos = dynamicRepository

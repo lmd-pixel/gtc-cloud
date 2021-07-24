@@ -58,6 +58,8 @@ public class TencentImService implements ImService {
     private final CommonService commonService;
     private final RedisService redisService;
 
+    private final SysAppConfigService sysAppConfigService;
+
     @Override
     public String login(User user) throws ApiException {
         // TODO: 2021/1/7 记录用户登录
@@ -240,7 +242,7 @@ public class TencentImService implements ImService {
         // 判断是否在审核
         if (sysConfigService.isAppAudit() &&
                 !StringUtils.isEmpty(version) &&
-                sysConfigService.getAppAuditVersion().equals(version)) {
+                sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version)) {
             // 过审版本 不显示时间
             resultMap.put("duration", 0);
         } else {
@@ -328,7 +330,7 @@ public class TencentImService implements ImService {
         // 判断是否在审核
         if (sysConfigService.isAppAudit() &&
                 !StringUtils.isEmpty(version) &&
-                sysConfigService.getAppAuditVersion().equals(version)) {
+                sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version)) {
             // 过审版本 不计费
             callPrice = BigDecimal.ZERO;
         } else {

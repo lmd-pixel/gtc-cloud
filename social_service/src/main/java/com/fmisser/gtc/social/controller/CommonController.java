@@ -55,7 +55,7 @@ public class CommonController {
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
 
         // 针对版本审核
-        if (sysConfigService.getAppAuditVersion().equals(version)) {
+        if (sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version)) {
             List<User> userList = userService.getAuditAnchorList(type, gender, pageIndex, pageSize);
             for (User user:
                  userList) {
@@ -90,7 +90,7 @@ public class CommonController {
         User userDto = userService.getAnchorProfile(user, selfUser);
 
         // 针对版本审核
-        if (sysConfigService.getAppAuditVersion().equals(version)) {
+        if (sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version)) {
             userDto.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             userDto.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             userDto.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));

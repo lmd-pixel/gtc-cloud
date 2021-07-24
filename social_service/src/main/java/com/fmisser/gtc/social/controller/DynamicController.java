@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -200,7 +201,7 @@ public class DynamicController {
     ApiResp<List<DynamicDto>> getLatestDynamicList(
             @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
             @RequestParam("pageIndex") int pageIndex,
-            @RequestParam("pageSize") int pageSize) {
+            @RequestParam("pageSize") int pageSize) throws ParseException {
         User selfUser = null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.isAuthenticated()) {

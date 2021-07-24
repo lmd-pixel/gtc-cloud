@@ -1,10 +1,14 @@
 package com.fmisser.gtc.social.domain;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
+import java.sql.Date;
 
 @Entity
 @Table(name = "t_sys_app_config")
@@ -40,8 +44,11 @@ public class SysAppConfig {
     @Column
     private String dynamicIsSwitch;
 
-//    @Column
-//    private DateTime dynamiChangeTime;
+    @LastModifiedDate
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column
+    private Date dynamiChangeTime;
 
     @Column
     private String vedioViewIsFee;

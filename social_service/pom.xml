@@ -173,11 +173,11 @@
             <artifactId>fpp-scheduler-quartz</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>com.fmisser.fpp</groupId>
             <artifactId>fpp-log-zipkin</artifactId>
             <version>1.0-SNAPSHOT</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>com.fmisser.fpp</groupId>
             <artifactId>fpp-cache-redis</artifactId>
