@@ -165,6 +165,8 @@ public class User implements Serializable {
     @Column
     private Date modifyTime;
 
+
+
 //    // 资产信息
 //    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 //    private Asset asset;
@@ -184,6 +186,9 @@ public class User implements Serializable {
     @JsonIgnore
     @Version
     private Long version;
+
+    @Column
+    private String channelId;
 
     @Transient
     private String constellation;   // 星座

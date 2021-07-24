@@ -68,7 +68,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public User create(String phone, int gender, String nick, String inviteCode, String version) throws ApiException {
+    public User create(String phone, int gender, String nick, String inviteCode, String version,String channelId) throws ApiException {
         // check exist
         if (userRepository.existsByUsername(phone)) {
             // 已经存在
@@ -79,6 +79,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setUsername(phone);
         user.setPhone(phone);
+        user.setChannelId(channelId);
 
         Date date = new Date();
         Date startHour = DateUtils.getHourStart(date);
