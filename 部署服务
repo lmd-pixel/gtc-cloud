@@ -2,25 +2,43 @@
 
 下面以打包发布social server举例
 
-1. 打包项目源码
+1.先切换到对应的工作空间的目录
+
+2. 打包项目源码
 通过 mvn clean package -Dmaven.test.skip=true 来打包，具体需要打包哪些服务，可以在根目录的 pom.xml里进行修改
 
-2. 通过docker上传docker image
+3. 通过docker上传docker image
    腾讯云打开对应服务器的2375端口
 
    执行命令
-   export DOCKER_HOST=tcp://42.192.212.67:2375（测试） 或者 export DOCKER_HOST=tcp://121.4.13.132:2375 （正式）
-   cd social_service
+   export/set DOCKER_HOST=tcp://42.192.212.67:2375（测试） 或者 export DOCKER_HOST=tcp://121.4.13.132:2375 （正式）
+   cd social_service(打包哪个服务切换到哪个服务的目录)
    mvn docker:build
 
    腾讯云关闭对应的服务器的2375端口
 
-3. 登录对应服务器
+4. 登录对应服务器
    停止并删除之前运行的docker：
    docker stop gtc_social
    docker rm gtc_social
 
+
    运行新的 social server
    sudo docker run -p 8003:8003 --name gtc_social -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/social/:/ROOT/logs/ -d social
+
+
+
+
+启动 redis
+docker restart gtc_cloud_cache
+启动rabbit
+docker restart gtc_cloud_mq
+
+#查看具体服务的配置
+docker logs gtc_gateway —tail=2000
+#查看启动的所有的服务
+docker image ls
+#查看正在运行的服务
+docker ps
 
    其他服务参见 gtc_cloud/docker/docker_shell下面的服务
