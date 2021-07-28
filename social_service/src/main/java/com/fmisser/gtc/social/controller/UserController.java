@@ -7,6 +7,7 @@ import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.Asset;
 import com.fmisser.gtc.social.domain.IdentityAudit;
+import com.fmisser.gtc.social.domain.SysAppConfig;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.service.*;
 import io.swagger.annotations.Api;
@@ -40,6 +41,7 @@ public class UserController {
     private final UserDeviceService userDeviceService;
     private final AssistService assistService;
     private final GuardService guardService;
+    private final SysAppConfigService sysAppConfigService;
 
     @ApiOperation(value = "创建用户")
     @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
@@ -251,11 +253,15 @@ public class UserController {
 
         User user = userService.getSelfProfile(userDo);
 
-        // 针对版本审核
-        if (sysConfigService.getAppAuditVersion().equals(version)) {
-            user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
-            user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
-            user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+        //判断是否在审核中
+        if (sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version) ) {
+            SysAppConfig sysAppConfig=sysAppConfigService.getSysAppconfig(version);
+            if(sysAppConfig!=null && sysAppConfig.getVedioViewIsFee().equals("1")){
+                user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+                user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+                user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            }
+
         }
 
         return ApiResp.succeed(user);
