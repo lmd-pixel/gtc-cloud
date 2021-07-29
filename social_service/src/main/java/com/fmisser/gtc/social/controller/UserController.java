@@ -1,6 +1,5 @@
 package com.fmisser.gtc.social.controller;
 
-import com.fmisser.fpp.cache.redis.service.RedisService;
 import com.fmisser.gtc.base.dto.social.GuardDto;
 import com.fmisser.gtc.base.dto.social.ProfitConsumeDetail;
 import com.fmisser.gtc.base.exception.ApiException;
@@ -256,12 +255,11 @@ public class UserController {
         //判断是否在审核中
         if (sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version) ) {
             SysAppConfig sysAppConfig=sysAppConfigService.getSysAppconfig(version);
-            if(sysAppConfig!=null && sysAppConfig.getVedioViewIsFee().equals("1")){
+            if(sysAppConfig!=null && sysAppConfig.getVedioViewIsFee().equals("0")){
                 user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
                 user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
                 user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
             }
-
         }
 
         return ApiResp.succeed(user);
@@ -397,8 +395,12 @@ public class UserController {
         User userDo = userService.getUserByUsername(username);
 
         // 审核检查
-        if (sysConfigService.getAppAuditVersion().equals(version)) {
-            return ApiResp.succeed(1);
+        if (sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version) ) {
+            SysAppConfig sysAppConfig= sysAppConfigService.getSysAppconfig(version);
+            if (sysAppConfig!=null && sysAppConfig.getVedioActualIsFee().equals("0")){
+                return ApiResp.succeed(1);
+            }
+
         }
 
         User userDest = userService.getUserByDigitId(digitId);

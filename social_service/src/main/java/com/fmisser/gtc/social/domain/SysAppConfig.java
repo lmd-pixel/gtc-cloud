@@ -54,7 +54,7 @@ public class SysAppConfig {
     private String vedioViewIsFee;
 
     @Column
-    private String vedioActualIsFee;
+    private String vedioActualIsFee;//根据过审版本判断通话是否需要收费
 
 
 

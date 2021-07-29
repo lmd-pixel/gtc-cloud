@@ -240,11 +240,14 @@ public class TencentImService implements ImService {
         }
 
         // 判断是否在审核
-        if (sysConfigService.isAppAudit() &&
-                !StringUtils.isEmpty(version) &&
-                sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version)) {
-            // 过审版本 不显示时间
-            resultMap.put("duration", 0);
+        if (sysConfigService.isAppAudit() && !StringUtils.isEmpty(version) && sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version) ){
+              SysAppConfig sysAppConfig=sysAppConfigService.getSysAppconfig(version);
+            // 过审版本  根据是否实际收费 0不收费，1收费
+              if(sysAppConfig!=null && sysAppConfig.getVedioActualIsFee().equals("0")){
+                resultMap.put("duration", 0);
+            }else{
+                resultMap.put("duration", call.getDuration());
+            }
         } else {
             resultMap.put("duration", call.getDuration());
         }
@@ -328,13 +331,31 @@ public class TencentImService implements ImService {
 
         BigDecimal callPrice;
         // 判断是否在审核
+/*
         if (sysConfigService.isAppAudit() &&
                 !StringUtils.isEmpty(version) &&
-                sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version)) {
+                sysAppConfigService.getAppAuditVersion(version).equals(version) &&
+                sysAppConfigService.getAppAuditVersionTime(version) &&
+                sysAppConfigService.getSysAppconfig(version)!=null ||
+                sysAppConfigService.getSysAppconfig(version).getVedioActualIsFee().equals("0")) {
             // 过审版本 不计费
             callPrice = BigDecimal.ZERO;
         } else {
             // 获取通话费用
+            callPrice = call.getType() == 0 ? userTo.getCallPrice() : userTo.getVideoPrice();
+        }
+*/
+
+
+        if (sysConfigService.isAppAudit() && !StringUtils.isEmpty(version) && sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version) ){
+            SysAppConfig sysAppConfig=sysAppConfigService.getSysAppconfig(version);
+            // 过审版本  根据是否实际收费 0不收费，1收费
+            if(sysAppConfig!=null && sysAppConfig.getVedioActualIsFee().equals("0")){
+                callPrice = BigDecimal.ZERO;
+            }else{
+                callPrice = call.getType() == 0 ? userTo.getCallPrice() : userTo.getVideoPrice();
+            }
+        } else {
             callPrice = call.getType() == 0 ? userTo.getCallPrice() : userTo.getVideoPrice();
         }
 

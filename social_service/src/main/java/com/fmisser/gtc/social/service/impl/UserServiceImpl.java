@@ -1600,7 +1600,6 @@ public class UserServiceImpl implements UserService {
     public List<AnchorCallStatusDto> getAnchorStatusList(List<String> anchorList) throws ApiException {
         // TODO: 2021/7/20 测试正确性
         List<Pair<String, String>> pairs = redisService.getList(anchorList);
-        System.out.println(pairs.size());
         List<AnchorCallStatusDto> dtoList = new ArrayList<>();
 
         for (Pair pair: pairs) {

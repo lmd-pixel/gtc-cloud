@@ -12,4 +12,5 @@ public interface SysAppConfigService {
     // 获取 app 审核的版本号
     String getAppAuditVersion(String version) throws ApiException;
     boolean getAppAuditVersionTime(String version) throws ApiException;
+    SysAppConfig getSysAppconfig(String version) throws ApiException;
 }

@@ -90,10 +90,13 @@ public class CommonController {
         User userDto = userService.getAnchorProfile(user, selfUser);
 
         // 针对版本审核
-        if (sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version)) {
-            userDto.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
-            userDto.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
-            userDto.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+        if (sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version) ) {
+            SysAppConfig sysAppConfig=sysAppConfigService.getSysAppconfig(version);
+            if(sysAppConfig!=null && sysAppConfig.getVedioViewIsFee().equals("0")) {
+                userDto.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+                userDto.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+                userDto.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            }
         }
 
         return ApiResp.succeed(userDto);

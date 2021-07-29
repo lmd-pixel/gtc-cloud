@@ -121,6 +121,12 @@ public class SysAppConfigServiceImpl  implements SysAppConfigService {
         }
     }
 
+    @Override
+    public SysAppConfig getSysAppconfig(String version) throws ApiException {
+        SysAppConfig sysAppConfig = sysAppConfigRepository.findByName(version);
+
+        return sysAppConfig;
+    }
 
 
 }
