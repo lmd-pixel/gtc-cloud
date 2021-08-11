@@ -11,4 +11,5 @@ import lombok.Data;
 public class AnchorCallStatusDto {
     private String digitId;
     private Integer status;
+    private String headThumbnailUrl;
 }
