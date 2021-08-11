@@ -3,6 +3,7 @@ package com.fmisser.gtc.social.controller;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.Banner;
 import com.fmisser.gtc.social.service.BannerService;
+import com.fmisser.gtc.social.service.SysAppConfigService;
 import com.fmisser.gtc.social.service.SysConfigService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -24,6 +25,9 @@ public class BannerController {
     @Autowired
     private SysConfigService sysConfigService;
 
+    @Autowired
+    private SysAppConfigService sysAppConfigService;
+
     @ApiOperation("广告列表")
     @GetMapping("/list")
     ApiResp<List<Banner>> getBannerList(
@@ -31,7 +35,7 @@ public class BannerController {
             @RequestParam("lang") String lang) {
 
         // 针对版本审核
-        if (sysConfigService.getAppAuditVersion().equals(version)) {
+        if (sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version)) {
             List<Banner> bannerList = bannerService.getAuditBannerList(lang);
             return ApiResp.succeed(bannerList);
         } else {
