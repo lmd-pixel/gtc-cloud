@@ -44,10 +44,18 @@ public class WithdrawManagerServiceImpl implements WithdrawManagerService {
         int totalPage = withdrawAuditDtoPage.getTotalPages();
         long totalEle = withdrawAuditDtoPage.getTotalElements();
 
+
+        WithdrawAuditDto  withdrawAuditDto= withdrawAuditRepository.withdrawAudit(digitId, nick,  startTime,endTime);
+
+
         Map<String, Object> extra = new HashMap<>();
         extra.put("totalPage", totalPage);
         extra.put("totalEle", totalEle);
         extra.put("currPage", pageIndex);
+
+        extra.put("totalCount", withdrawAuditDto.getCount());
+        extra.put("totolRecharge", withdrawAuditDto.getRecharge());
+
 
         return Pair.of(withdrawAuditDtoPage.getContent(), extra);
     }
@@ -166,10 +174,16 @@ public class WithdrawManagerServiceImpl implements WithdrawManagerService {
         Page<WithdrawAuditDto> withdrawAuditDtoPage = withdrawAuditRepository
                 .getWithdrawList(digitId, nick, startTime, endTime, statusList, pageable);
 
+        WithdrawAuditDto  withdrawAuditDto= withdrawAuditRepository.withdrawAuditList(digitId, nick,  startTime,endTime,statusList);
+
         Map<String, Object> extra = new HashMap<>();
         extra.put("totalPage", withdrawAuditDtoPage.getTotalPages());
         extra.put("totalEle", withdrawAuditDtoPage.getTotalElements());
         extra.put("currPage", pageIndex);
+
+        extra.put("totalCount", withdrawAuditDto.getCount());
+        extra.put("totolRecharge", withdrawAuditDto.getRecharge());
+
 
         return Pair.of(withdrawAuditDtoPage.getContent(), extra);
     }

@@ -49,6 +49,18 @@ public interface WithdrawAuditRepository extends JpaRepository<WithdrawAudit, Lo
             nativeQuery = true)
     Page<WithdrawAuditDto> getWithdrawAuditList(String digitId, String nick, Date startTime, Date endTime, Pageable pageable);
 
+
+    // 统计总充值
+    @Query(value = "SELECT COUNT(twa.id)  AS count, SUM(twa.draw_curr) AS recharge " +
+            "FROM t_withdraw_audit twa " +
+            "INNER JOIN t_user tu ON tu.id = twa.user_id AND " +
+            "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) " +
+            "WHERE twa.status = 10 AND " +
+            "(twa.create_time BETWEEN ?3 AND ?4 OR ?3 IS NULL OR ?4 IS NULL)",
+            nativeQuery = true)
+    WithdrawAuditDto withdrawAudit(String digitId, String nick, Date startTime, Date endTime);
+
     // 获取提现列表
     @Query(value = "SELECT twa.order_number AS orderNumber, twa.draw_curr AS drawCurr, " +
             "twa.draw_max AS drawMax, twa.draw_actual As drawActual, " +
@@ -72,6 +84,19 @@ public interface WithdrawAuditRepository extends JpaRepository<WithdrawAudit, Lo
                     "(twa.create_time BETWEEN ?3 AND ?4 OR ?3 IS NULL OR ?4 IS NULL)",
             nativeQuery = true)
     Page<WithdrawAuditDto> getWithdrawList(String digitId, String nick, Date startTime, Date endTime, List<Integer> status, Pageable pageable);
+
+
+    // 统计总充值
+    @Query(value = "SELECT COUNT(twa.id)  AS count, SUM(twa.draw_curr) AS recharge " +
+            "FROM t_withdraw_audit twa " +
+            "INNER JOIN t_user tu ON tu.id = twa.user_id AND " +
+            "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) " +
+            "WHERE twa.status IN (?5) AND " +
+            "(twa.create_time BETWEEN ?3 AND ?4 OR ?3 IS NULL OR ?4 IS NULL)",
+            nativeQuery = true)
+    WithdrawAuditDto withdrawAuditList(String digitId, String nick, Date startTime, Date endTime, List<Integer> status);
+
 
     // 获取待打款列表
     @Query(value = "SELECT twa.order_number AS orderNumber, twa.pay_money AS payMoney, twa.pay_actual AS payActual, " +

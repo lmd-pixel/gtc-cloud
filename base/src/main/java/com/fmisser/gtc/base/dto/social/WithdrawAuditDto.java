@@ -22,4 +22,10 @@ public interface WithdrawAuditDto {
     String getRemark();
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     Date getCreateTime();
+
+    // 总数量
+    Long getCount();
+
+    // 总充值
+    BigDecimal getRecharge();
 }

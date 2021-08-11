@@ -1,10 +1,7 @@
 package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.dto.social.*;
-import com.fmisser.gtc.base.dto.social.calc.CalcAnchorProfitDto;
-import com.fmisser.gtc.base.dto.social.calc.CalcCallProfitDto;
-import com.fmisser.gtc.base.dto.social.calc.CalcGiftProfitDto;
-import com.fmisser.gtc.base.dto.social.calc.CalcMessageProfitDto;
+import com.fmisser.gtc.base.dto.social.calc.*;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.social.repository.CallBillRepository;
 import com.fmisser.gtc.social.repository.GiftBillRepository;
@@ -61,6 +58,8 @@ public class ProfitManagerServiceImpl implements ProfitManagerService {
         CalcCallProfitDto calcCallProfitDto =
                 callBillRepository.calcCallProfit(null, null, digitId, nick, startTime, endTime, type);
 
+
+        CalcAnchorProfitDto calcAnchorProfitDto=callBillRepository.getAnchorProfit(digitId,nick,startTime,endTime);
         Map<String, Object> extra = new HashMap<>();
         extra.put("totalPage", (calcCallProfitDto.getCount() / pageSize) + 1 );
         extra.put("totalEle", calcCallProfitDto.getCount());
@@ -69,6 +68,14 @@ public class ProfitManagerServiceImpl implements ProfitManagerService {
         extra.put("profit", calcCallProfitDto.getProfit());
         extra.put("commission", calcCallProfitDto.getCommission());
         extra.put("consume", calcCallProfitDto.getConsume());
+
+        extra.put("totalProfit",calcAnchorProfitDto.getTotalProfit());
+        extra.put("videoProfit",calcAnchorProfitDto.getVideoProfit());
+        extra.put("voiceProfit",calcAnchorProfitDto.getVoiceProfit());
+        extra.put("msgProfit",calcAnchorProfitDto.getMsgProfit());
+        extra.put("giftProfit",calcAnchorProfitDto.getGiftProfit());
+
+
 
         return Pair.of(anchorCallBillDtoPage, extra);
     }
@@ -156,6 +163,14 @@ public class ProfitManagerServiceImpl implements ProfitManagerService {
         extra.put("profit", calcCallProfitDto.getProfit());
         extra.put("commission", calcCallProfitDto.getCommission());
         extra.put("consume", calcCallProfitDto.getConsume());
+
+        CalcConsumerProfitDto CalcConsumerProfitDto=callBillRepository.getConsumerProfit(consumerDigitId, consumerNick, anchorDigitId, anchorNick, startTime, endTime);
+
+        extra.put("totalProfit",CalcConsumerProfitDto.getTotalProfit());
+        extra.put("videoProfit",CalcConsumerProfitDto.getVideoProfit());
+        extra.put("voiceProfit",CalcConsumerProfitDto.getVoiceProfit());
+        extra.put("msgProfit",CalcConsumerProfitDto.getMsgProfit());
+        extra.put("giftProfit",CalcConsumerProfitDto.getGiftProfit());
 
         return Pair.of(consumerCallBillDtoList, extra);
 
