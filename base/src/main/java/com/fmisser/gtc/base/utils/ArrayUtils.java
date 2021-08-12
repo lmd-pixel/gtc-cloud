@@ -1,9 +1,13 @@
 package com.fmisser.gtc.base.utils;
 
 import lombok.SneakyThrows;
+import org.springframework.data.util.Pair;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author by fmisser
@@ -20,6 +24,29 @@ public class ArrayUtils {
         out.writeObject(src);
         ByteArrayInputStream byteIn = new ByteArrayInputStream(byteOut.toByteArray());
         ObjectInputStream in = new ObjectInputStream(byteIn);
-        return (List<T>)in.readObject();
+        return (List<T>) in.readObject();
+    }
+
+
+    public static Pair<String, Integer> getCommonTotal(List<String> list) {
+        Map<String, Integer> map = new HashMap<String, Integer>();
+
+        for (String item : list) {
+            if (map.containsKey(item)) {
+                map.put(item, map.get(item).intValue() + 1);
+            } else {
+                map.put(item, new Integer(1));
+            }
+        }
+
+        Iterator<String> keys = map.keySet().iterator();
+
+        while (keys.hasNext()) {
+            String key = keys.next();
+            System.out.print(key + ":" + map.get(key).intValue() + ", ");
+
+            return Pair.of(key, map.get(key).intValue());
+        }
+        return null;
     }
 }
