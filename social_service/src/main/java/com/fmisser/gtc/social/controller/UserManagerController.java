@@ -19,8 +19,6 @@ import org.hibernate.validator.constraints.Range;
 import org.springframework.data.util.Pair;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -52,6 +50,7 @@ public class UserManagerController {
             @ApiImplicitParam(name = "digitId", value = "用户ID", paramType = "query", required = false),
             @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query", required = false),
             @ApiImplicitParam(name = "phone", value = "用户手机号", paramType = "query", required = false),
+            @ApiImplicitParam(name = "channelId", value = "注册渠道号", paramType = "query", required = false),
             @ApiImplicitParam(name = "gender", value = "用户性别", paramType = "query", dataType = "Integer, required = false"),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
@@ -71,12 +70,13 @@ public class UserManagerController {
                                                       @RequestParam(value = "gender", required = false) Integer gender,
                                                       @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
                                                       @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
+                                                      @RequestParam(value = "channelId", required = false) String channelId,
                                                       @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
                                                       @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize,
                                                       @RequestParam(value = "sortColumn", required = false, defaultValue = "0") int sortColumn,
                                                       @RequestParam(value = "sortDirection", required = false, defaultValue = "0") int sortDirection) {
         Pair<List<AnchorDto>, Map<String, Object>> anchorDtoList = userManagerService
-                .getAnchorList(digitId, nick, phone, gender, startTime, endTime, pageIndex, pageSize, sortColumn, sortDirection);
+                .getAnchorList(digitId, nick, phone, gender, startTime, endTime, pageIndex, pageSize, sortColumn, sortDirection,channelId);
 
         return ApiResp.succeed(anchorDtoList.getFirst(), anchorDtoList.getSecond());
     }
@@ -89,6 +89,7 @@ public class UserManagerController {
             @ApiImplicitParam(name = "phone", value = "用户手机号", paramType = "query", required = false),
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
+            @ApiImplicitParam(name = "channelId", value = "注册渠道号", paramType = "query", required = false),
             @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
             @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer"),
             @ApiImplicitParam(name = "sortColumn",
@@ -104,12 +105,13 @@ public class UserManagerController {
                                              @RequestParam(value = "phone", required = false) String phone,
                                              @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
                                              @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
+                                             @RequestParam(value = "channelId", required = false) String channelId,
                                              @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
                                              @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize,
                                              @RequestParam(value = "sortColumn", required = false, defaultValue = "0") int sortColumn,
-                                             @RequestParam(value = "sortDirection", required = false, defaultValue = "0") int sortDirection) {
+                                             @RequestParam(value = "sortDirection", required = false, defaultValue = "1") int sortDirection) {
         Pair<List<ConsumerDto>, Map<String, Object>> consumerDtoList = userManagerService
-                .getConsumerList(digitId, nick, phone, startTime, endTime, pageIndex, pageSize, sortColumn, sortDirection);
+                .getConsumerList(digitId, nick, phone, startTime, endTime, pageIndex, pageSize, sortColumn, sortDirection,channelId);
 
         // 统计数据
 //        Map<String, Object> countMap = new HashMap<>();
@@ -156,7 +158,8 @@ public class UserManagerController {
             @ApiImplicitParam(name = "nick", value = "用户昵称", paramType = "query"),
             @ApiImplicitParam(name = "type", value = "推荐模块 0，6，7: 首页推荐 1： 首页活跃（保留，暂时不做）2：首页新人 3：私聊推荐主播 4：通话推荐主播 5:审核推荐主播", required = true, paramType = "query"),
             @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
-            @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
+            @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer"),
+            @ApiImplicitParam(name = "channelId", value = "注册渠道号", paramType = "query", required = false)
     })
     @GetMapping(value = "/list-recommend")
     @PreAuthorize("hasAnyRole('MANAGER')")
@@ -165,9 +168,10 @@ public class UserManagerController {
                                                  @RequestParam(value = "gender", required = false) Integer gender,
                                                  @RequestParam(value = "type") @Range(min = 0, max = 7, message = "type参数范围不合法") Integer type,
                                                  @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
-                                                 @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
+                                                 @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize,
+                                                 @RequestParam(value = "channelId", required = false) String channelId) {
         Pair<List<RecommendDto>, Map<String, Object>> recommendDtoList =
-                userManagerService.getRecommendList(digitId, nick, gender, type, pageIndex, pageSize);
+                userManagerService.getRecommendList(digitId, nick, gender, type,channelId, pageIndex, pageSize);
         return ApiResp.succeed(recommendDtoList.getFirst(), recommendDtoList.getSecond());
     }
 
@@ -355,6 +359,15 @@ public class UserManagerController {
                                       @RequestParam(value = "message", required = false) String message) {
         int ret = userManagerService.anchorVideoAudit(digitId, operate, message);
         return ApiResp.succeed(ret, "设置成功");
+    }
+
+
+
+    @ApiOperation(value = "获取注册渠道号")
+    @GetMapping("/brand_list")
+    ApiResp<List<String>> getBrandList() {
+     List<String> brnadList=  userManagerService.getBrandList();
+        return ApiResp.succeed(brnadList);
     }
 
 }

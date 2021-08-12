@@ -1,9 +1,14 @@
 package com.fmisser.gtc.social.controller;
 
+
+import com.fmisser.gtc.base.dto.social.DeviceForbiddenDto;
 import com.fmisser.gtc.base.dto.social.ForbiddenDto;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.social.domain.UserDevice;
+import com.fmisser.gtc.social.service.DeviceForbiddenService;
 import com.fmisser.gtc.social.service.ForbiddenService;
+import com.fmisser.gtc.social.service.UserDeviceService;
 import com.fmisser.gtc.social.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -25,6 +30,10 @@ public class ForbiddenManagerController {
 
     @Autowired
     private ForbiddenService forbiddenService;
+    @Autowired
+    private UserDeviceService userDeviceService;
+    @Autowired
+    private DeviceForbiddenService deviceForbiddenService;
 
     @Autowired
     private UserService userService;
@@ -62,6 +71,54 @@ public class ForbiddenManagerController {
     @PreAuthorize("hasAnyRole('MANAGER')")
     ApiResp<Integer> cancelForbidden(@RequestParam(value = "forbiddenId") Long forbiddenId) {
         int ret = forbiddenService.disableForbidden(forbiddenId);
+        return ApiResp.succeed(ret);
+    }
+
+    /**************
+     * 封号（封锁设备或者ip）
+     * @param deviceId
+     * @param days
+     * @param type
+     * @param message
+     * @return
+     */
+    @ApiOperation(value = "封号{封锁设备或ip}")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @PostMapping("/deviceForbiden")
+    @PreAuthorize("hasAnyRole('MANAGER')")
+    ApiResp<Integer> deviceceForbidden(@RequestParam(value = "deviceId") long deviceId,
+                                       @RequestParam(value = "days") Integer days,
+                                       @RequestParam(value = "type") String type,
+                                       @RequestParam(value = "message", required = false) String message) {
+        UserDevice userDevice= userDeviceService.getUserDeviceById(deviceId);
+        int ret = forbiddenService.deviceceForbidden(userDevice,type, days, message);
+        return ApiResp.succeed(ret);
+    }
+
+
+    @ApiOperation(value = "获取封号列表")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @GetMapping("/list-forbidden")
+    @PreAuthorize("hasAnyRole('MANAGER')")
+    ApiResp<List<DeviceForbiddenDto>> getDeviceForbiddenList(
+            @RequestParam(value = "digitId", required = false) String digitId,
+            @RequestParam(value = "nick", required = false) String nick,
+            @RequestParam(value = "identity", required = false) Integer identity,
+            @RequestParam(value = "deviceName", required = false) String deviceName,
+            @RequestParam(value = "ipAddress", required = false) String ipAddress,
+            @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
+        Pair<List<DeviceForbiddenDto>, Map<String, Object>> forbiddenDtoList
+                = deviceForbiddenService.getDeviceForbiddenList(digitId, nick, identity,deviceName,ipAddress,pageSize, pageIndex);
+        return ApiResp.succeed(forbiddenDtoList.getFirst(), forbiddenDtoList.getSecond());
+    }
+
+    @ApiOperation(value = "解封")
+    @ApiImplicitParam(name = "Authorization", value = "Bearer Token", required = true, dataType = "String", paramType = "header")
+    @PostMapping("/device_cancel")
+    @PreAuthorize("hasAnyRole('MANAGER')")
+    ApiResp<Integer> cancelDevice(@RequestParam(value = "forbiddenId") Long forbiddenId) {
+        int ret = deviceForbiddenService.disableForbidden(forbiddenId);
         return ApiResp.succeed(ret);
     }
 }

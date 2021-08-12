@@ -2,10 +2,12 @@ package com.fmisser.gtc.social.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Data;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
@@ -19,6 +21,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "t_device_forbidden")
+@Data
 public class DeviceForbidden {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -87,4 +90,13 @@ public class DeviceForbidden {
     @LastModifiedBy
     @Column
     private String modifyBy;
+
+    @Column(nullable = false)
+    private Long userId;
+
+    @Column(nullable = false)
+    private Long deviceId;
+
+    @Column(nullable = false)
+    private String ip;
 }

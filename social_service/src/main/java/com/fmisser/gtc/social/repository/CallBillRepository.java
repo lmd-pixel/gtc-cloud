@@ -3,17 +3,14 @@ package com.fmisser.gtc.social.repository;
 import com.fmisser.gtc.base.dto.social.AnchorCallBillDto;
 import com.fmisser.gtc.base.dto.social.CommonBillDto;
 import com.fmisser.gtc.base.dto.social.ConsumerCallBillDto;
-import com.fmisser.gtc.base.dto.social.ConsumerMessageBillDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcAnchorProfitDto;
 import com.fmisser.gtc.base.dto.social.calc.CalcCallProfitDto;
+import com.fmisser.gtc.base.dto.social.calc.CalcConsumerProfitDto;
 import com.fmisser.gtc.social.domain.CallBill;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -109,6 +106,7 @@ public interface CallBillRepository extends JpaRepository<CallBill, Long> {
                                      Integer type);
 
 
+
     // 获取主播总收益，视频收益，语音收益，私信收益，礼物收益
     @Query(value = "SELECT\n" +
             "       SUM(t_profit.videoProfit+t_profit.voiceProfit+t_profit.msgProfit+t_profit.giftProfit) AS totalProfit,\n" +
@@ -149,5 +147,74 @@ public interface CallBillRepository extends JpaRepository<CallBill, Long> {
             "WHERE tgb.creat_time BETWEEN ?3 AND ?4 OR ?3 IS NULL OR ?4 IS NULL)\n" +
             "    t_profit", nativeQuery = true)
     CalcAnchorProfitDto getAnchorProfit(String digitId, String nick, Date startTime, Date endTime);
+
+
+    @Query(value = "SELECT\n" +
+            "SUM(t_profit.videoProfit+t_profit.voiceProfit+t_profit.msgProfit+t_profit.giftProfit) AS totalProfit,\n" +
+            "SUM(t_profit.voiceProfit) AS voiceProfit,\n" +
+            "SUM(t_profit.videoProfit) AS videoProfit,\n" +
+            "SUM(t_profit.msgProfit) AS msgProfit,\n" +
+            " SUM(t_profit.giftProfit) AS giftProfit\n" +
+            "FROM\n" +
+            "(SELECT\n " +
+            "0 AS voiceProfit,\n" +
+            "SUM(IF(tcb.type=1,tcb.origin_coin,0)) AS videoProfit,\n" +
+            "0 AS msgProfit, 0 AS giftProfit\n" +
+            "FROM t_call tc\n " +
+            "INNER JOIN t_user tu ON tu.id = tc.user_id_from AND\n " +
+            "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND \n" +
+            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL)\n " +
+            "INNER JOIN t_user tu2 ON tu2.id = tc.user_id_to AND\n " +
+            "(tu2.digit_id LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND\n " +
+            "(tu2.nick LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) \n" +
+            "LEFT JOIN t_call_bill tcb ON tcb.call_id = tc.id AND valid = 1 " +
+            "WHERE tc.type = 1 AND " +
+            "(tc.created_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL)\n " +
+            "UNION ALL\n" +
+            "SELECT\n " +
+            "SUM(IF(tcb.type=0,tcb.origin_coin,0)) AS voiceProfit,\n" +
+            "0 AS videoProfit,\n" +
+            "0 AS msgProfit, 0 AS giftProfit\n" +
+            "FROM t_call tc\n " +
+            "INNER JOIN t_user tu ON tu.id = tc.user_id_from AND\n " +
+            "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND \n" +
+            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL)\n " +
+            "INNER JOIN t_user tu2 ON tu2.id = tc.user_id_to AND\n " +
+            "(tu2.digit_id LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND\n " +
+            "(tu2.nick LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) \n" +
+            "LEFT JOIN t_call_bill tcb ON tcb.call_id = tc.id AND valid = 1 " +
+            "WHERE tc.type = 0 AND " +
+            "(tc.created_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL)\n " +
+            "UNION ALL\n" +
+            "SELECT\n " +
+                "0 AS voiceProfit, 0 AS videoProfit,\n" +
+                "SUM(tmb.origin_coin) AS msgProfit,0 AS giftProfit\n " +
+                "FROM t_message_bill tmb\n " +
+                "INNER JOIN t_user tu ON tu.id = tmb.user_id_from AND \n" +
+                "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND\n " +
+                "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) \n" +
+                "INNER JOIN t_user tu2 ON tu2.id = tmb.user_id_to AND \n" +
+                "(tu2.digit_id LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND\n " +
+                "(tu2.nick LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) " +
+                "WHERE tmb.valid = 1 AND " +
+                "(tmb.creat_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL) \n"+
+            "UNION ALL\n" +
+            "SELECT  0 AS voiceProfit, 0 AS videoProfit, 0 AS msgProfit,\n " +
+            "SUM(tgb.origin_coin) AS giftProfit " +
+            "FROM t_gift_bill tgb " +
+            "INNER JOIN t_user tu ON tu.id = tgb.user_id_from AND " +
+            "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
+            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) " +
+            "INNER JOIN t_user tu2 ON tu2.id = tgb.user_id_to AND " +
+            "(tu2.digit_id LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
+            "(tu2.nick LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) " +
+            "WHERE tgb.valid = 1 AND " +
+            "(tgb.creat_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL)) " +
+            "    t_profit", nativeQuery = true)
+    CalcConsumerProfitDto getConsumerProfit(String consumerDigitId, String consumerNick,
+                                            String anchorDigitId, String anchorNick,
+                                            Date startTime, Date endTime);
+
+
 
 }

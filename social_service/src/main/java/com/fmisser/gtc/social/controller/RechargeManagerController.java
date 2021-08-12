@@ -43,7 +43,8 @@ public class RechargeManagerController {
             @ApiImplicitParam(name = "startTime", value = "起始时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "date", required = false),
             @ApiImplicitParam(name = "pageIndex", value = "展示第几页", paramType = "query", defaultValue = "1", dataType = "Integer"),
-            @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer")
+            @ApiImplicitParam(name = "pageSize", value = "每页数据条数", paramType = "query", defaultValue = "30", dataType = "Integer"),
+            @ApiImplicitParam(name = "channelId", value = "注册渠道号", paramType = "query", required = false)
     })
     @PreAuthorize("hasAnyRole('MANAGER')")
     @RequestMapping(value = "/list-recharge", method = RequestMethod.GET)
@@ -54,9 +55,11 @@ public class RechargeManagerController {
             @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
             @RequestParam(value = "pageIndex", required = false, defaultValue = "1") int pageIndex,
-            @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
+            @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize,
+            @RequestParam(value = "channelId", required = false) String channelId
+    ) {
         Pair<List<RechargeDto>, Map<String, Object>> rechargeDtoList =
-                rechargeManagerService.getRechargeList(digitId, nick, status, startTime, endTime, pageIndex, pageSize);
+                rechargeManagerService.getRechargeList(digitId, nick, status, startTime, endTime, pageIndex, pageSize,channelId);
         return ApiResp.succeed(rechargeDtoList.getFirst(), rechargeDtoList.getSecond());
     }
 }

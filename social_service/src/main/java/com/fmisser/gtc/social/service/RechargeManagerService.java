@@ -11,5 +11,5 @@ import java.util.Map;
 public interface RechargeManagerService {
     Pair<List<RechargeDto>, Map<String, Object>> getRechargeList(String digitId, String nick, Integer status,
                                                                  Date startTime, Date endTime,
-                                                                 Integer pageIndex, Integer pageSize) throws ApiException;
+                                                                 Integer pageIndex, Integer pageSize,String channelId) throws ApiException;
 }

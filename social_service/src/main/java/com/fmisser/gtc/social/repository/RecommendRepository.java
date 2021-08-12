@@ -14,14 +14,15 @@ import java.util.Optional;
 public interface RecommendRepository extends JpaRepository<Recommend, Long> {
 
     @Query(value = "SELECT tr.type AS type, tr.level AS level, " +
-            "tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.gender AS gender," +
+            "tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.gender AS gender,tu.channel_id AS channel_id," +
             "tr.start_time AS startTime, tr.end_time AS endTime, " +
             "tr.start_time2 AS startTime2, tr.end_time2 AS endTime2 " +
             "FROM t_recommend tr " +
             "INNER JOIN t_user tu ON tu.id = tr.user_id AND " +
             "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
             "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
-            "(tu.gender LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) " +
+            "(tu.gender LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL)  AND" +
+            "(tu.channel_id LIKE CONCAT('%', ?5, '%') OR ?5 IS NULL)  "+
             "WHERE tr.recommend = 1 AND tr.type = ?4 " +
             "ORDER BY tr.level ",
             countQuery = "SELECT COUNT(tr.id) " +
@@ -29,10 +30,11 @@ public interface RecommendRepository extends JpaRepository<Recommend, Long> {
                     "INNER JOIN t_user tu ON tu.id = tr.user_id AND " +
                     "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
                     "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
-                    "(tu.gender LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) " +
+                    "(tu.gender LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL)  AND" +
+                    "(tu.channel_id LIKE CONCAT('%', ?5, '%') OR ?5 IS NULL)  "+
                     "WHERE tr.recommend = 1 AND tr.type = ?4 ",
             nativeQuery = true)
-    Page<RecommendDto> getRecommendList(String digitId, String nick, Integer gender, Integer type, Pageable pageable);
+    Page<RecommendDto> getRecommendList(String digitId, String nick, Integer gender, Integer type,String channelId, Pageable pageable);
 
     Optional<Recommend> findByUserIdAndType(Long userId, int type);
 

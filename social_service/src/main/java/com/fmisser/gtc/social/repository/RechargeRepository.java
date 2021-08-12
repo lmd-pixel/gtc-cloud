@@ -38,7 +38,8 @@ public interface RechargeRepository extends JpaRepository<Recharge, Long> {
             "FROM t_recharge tr " +
             "INNER JOIN t_user tu ON tu.id = tr.user_id AND " +
             "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
-            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) " +
+            "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
+            "(tu.channel_id LIKE CONCAT('%', ?8, '%') OR ?8 IS NULL) " +
             "WHERE tr.status IN (?5) AND " +
             "(tr.creat_time BETWEEN ?3 AND ?4 OR ?3 IS NULL OR ?4 IS NULL) " +
             "ORDER BY tr.creat_time DESC " +
@@ -49,7 +50,7 @@ public interface RechargeRepository extends JpaRepository<Recharge, Long> {
 //                                      List<Integer> status, Pageable pageable);
     List<RechargeDto> getRechargeList(String digitId, String nick,
                                       Date startTime, Date endTime,
-                                      List<Integer> status, int limit, int offset);
+                                      List<Integer> status, int limit, int offset,String channelId);
 
     // 统计总充值
     @Query(value = "SELECT COUNT(tr.id) AS count, SUM(tr.price) AS recharge " +

@@ -2,6 +2,7 @@ package com.fmisser.gtc.base.utils;
 
 import lombok.SneakyThrows;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -132,6 +133,28 @@ public class DateUtils {
     }
 
 
+    /**
+     * 获取任意时间的下一个月yyyymm
+     * 描述:<描述函数实现的功能>.
+     * @param repeatDate
+     * @return
+     */
+    public static Date getPreMonth(String repeatDate) throws ParseException {
+        String lastMonth = "";
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat dft = new SimpleDateFormat("yyyy-MM-dd");
+        int year = Integer.parseInt(repeatDate.substring(0, 4));
+        String monthsString = repeatDate.substring(4, 7);
+        int month;
+        if ("0".equals(monthsString.substring(0, 1))) {
+            month = Integer.parseInt(monthsString.substring(1, 2));
+        } else {
+            month = Integer.parseInt(monthsString.substring(0, 2));
+        }
+        cal.set(year,month,Calendar.DATE);
+        lastMonth = dft.format(cal.getTime());
+        return dft.parse(lastMonth);
+    }
 
 
 

@@ -1,5 +1,6 @@
 package com.fmisser.gtc.social.controller;
 
+import com.fmisser.fpp.cache.redis.service.RedisService;
 import com.fmisser.gtc.base.dto.social.AnchorCallStatusDto;
 import com.fmisser.gtc.base.dto.social.GuardDto;
 import com.fmisser.gtc.base.dto.social.RecvGiftDto;
@@ -11,6 +12,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.util.Pair;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
@@ -35,14 +37,24 @@ public class CommonController {
     private final SysConfigService sysConfigService;
     private final GuardService guardService;
     private final  SysAppConfigService sysAppConfigService;
+    private final RedisService redisService;
 
 
 
     @ApiOperation(value = "获取主播的是否在线")
     @GetMapping(value = "/getAnchorStatus-list")
-    ApiResp<List<AnchorCallStatusDto>> getAnchorStatusList(@RequestParam(value = "anchors") String anchors) {
+    ApiResp<List<AnchorCallStatusDto>> getAnchorStatusList() {
+       // List<String> anchorList = Arrays.asList(anchors.split(","));
+        return ApiResp.succeed(userService.getAnchorStatusList());
+    }
+
+
+    @ApiOperation(value = "获取总的在线主播数")
+    @GetMapping(value = "/getOnLineAhchor-count")
+    ApiResp<Map<String, Object>> getOnLineAhchorCount(@RequestParam(value = "anchors") String anchors) {
         List<String> anchorList = Arrays.asList(anchors.split(","));
-        return ApiResp.succeed(userService.getAnchorStatusList(anchorList));
+        Map<String, Object> results = userService.getAnchorStatusLCount(anchorList);
+        return ApiResp.succeed(results);
     }
 
     @ApiOperation(value = "获取主播列表")
@@ -172,9 +184,9 @@ public class CommonController {
         List<BigDecimal> msgPrice = Arrays.asList(BigDecimal.valueOf(5), BigDecimal.valueOf(10));
         List<BigDecimal> callPrice = Arrays.asList(
                 BigDecimal.valueOf(300),
-                BigDecimal.valueOf(500),
-                BigDecimal.valueOf(800),
-                BigDecimal.valueOf(1000)
+                BigDecimal.valueOf(400),
+                BigDecimal.valueOf(500)
+                //BigDecimal.valueOf(1000)
 //                BigDecimal.valueOf(300),
 //                BigDecimal.valueOf(350),
 //                BigDecimal.valueOf(400),

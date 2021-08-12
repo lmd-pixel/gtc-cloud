@@ -26,7 +26,7 @@ public class RechargeManagerServiceImpl implements RechargeManagerService {
     @Override
     public Pair<List<RechargeDto>, Map<String, Object>> getRechargeList(String digitId, String nick, Integer status,
                                                        Date startTime, Date endTime,
-                                                       Integer pageIndex, Integer pageSize) throws ApiException {
+                                                       Integer pageIndex, Integer pageSize,String channelId) throws ApiException {
 //        Pageable pageable = PageRequest.of(pageIndex, pageSize);
 
         // status: 0: 未完成 1:已完成 2: 全部
@@ -52,7 +52,7 @@ public class RechargeManagerServiceImpl implements RechargeManagerService {
 //                .getRechargeList(digitId, nick, startTime, endTime, statusList, pageable);
 
         List<RechargeDto> rechargeDtoList = rechargeRepository
-                .getRechargeList(digitId, nick, startTime, endTime, statusList, pageSize, pageSize * (pageIndex - 1));
+                .getRechargeList(digitId, nick, startTime, endTime, statusList, pageSize, pageSize * (pageIndex - 1),channelId);
 
         CalcRechargeDto calcRechargeDto = rechargeRepository.calcRecharge(digitId, nick, startTime, endTime, statusList);
 

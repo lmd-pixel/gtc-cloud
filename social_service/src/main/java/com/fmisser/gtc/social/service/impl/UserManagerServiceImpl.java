@@ -36,12 +36,13 @@ public class UserManagerServiceImpl implements UserManagerService {
     private final ImService imService;
     private final AsyncService asyncService;
     private final UserMaterialService userMaterialService;
+    private final UserDeviceRepository userDeviceRepository;
 
     @Override
     public Pair<List<AnchorDto>,Map<String, Object>> getAnchorList(String digitId, String nick, String phone, Integer gender,
                                          Date startTime, Date endTime,
                                          int pageIndex, int pageSize,
-                                         int sortColumn, int sortDirection) throws ApiException {
+                                         int sortColumn, int sortDirection,String channelId) throws ApiException {
 //        Sort.Direction direction;
         String sortProp;
 //        if (sortDirection == 0) {
@@ -94,7 +95,7 @@ public class UserManagerServiceImpl implements UserManagerService {
 //                .anchorStatistics(digitId, nick, phone, gender, startTime, endTime, pageable);
 
         List<AnchorDto> anchorDtoList = userRepository
-                .anchorStatisticsEx2(digitId, nick, phone, gender, startTime, endTime, pageSize, (pageIndex - 1) * pageSize, sortProp);
+                .anchorStatisticsEx2(digitId, nick, phone, gender, startTime, endTime, pageSize, (pageIndex - 1) * pageSize, sortProp,channelId);
 
         Long totalCount = userRepository.countAnchorStatisticsEx(digitId, nick, phone, gender, startTime, endTime);
         Long totalPage = (totalCount / pageSize) + 1;
@@ -112,7 +113,7 @@ public class UserManagerServiceImpl implements UserManagerService {
     public Pair<List<ConsumerDto>,Map<String, Object>> getConsumerList(String digitId, String nick, String phone,
                                              Date startTime, Date endTime,
                                              int pageIndex, int pageSize,
-                                             int sortColumn, int sortDirection) throws ApiException {
+                                             int sortColumn, int sortDirection,String  channelId) throws ApiException {
 //        Sort.Direction direction;
         String sortProp;
 //        if (sortDirection == 0) {
@@ -162,7 +163,7 @@ public class UserManagerServiceImpl implements UserManagerService {
 //                .consumerStatistics(digitId, nick, phone, startTime, endTime, pageable);
 
         List<ConsumerDto> consumerDtoList = userRepository
-                .consumerStatisticsEx2(digitId, nick, phone, startTime, endTime, pageSize, (pageIndex - 1) * pageSize, sortProp);
+                .consumerStatisticsEx2(digitId, nick, phone, startTime, endTime, pageSize, (pageIndex - 1) * pageSize, channelId);
 
         CalcConsumeDto calcConsumeDto = userRepository.calcConsume(digitId, nick, phone, startTime, endTime);
         Long totalCount = calcConsumeDto.getCount();
@@ -192,6 +193,10 @@ public class UserManagerServiceImpl implements UserManagerService {
 
         user.setBirthDay(user.getBirth());
 
+        List<UserDevice> userDeviceList=  userDeviceRepository.findByUserId(user.getId());
+        user.setUserDeviceList(userDeviceList);
+
+
         return userService.profile(user);
     }
 
@@ -206,7 +211,6 @@ public class UserManagerServiceImpl implements UserManagerService {
         Optional<IdentityAudit> userVideoAudit = identityAuditService.getLastVideoAudit(user);
         Optional<IdentityAudit> userGuardPhotosAudit = identityAuditService.getLastGuardPhotosAudit(user);
         Optional<IdentityAudit> userAuditVideoAudit = identityAuditService.getLastAuditVideoAudit(user);
-
         userProfileAudit.ifPresent(identityAudit -> {
             if (identityAudit.getStatus() == 10) {
                 // TODO: 2021/4/2 写个mapper 转换
@@ -292,15 +296,17 @@ public class UserManagerServiceImpl implements UserManagerService {
 
         user.setBirthDay(user.getBirth());
 
+
+
         return userService.profile(user);
     }
 
     @Override
     public Pair<List<RecommendDto>, Map<String, Object>> getRecommendList(String digitId, String nick, Integer gender,
-                                                                          Integer type, int pageIndex, int pageSize) throws ApiException {
+                                                                          Integer type,String channelId, int pageIndex, int pageSize) throws ApiException {
         Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
         Page<RecommendDto> recommendDtoPage =
-                recommendRepository.getRecommendList(digitId, nick, gender, type, pageable);
+                recommendRepository.getRecommendList(digitId, nick, gender, type,channelId, pageable);
 
         Map<String, Object> extra = new HashMap<>();
         extra.put("totalPage", recommendDtoPage.getTotalPages());
@@ -634,6 +640,11 @@ public class UserManagerServiceImpl implements UserManagerService {
         }
 
         return 1;
+    }
+
+    @Override
+    public List<String> getBrandList() {
+        return userRepository.getBrandList();
     }
 
     // 创建标签
