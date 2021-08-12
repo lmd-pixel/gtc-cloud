@@ -24,6 +24,14 @@ public class SysAppConfigServiceImpl  implements SysAppConfigService {
     @Autowired
     private SysAppConfigRepository sysAppConfigRepository;
 
+    /****
+     * 获取审核版本的审核状态
+     * @param channelId
+     * @param version
+     * @return
+     * @throws ApiException
+     * @throws ParseException
+     */
     @Override
     public String getAppAuditVersionEx(String channelId, String version) throws ApiException, ParseException {
         String versionStatus="";
@@ -56,6 +64,14 @@ public class SysAppConfigServiceImpl  implements SysAppConfigService {
         return versionStatus;
     }
 
+    /****
+     * 获取审核版本的查询截至时间
+     * @param channelId
+     * @param version
+     * @return
+     * @throws ApiException
+     * @throws ParseException
+     */
     @Override
     public Date getAppAuditDynamicDateLimit(String channelId, String version) throws ApiException, ParseException {
         SysAppConfig sysAppConfig = sysAppConfigRepository.findByName(version);
@@ -86,6 +102,12 @@ public class SysAppConfigServiceImpl  implements SysAppConfigService {
         }
     }
 
+    /****
+     * 获取审核版本
+     * @param version
+     * @return
+     * @throws ApiException
+     */
     @Override
     public String getAppAuditVersion(String version) throws ApiException {
         SysAppConfig sysConfig = sysAppConfigRepository.findByName(version);
@@ -99,10 +121,18 @@ public class SysAppConfigServiceImpl  implements SysAppConfigService {
         }
     }
 
-
+    /****
+     * 获取审核版本是否在有效时间范围内
+     * @param version
+     * @return
+     * @throws ApiException
+     */
     @Override
     public boolean getAppAuditVersionTime(String version) throws ApiException {
         SysAppConfig sysAppConfig = sysAppConfigRepository.findByName(version);
+        if (Objects.isNull(sysAppConfig)) {
+            return false;
+        }
         if(!StringUtils.isEmpty(sysAppConfig.getWeek()) &&sysAppConfig.getWeek().contains(DateUtils.getWeek()+"") ){//判断是否是当前的week
             Date now = new Date();
             SimpleDateFormat dateFormat = new SimpleDateFormat("HH");
@@ -121,10 +151,15 @@ public class SysAppConfigServiceImpl  implements SysAppConfigService {
         }
     }
 
+    /****
+     * 获取审核版本的数据,当前数据行配置的数据信息
+     * @param version
+     * @return
+     * @throws ApiException
+     */
     @Override
     public SysAppConfig getSysAppconfig(String version) throws ApiException {
         SysAppConfig sysAppConfig = sysAppConfigRepository.findByName(version);
-
         return sysAppConfig;
     }
 

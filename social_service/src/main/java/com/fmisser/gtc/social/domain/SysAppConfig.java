@@ -51,10 +51,13 @@ public class SysAppConfig {
     private Date dynamiChangeTime;
 
     @Column
-    private String vedioViewIsFee;
+    private String vedioViewIsFee;//根据审核版本判断通话是否展示收费
 
     @Column
     private String vedioActualIsFee;//根据过审版本判断通话是否需要收费
+
+    @Column
+    private String harassIsStart;//根据版本判断是否开启骚扰模式
 
 
 
