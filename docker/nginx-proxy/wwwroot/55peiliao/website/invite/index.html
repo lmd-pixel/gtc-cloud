@@ -177,7 +177,7 @@
 					}
 					$.ajax({
 						method: 'post',
-						url: 'http://42.192.212.67:8088/api/auth/user/phone-code',
+						url: 'http://101.34.163.168:8088/api/auth/user/phone-code',
 						data: {
 							phone: $('#phone').val(),
 							type: '0'
@@ -217,7 +217,7 @@
 
 					$.ajax({
 						method: 'post',
-						url: 'http://42.192.212.67:8088/api/auth/user/sms-login',
+						url: 'http://101.34.163.168:8088/api/auth/user/sms-login',
 						data: {
 							code: $('#code').val(),
 							phone: $('#phone').val(),
@@ -245,7 +245,7 @@
 				console.log('token=>',token);
 				$.ajax({
 					method: 'post',
-					url: 'http://42.192.212.67:8088/api/social/user/create',
+					url: 'http://101.34.163.168:8088/api/social/user/create',
 					headers: {
 						Authorization: "Bearer" + token
 					},
