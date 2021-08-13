@@ -10,8 +10,8 @@
 3. 通过docker上传docker image
    腾讯云打开对应服务器的2375端口
 
-   执行命令
-   export/set DOCKER_HOST=tcp://42.192.212.67:2375（测试） 或者 export DOCKER_HOST=tcp://121.4.13.132:2375 （正式）
+   执行命令//101.34.163.168
+   export/set DOCKER_HOST=tcp://101.34.163.168:2375（测试） 或者 export/set DOCKER_HOST=tcp://121.4.13.132:2375 （正式）
    cd social_service(打包哪个服务切换到哪个服务的目录)
    mvn docker:build
 
@@ -27,6 +27,9 @@
    sudo docker run -p 8003:8003 --name gtc_social -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/social/:/ROOT/logs/ -d social
 
 
+##############
+将oss.55peiliao.com 重定向到cos.55peiliao.com
+
 
 
 启动 redis
@@ -41,4 +44,41 @@ docker image ls
 #查看正在运行的服务
 docker ps
 
-   其他服务参见 gtc_cloud/docker/docker_shell下面的服务
+重启nginx 服务（在 ngxin-proxy里执行）
+docker-compose restart ngxin
+
+#------------------------------------------------------------------------------------------------------
+官方文档:
+https://docs.docker.com/engine/install/centos/
+
+sudo yum install -y yum-utils \
+  device-mapper-persistent-data \
+  lvm2
+
+sudo yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
+
+sudo yum install -y docker-ce
+
+sudo systemctl start docker
+
+sudo docker run hello-world
+
+
+安装docker compose:
+https://docs.docker.com/compose/install/#install-compose
+
+使用python环境安装docker-compose
+yum -y install epel-release
+yum -y install python-pip
+pip install --upgrade pip
+pip install docker-compose
+
+降级
+pip uninstall docker-compose
+pip install docker-compose==1.18.0
+
+
+命令行连接redis
+redis-cli -h cache.host.com -p 6379 -a gtc_cloud@123456

@@ -4,10 +4,15 @@
 echo "Asia/shanghai" > /etc/timezone
 cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
+删除timezone
+rm -rf /etc/timezone
 
 ## rabbit mq 增加 delay message queue
 插件下载地址： https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/tag/3.8.9
-拷贝插件到容器： docker cp rabbitmq_delayed_message_exchange-3.8.9-0199d11c.ez gtc_cloud_mq:/plugins
+拷贝插件到容器： docker cp
+rabbitmq_delayed_message_exchange-3.8.9-0199d11c.ez gtc_cloud_mq:/plugins
+rabbitmq_delayed_message_exchange-3.8.17.8f537ac.ez gtc_cloud_mq:/plugins
+
 进入容器启动插件： rabbitmq-plugins enable rabbitmq_delayed_message_exchange
 查看插件是否已加载: rabbitmq-plugins list
 
@@ -21,6 +26,9 @@ docker exec -it gtc_cloud_db mysqldump -uroot -pgtc_cloud@123456 gtc-auth-db > /
 
 ############################## mysql
 sudo docker run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=gtc_cloud@123456 --name gtc_cloud_db -d mysql:5.7
+
+docker exec gtc_cloud_db bash -c "echo 'log-bin=/var/lib/mysql/mysql-bin' >> /etc/mysql/mysql.conf.d/mysqld.cnf"
+docker exec gtc_cloud_db bash -c “echo ‘server-id=99’ >> /etc/mysql/mysql.conf.d/mysqld.cnf”
 
 # 开启 bin log
 docker exec -it gtc_cloud_db /bin/bash
@@ -45,6 +53,11 @@ show VARIABLES like '%max_allowed_packet%';
 
 ############################## rabbit
 sudo docker run -p 15672:15672 -p 5672:5672 -e RABBITMQ_DEFAULT_USER=root -e RABBITMQ_DEFAULT_PASS=gtc_cloud@123456 --name gtc_cloud_mq -d rabbitmq:management
+
+sudo docker run -p 15672:15672 -p 5672:5672  --name gtc_cloud_mq -d rabbitmq:management
+
+sudo docker run -p 15672:15672 -p 5672:5672 -e RABBITMQ_DEFAULT_USER=root -e RABBITMQ_DEFAULT_PASS=gtc_cloud@123456 --name gtc_cloud_mq -d rabbitmq:3.8.9-management
+
 
 ############################## minio
 sudo docker run -p 9000:9000 -e MINIO_ACCESS_KEY=root -e MINIO_SECRET_KEY=gtc_cloud@123456 --name gtc_cloud_file -d minio/minio server /data
@@ -94,8 +107,8 @@ i18n.locale: "zh-CN"
 docker cp ./kibana.yml gtc_cloud_kibana:/usr/share/kibana/config/kibana.yml
 docker restart gtc_cloud_kibana
 
-############################## zipkin
-sudo docker run -p 9411:9411 --name gtc_cloud_zipkin -e STORAGE_TYPE=elasticsearch -e ES_HOSTS=http://42.192.212.67:9200 -e ES_USERNAME=elastic -e ES_PASSWORD=gtc_cloud@123456 -d openzipkin/zipkin
+############################## zipkin101.34.163.168
+sudo docker run -p 9411:9411 --name gtc_cloud_zipkin -e STORAGE_TYPE=elasticsearch -e ES_HOSTS=http://101.34.163.168:9200 -e ES_USERNAME=elastic -e ES_PASSWORD=gtc_cloud@123456 -d openzipkin/zipkin
 
 ############################## logstash
 sudo docker run -it -p 5044:5044 -p 5045:5045 --name gtc_cloud_logstash --network=es-network -d docker.elastic.co/logstash/logstash:7.12.0
