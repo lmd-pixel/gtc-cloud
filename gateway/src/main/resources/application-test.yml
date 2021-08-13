@@ -7,7 +7,7 @@ eureka:
   client:
     service-url:
 #      defaultZone: http://localhost:8001/eureka/
-      defaultZone: http://42.192.212.67:8001/eureka/
+      defaultZone: http://101.34.163.168:8001/eureka/
   instance:
     prefer-ip-address: true
     instance-id: gateway
