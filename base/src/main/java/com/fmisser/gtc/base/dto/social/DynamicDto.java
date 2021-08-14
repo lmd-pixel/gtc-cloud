@@ -78,7 +78,7 @@ public class DynamicDto {
         this.selfIsGuard = 0L;
     }
 
-    public DynamicDto(Long id, Long userId, String digitId,int identity, String content, String city,
+    public DynamicDto(Long id, Long userId, String digitId,int identity, String intro,String content, String city,
                       int type, String video, String pictures,
                       Date createTime, Date modifyTime, BigDecimal longitude, BigDecimal latitude,
                       Long heartCount, Long selfHeart, Long commentCount, Long follow,
@@ -87,6 +87,7 @@ public class DynamicDto {
         this.userId = userId;
         this.digitId = digitId;
         this.identity=identity;
+        this.intro=intro;
         this.content = content;
         this.city = city;
         this.type = type;
@@ -99,7 +100,9 @@ public class DynamicDto {
         this.heartCount = heartCount;
         this.selfHeart = selfHeart;
         this.commentCount = commentCount;
+
         this.follow = follow;
+
         this.nick = nick;
         this.birth = birth;
         this.gender = gender;
@@ -107,10 +110,43 @@ public class DynamicDto {
         this.selfIsGuard = 0L;
     }
 
+    public DynamicDto(Long id, Long userId, String digitId,int identity, String intro,String content, String city,
+                      int type, String video, String pictures,
+                      Date createTime, Date modifyTime, BigDecimal longitude, BigDecimal latitude,
+                       Long selfHeart,
+                      String nick, Date birth, int gender, String head) {
+        this.id = id;
+        this.userId = userId;
+        this.digitId = digitId;
+        this.identity=identity;
+        this.intro=intro;
+        this.content = content;
+        this.city = city;
+        this.type = type;
+        this.video = video;
+        this.pictures = pictures;
+        this.createTime = createTime;
+        this.modifyTime = modifyTime;
+        this.longitude = longitude;
+        this.latitude = latitude;
+
+        this.selfHeart = selfHeart;
+
+
+
+        this.nick = nick;
+        this.birth = birth;
+        this.gender = gender;
+        this.head = head;
+        this.selfIsGuard = 0L;
+    }
+
+
     private Long id;
     private Long userId;
     private String digitId;
     private int identity;
+    private String intro;
     private String content;
     private String city;
     private int type;
@@ -124,6 +160,12 @@ public class DynamicDto {
     private Date modifyTime;
     private BigDecimal longitude;
     private BigDecimal latitude;
+
+    private List<DynamicCommentDto> commentList;
+    private List<DynamicHeartListDto> heartList;
+    private List<FollowDto> followList;
+    private List<BlockDto> blockList;
+
     private Long heartCount;
     private Long selfHeart;
     private Long commentCount;

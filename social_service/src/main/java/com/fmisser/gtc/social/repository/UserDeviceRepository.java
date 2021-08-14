@@ -4,6 +4,8 @@ import com.fmisser.gtc.social.domain.UserDevice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * @author fmisser
  * @create 2021-04-20 下午3:10
@@ -12,4 +14,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserDeviceRepository extends JpaRepository<UserDevice, Long> {
     UserDevice getTopByUserIdOrderByCreateTimeDesc(Long userId);
+
+    List<UserDevice> findByUserId(Long userId);
 }

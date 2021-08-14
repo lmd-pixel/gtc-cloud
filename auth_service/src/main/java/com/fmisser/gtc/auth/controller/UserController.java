@@ -43,17 +43,27 @@ public class UserController {
     @PostMapping("/auto-login")
     public ApiResp<TokenDto> autoLogin(@RequestHeader(value = "identity", required = false) String identity,
 //                                       @RequestParam(value = "phone", required = false) @Size(min = 11, max = 11, message = "请输入有效的手机号") String phone,
-                                       @RequestParam("token") String token) throws ApiException {
-        return ApiResp.succeed(userService.autoLogin(identity, token));
+                                       @RequestParam("token") String token,
+                                       @RequestParam(value = "ipAddress",required = false) String ipAddress,
+                                       @RequestParam(value ="deviceId",required = false) String deviceId) throws ApiException {
+        return ApiResp.succeed(userService.autoLogin(identity, token,ipAddress,deviceId));
     }
 
     @PostMapping("/sms-login")
     public ApiResp<TokenDto> phoneCodeLogin(@RequestParam("phone") @Size(min = 11, max = 11, message = "请输入有效的手机号") String phone,
-                                            @RequestParam("code") String code) throws ApiException {
+                                            @RequestParam("code") String code,
+                                            @RequestParam(value = "ipAddress",required = false) String ipAddress,
+                                            @RequestParam(value ="deviceId",required = false) String deviceId
+                                            ) throws ApiException {
         try {
-            return ApiResp.succeed(userService.smsLogin(phone, code));
+            return ApiResp.succeed(userService.smsLogin(phone, code,ipAddress,deviceId));
         } catch (Exception e) {
-            return ApiResp.failed(-1, "验证码不正确，请重试!");
+            if(e.getMessage().equals("LOGINFAIL")){
+                return ApiResp.failed(-1, "你暂时无法登录!");
+            }else{
+                return ApiResp.failed(-1, "验证码不正确，请重试!");
+            }
+
         }
     }
 

@@ -283,4 +283,9 @@ public class User implements Serializable {
     // 守护版本 是否是我守护的主播
     @Transient
     private int isGuard;
+
+
+   // @Deprecated
+    @Transient
+    private  List<UserDevice> userDeviceList;
 }

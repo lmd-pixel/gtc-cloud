@@ -133,10 +133,10 @@ public class RedisServiceImpl implements RedisService {
         List<Pair<String, String>> lists = new ArrayList<>();
 
         for (int i = 0; i < results.size(); i++) {
-            if (Objects.isNull(results.get(i))){
+            if(Objects.isNull(get(keys.get(i).toString()))){
                 lists.add(Pair.of(keys.get(i).toString(), "0"));
             }else{
-                lists.add(Pair.of(keys.get(i).toString(), results.get(i).toString()));
+                lists.add(Pair.of(keys.get(i).toString(),get(keys.get(i).toString()).toString()));
             }
 
         }

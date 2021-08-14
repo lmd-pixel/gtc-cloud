@@ -26,12 +26,12 @@ public interface UserService extends UserDetailsService {
     /**
      * 手机号一键登录
      */
-    TokenDto autoLogin(String identity, String token) throws ApiException;
+    TokenDto autoLogin(String identity, String token,String ipAddress,String deviceId) throws ApiException;
 
     /**
      * 手机号验证码登录
      */
-    TokenDto smsLogin(String phone, String code) throws ApiException;
+    TokenDto smsLogin(String phone, String code,String ipAddress,String deviceId) throws ApiException;
 
     /**
      * 账号密码登录

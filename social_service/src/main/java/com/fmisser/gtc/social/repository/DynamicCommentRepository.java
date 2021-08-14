@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface DynamicCommentRepository extends JpaRepository<DynamicComment, Long> {
     Page<DynamicComment> findByDynamicIdAndIsDeleteOrderByCreateTimeDesc(Long dynamicId, int isDelete, Pageable pageable);
@@ -23,4 +25,17 @@ public interface DynamicCommentRepository extends JpaRepository<DynamicComment, 
             "WHERE tdc.isDelete = 0 AND tdc.dynamicId = :dynamicId GROUP BY tdc.id " +
             "ORDER BY tdc.id DESC")
     Page<DynamicCommentDto> getCommentList(@Param("dynamicId") Long dynamicId, Pageable pageable);
+
+
+    @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.DynamicCommentDto" +
+            "(tdc.id, tdc.dynamicId, tdc.commentIdTo, tdc.userIdFrom, tdc.userIdTo, " +
+            "tdc.content, tdc.createTime) " +
+            "FROM DynamicComment tdc " +
+            "WHERE tdc.isDelete = 0 AND tdc.dynamicId = :dynamicId GROUP BY tdc.id " +
+            "ORDER BY tdc.id DESC")
+    List<DynamicCommentDto> getCommentListByDynamicId(@Param("dynamicId") Long dynamicI);
+
+
+    @Override
+    List<DynamicComment> findAll();
 }

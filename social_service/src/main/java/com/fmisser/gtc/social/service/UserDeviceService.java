@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.service;
 
 import com.fmisser.gtc.base.exception.ApiException;
+import com.fmisser.gtc.social.domain.DeviceForbidden;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.domain.UserDevice;
 
@@ -16,4 +17,7 @@ public interface UserDeviceService {
                String channel, String deviceDescribe, String ipAddr, String lang,
                String appVersion, String sysVersion, String deviceBrand, String deviceIfv,String localizedmodel) throws ApiException;
     UserDevice getRecentUserDevice(User user) throws ApiException;
+
+
+    UserDevice getUserDeviceById(Long id) throws ApiException;
 }

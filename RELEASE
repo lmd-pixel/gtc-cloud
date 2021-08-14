@@ -11,8 +11,9 @@
     systemctl stop docker
 
     vi /lib/systemd/system/docker.service
+    i开启编辑
     ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
-
+    esc退出后输入:wq!保存
     systemctl daemon-reload
     systemctl restart docker
 
@@ -28,7 +29,7 @@
 
 4. 打包成docker
     设置docker地址
-    测试： export DOCKER_HOST=tcp://42.192.212.67:2375
+    测试： export DOCKER_HOST=tcp://101.34.163.168:2375
     正式： export DOCKER_HOST=tcp://121.4.13.132:2375
     hleen: export DOCKER_HOST=tcp://1.116.157.97:2375
     打包  mvn docker:build (如果设置了防火墙，先打开该端口)
@@ -38,6 +39,7 @@
 6. 打开centos防火墙 防止 docker 打开2375端口后被植入其他容器
 
    systemctl start firewalld (打开防火墙后，docker需要重启，否则内部网络存在联通问题)
+   systemctl stop firewalld
 
    打开http和https端口
    firewall-cmd --zone=public --add-port=80/tcp --permanent

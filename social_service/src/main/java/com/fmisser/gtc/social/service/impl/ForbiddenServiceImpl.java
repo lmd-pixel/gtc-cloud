@@ -53,7 +53,12 @@ public class ForbiddenServiceImpl implements ForbiddenService {
 
             Date endTime = new Date(startTime.getTime() + (long) days * 3600 * 1000 * 24);
             forbidden.setEndTime(endTime);
+            redisService.set("user:forbidden:"+user.getPhone(),user.getPhone(),(long) days * 3600 * 24);
+        }else{
+
+            redisService.set("user:forbidden:"+user.getPhone(),user.getPhone(),365*5 * 3600 * 24);
         }
+
 
         forbiddenRepository.save(forbidden);
 
@@ -100,12 +105,24 @@ public class ForbiddenServiceImpl implements ForbiddenService {
         deviceForbidden.setUserId(userDevice.getUserId());
         if(type.equals("1")){
             deviceForbidden.setDeviceId(userDevice.getId());
-            redisService.set(userDevice.getUserId()+":"+userDevice.getDeviceAndroidId(),userDevice.getDeviceAndroidId(),(long) days * 3600 * 24);
+            //存入redis中设置key为设备ID+用户ID+设备码
+            if (days > 0) {
+                redisService.set(userDevice.getId()+":"+userDevice.getUserId()+":"+userDevice.getDeviceAndroidId(),userDevice.getDeviceAndroidId(),(long) days * 3600 * 24);
+            }else{
+                redisService.set(userDevice.getId()+":"+userDevice.getUserId()+":"+userDevice.getDeviceAndroidId(),userDevice.getDeviceAndroidId(),365*5 * 3600 * 24);
+            }
 
         }
         if(type.equals("2")){
             deviceForbidden.setIp(userDevice.getIpAddr());
-            redisService.set(userDevice.getUserId()+":"+userDevice.getIpAddr(),userDevice.getIpAddr(),(long) days * 3600  * 24);
+            //存入redis中设置key为设备ID+用户ID+IP
+            if (days > 0) {
+                redisService.set(userDevice.getId()+":"+userDevice.getUserId()+":"+userDevice.getIpAddr(),userDevice.getIpAddr(),(long) days * 3600  * 24);
+            }else{
+                redisService.set(userDevice.getId()+":"+userDevice.getUserId()+":"+userDevice.getIpAddr(),userDevice.getIpAddr(),365*5 * 3600  * 24);
+
+            }
+
         }
          deviceForbiddenRepository.save(deviceForbidden);
 
@@ -151,6 +168,10 @@ public class ForbiddenServiceImpl implements ForbiddenService {
 
         Forbidden forbidden = optionalForbidden.get();
         forbidden.setDisable(1);
+        String key="user:forbidden:"+forbidden.getUserId();
+        if(redisService.hasKey(key)){
+            redisService.delKey(key);
+        }
         forbiddenRepository.save(forbidden);
 
         return 1;

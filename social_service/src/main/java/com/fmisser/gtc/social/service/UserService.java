@@ -13,7 +13,7 @@ import java.util.Map;
 public interface UserService {
 
     // 创建用户
-    User create(String phone, int gender, String nick, String inviteCode, String version,String channelId) throws ApiException;
+    User create(String phone, int gender, String nick, String inviteCode, String version,String channelId,String ipAdress,String deviceId) throws ApiException;
 
     // 通过用户名查找用户实体
     User getUserByUsername(String username) throws ApiException;
@@ -90,5 +90,8 @@ public interface UserService {
     User updateAuditVideo(User user, Integer updateType, Integer code,
                           Map<String, MultipartFile> multipartFileMap) throws ApiException;
 
-    List<AnchorCallStatusDto> getAnchorStatusList(List<String> anchorList) throws ApiException;
+    List<AnchorCallStatusDto> getAnchorStatusList() throws ApiException;
+
+
+    Map<String, Object> getAnchorStatusLCount(List<String> anchorList) throws ApiException;
 }

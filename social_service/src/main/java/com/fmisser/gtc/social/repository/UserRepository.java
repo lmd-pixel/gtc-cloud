@@ -208,7 +208,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "OR tr2.start_time2 IS NULL OR tr2.end_time2 IS NULL)" +
             ") " +
             "WHERE tu2.identity = 1 AND (tu2.gender LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND tr2.id IS NULL) " +
-            "ORDER BY sort1 , sort2 DESC LIMIT ?3 OFFSET ?4",
+            "ORDER BY  sort1 , sort2 DESC LIMIT ?3 OFFSET ?4",
             nativeQuery = true)
     List<User> getAnchorListBySystemAndActive(Date date, Integer gender, int limit, int offset, int type);
 
@@ -319,7 +319,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                                        int limit, int offset, String order);
 
     // 改良版主播数据模糊查询（正确了？）
-    @Query(value = "SELECT tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.gender AS gender, " +
+    @Query(value = "SELECT tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.gender AS gender,tu.channel_id AS channel_id, " +
             "tu.follows AS follows, tu.create_time AS createTime, " +
             "(SELECT SUM(tc.duration) FROM t_call tc WHERE tc.user_id_to = tu.id AND type = 0) AS audioDuration, " +
             "(SELECT SUM(tc.duration) FROM t_call tc WHERE tc.user_id_to = tu.id AND type = 1) AS videoDuration, " +
@@ -334,13 +334,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
             "(tu.phone LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
             "(tu.gender LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) AND " +
-            "(tu.create_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL) " +
-            "ORDER BY ?9 " +
+            "(tu.create_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL) AND" +
+            "(tu.channel_id LIKE CONCAT('%', ?9, '%') OR ?9 IS NULL)  " +
+            "ORDER BY create_time desc " +
             "LIMIT ?7 OFFSET ?8 ",
             nativeQuery = true)
     List<AnchorDto> anchorStatisticsEx2(String digitId, String nick, String phone, Integer gender,
                                        Date startTime, Date endTime,
-                                       int limit, int offset, String order);
+                                       int limit, int offset, String channelId);
 
     // 统计主播查询的总数量
     @Query(value = "SELECT COUNT(tu.id) " +
@@ -356,7 +357,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                                  Date startTime, Date endTime);
 
     // 改良版 用户数据模糊查询（正确？）
-    @Query(value = "SELECT tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, " +
+    @Query(value = "SELECT tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.channel_id AS channel_id," +
             "tu.create_time AS createTime, " +
             "(SELECT SUM(tr.coin) FROM t_recharge tr WHERE tr.user_id = tu.id AND tr.status >= 20) AS rechargeCoin, " +
             "(SELECT SUM(tcb.origin_coin) FROM t_call_bill tcb WHERE tcb.user_id_from = tu.id AND type = 0) AS audioCoin, " +
@@ -369,13 +370,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
             "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
             "(tu.phone LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
-            "(tu.create_time BETWEEN ?4 AND ?5 OR ?4 IS NULL OR ?5 IS NULL) " +
-            "ORDER BY ?8 " +
+            "(tu.create_time BETWEEN ?4 AND ?5 OR ?4 IS NULL OR ?5 IS NULL)  AND" +
+            "(tu.channel_id LIKE CONCAT('%', ?8, '%') OR ?8 IS NULL)  " +
+            "ORDER BY create_time desc " +
             "LIMIT ?6 OFFSET ?7 ",
             nativeQuery = true)
     List<ConsumerDto> consumerStatisticsEx2(String digitId, String nick, String phone,
                                             Date startTime, Date endTime,
-                                            int limit, int offset, String order);
+                                            int limit, int offset, String channelId);
+
+    @Query(value = "SELECT distinct(tu.channel_id) " +
+            "FROM t_user tu where  tu.channel_id is not null",nativeQuery = true)
+    List<String> getBrandList();
 
     // 改良版 用户数据模糊查询（还是不对）
     @Query(value = "SELECT tu.digitId AS digitId, tu.nick AS nick, tu.phone AS phone, " +

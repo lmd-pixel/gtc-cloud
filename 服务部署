@@ -6,11 +6,13 @@
 
 2. 打包项目源码
 通过 mvn clean package -Dmaven.test.skip=true 来打包，具体需要打包哪些服务，可以在根目录的 pom.xml里进行修改
+//
 
 3. 通过docker上传docker image
    腾讯云打开对应服务器的2375端口
 
    执行命令//101.34.163.168
+   set DOCKER_HOST=tcp://175.24.191.245:2375
    export/set DOCKER_HOST=tcp://101.34.163.168:2375（测试） 或者 export/set DOCKER_HOST=tcp://121.4.13.132:2375 （正式）
    cd social_service(打包哪个服务切换到哪个服务的目录)
    mvn docker:build
@@ -24,8 +26,14 @@
 
 
    运行新的 social server
-   sudo docker run -p 8003:8003 --name gtc_social -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/social/:/ROOT/logs/ -d social
+   sudo docker run -p 8003:8003 --name gtc_social -v /etc/localtime:/etc/localtime:ro -v /etc/timezone/timezone:/etc/timezone:ro -v /root/docker/logs/social/:/ROOT/logs/ -d social
 
+
+
+1.安装镜像
+docker pull nginx
+2.创建并启动nginx容器
+docker run --name nginx-101 -p 80:80 -v /etc/localtime:/etc/localtime:ro  -v /root/docker/nginx-proxy/conf.d:/etc/nginx/conf.d -d nginx
 
 ##############
 将oss.55peiliao.com 重定向到cos.55peiliao.com

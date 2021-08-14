@@ -20,6 +20,7 @@ public interface ConsumerDto {
     BigDecimal getVideoCoin();
     BigDecimal getMessageCoin();
     BigDecimal getGiftCoin();
+    String getChannelId();
     BigDecimal getCoin();
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     Date getCreateTime();

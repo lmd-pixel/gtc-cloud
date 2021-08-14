@@ -151,7 +151,10 @@ public class TencentImService implements ImService {
         call.setStartTime(new Date());
 
         if (call.getCallMode() == 0) {
-            redisService.set(userTo.getDigitId(), "1", 65);
+            if(userTo!=null){
+                redisService.set(userTo.getDigitId(), "1", 65);
+            }
+
         } else {
             redisService.set(userFrom.getDigitId(), "1", 65);
         }
@@ -163,7 +166,10 @@ public class TencentImService implements ImService {
     public Map<String, Object> hangup(User user, Long roomId, String version) throws ApiException {
 
         if (user.getIdentity() == 1) {
-            redisService.set(user.getDigitId(), "0", 65);
+            if(redisService.hasKey(user.getDigitId())){
+                redisService.delKey(user.getDigitId());
+            }
+            redisService.set(user.getDigitId(), "0",28);
         }
 
 

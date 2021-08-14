@@ -31,6 +31,20 @@ public class DynamicCommentDto {
         this.gender = gender;
     }
 
+    public DynamicCommentDto(Long id, Long dynamicId, Long commentIdTo,
+                             Long userIdFrom, Long userIdTo,
+                             String content, Date createTime
+                           ) {
+        this.id = id;
+        this.dynamicId = dynamicId;
+        this.commentIdTo = commentIdTo;
+        this.userIdFrom = userIdFrom;
+        this.userIdTo = userIdTo;
+        this.content = content;
+        this.createTime = createTime;
+
+    }
+
     private Long id;
     private Long dynamicId;
     private Long commentIdTo;

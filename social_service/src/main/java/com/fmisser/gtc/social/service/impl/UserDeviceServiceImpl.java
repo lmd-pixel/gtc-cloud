@@ -1,6 +1,7 @@
 package com.fmisser.gtc.social.service.impl;
 
 import com.fmisser.gtc.base.exception.ApiException;
+import com.fmisser.gtc.social.domain.DeviceForbidden;
 import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.domain.UserDevice;
 import com.fmisser.gtc.social.repository.UserDeviceRepository;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author fmisser
@@ -100,5 +102,14 @@ public class UserDeviceServiceImpl implements UserDeviceService {
     @Override
     public UserDevice getRecentUserDevice(User user) throws ApiException {
         return userDeviceRepository.getTopByUserIdOrderByCreateTimeDesc(user.getId());
+    }
+
+    @Override
+    public UserDevice getUserDeviceById(Long id) throws ApiException {
+        Optional<UserDevice> userDeviceOptional = userDeviceRepository.findById(id);
+        if (!userDeviceOptional.isPresent()) {
+            throw new ApiException(1005, "数据不存在");
+        }
+        return userDeviceOptional.get();
     }
 }

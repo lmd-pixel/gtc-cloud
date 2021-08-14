@@ -25,7 +25,7 @@ public interface DeviceForbiddenRepository extends JpaRepository<DeviceForbidden
 
 
     @Query(value = "SELECT tf.id AS id, tu.digit_id AS digitId,tu.identity As identity, tu.nick AS nick, " +
-            "tf.days AS days, tf.message AS message, tf.start_time AS startTime, tf.end_time AS endTime,tf.ip AS ipAdress,if(tud.device_type=1,tud.device_android_id,tud.device_name) AS deviceName " +
+            "tf.days AS days, tf.message AS message, tf.start_time AS startTime, tf.end_time AS endTime,tf.ip AS ipAdress,tud.device_android_id AS deviceName " +
             "FROM t_device_forbidden tf " +
             "INNER JOIN t_user tu ON tu.id = tf.user_id AND " +
             "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +

@@ -95,7 +95,7 @@ public class UserManagerServiceImpl implements UserManagerService {
 //                .anchorStatistics(digitId, nick, phone, gender, startTime, endTime, pageable);
 
         List<AnchorDto> anchorDtoList = userRepository
-                .anchorStatisticsEx2(digitId, nick, phone, gender, startTime, endTime, pageSize, (pageIndex - 1) * pageSize, sortProp,channelId);
+                .anchorStatisticsEx2(digitId, nick, phone, gender, startTime, endTime, pageSize, (pageIndex - 1) * pageSize, channelId);
 
         Long totalCount = userRepository.countAnchorStatisticsEx(digitId, nick, phone, gender, startTime, endTime);
         Long totalPage = (totalCount / pageSize) + 1;

@@ -18,4 +18,19 @@ public class FollowDto {
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 
+    private int status;
+
+    public FollowDto(){
+
+    }
+
+
+    public FollowDto(Long userIdFrom,Long userIdTo,Date createTime,int status){
+        this.userIdFrom=userIdFrom;
+        this.userIdTo=userIdTo;
+        this.createTime=createTime;
+        this.status=status;
+
+    }
+
 }

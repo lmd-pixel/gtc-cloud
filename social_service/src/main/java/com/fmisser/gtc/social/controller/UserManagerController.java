@@ -61,7 +61,7 @@ public class UserManagerController {
                     paramType = "query", defaultValue = "0", dataType = "Integer"),
             @ApiImplicitParam(name = "sortDirection",
                     value = "排序方向 0：AS， 1： DESC",
-                    paramType = "query", defaultValue = "0", dataType = "Integer")})
+                    paramType = "query", defaultValue = "1", dataType = "Integer")})
     @PreAuthorize("hasAnyRole('MANAGER')")
     @RequestMapping(value = "/list-anchor", method = RequestMethod.GET)
     public ApiResp<List<AnchorDto>> getAnchorList(@RequestParam(value = "digitId", required = false) String digitId,

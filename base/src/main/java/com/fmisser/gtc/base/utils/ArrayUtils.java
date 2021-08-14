@@ -41,12 +41,16 @@ public class ArrayUtils {
 
         Iterator<String> keys = map.keySet().iterator();
 
-        while (keys.hasNext()) {
-            String key = keys.next();
-            System.out.print(key + ":" + map.get(key).intValue() + ", ");
+      if(keys.hasNext()){
+          while (keys.hasNext()) {
+              String key = keys.next();
+              System.out.print(key + ":" + map.get(key).intValue() + ", ");
 
-            return Pair.of(key, map.get(key).intValue());
-        }
+              return Pair.of(key, map.get(key).intValue());
+          }
+      }else{
+          return Pair.of("",0);
+      }
         return null;
     }
 }

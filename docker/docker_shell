@@ -153,14 +153,14 @@ docker cp logstash.yml gtc_cloud_logstash:/usr/share/logstash/config/logstash.ym
 
 ############################## 服务
 sudo docker run -p 8001:8001 --name gtc_registry -d registry
-sudo docker run -p 8002:8002 --name gtc_auth -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/auth/:/ROOT/logs/ -d auth
-sudo docker run -p 8003:8003 --name gtc_social -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/social/:/ROOT/logs/ -d social
-sudo docker run -p 8005:8005 --name gtc_push -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/push/:/ROOT/logs/ -d push
-sudo docker run -p 8088:8088 --name gtc_gateway -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -d gateway
+sudo docker run -p 8002:8002 --name gtc_auth -v /etc/localtime:/etc/localtime:ro -v /etc/timezone/timezone:/etc/timezone:ro -v /root/docker/logs/auth/:/ROOT/logs/ -d auth
+sudo docker run -p 8003:8003 --name gtc_social -v /etc/localtime:/etc/localtime:ro -v /etc/timezone/timezone:/etc/timezone:ro -v /root/docker/logs/social/:/ROOT/logs/ -d social
+sudo docker run -p 8005:8005 --name gtc_push -v /etc/localtime:/etc/localtime:ro -v /etc/timezone/timezone:/etc/timezone:ro -v /root/docker/logs/push/:/ROOT/logs/ -d push
+sudo docker run -p 8088:8088 --name gtc_gateway -v /etc/localtime:/etc/localtime:ro -v /etc/timezone/timezone:/etc/timezone:ro -d gateway
 sudo docker run -p 8089:8089 --name gtc_monitor -d monitor
 
-sudo docker run -p 8080:8080 --name gtc_pay -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/pay/:/root/logs/pay/ -d pay
-sudo docker run -p 8006:8006 --name gtc_passport -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro -v /root/docker/logs/pay/:/root/logs/pay/ -d passport
+sudo docker run -p 8080:8080 --name gtc_pay -v /etc/localtime:/etc/localtime:ro -v /etc/timezone/timezone:/etc/timezone:ro -v /root/docker/logs/pay/:/root/logs/pay/ -d pay
+sudo docker run -p 8006:8006 --name gtc_passport -v /etc/localtime:/etc/localtime:ro -v /etc/timezone/timezone:/etc/timezone:ro -v /root/docker/logs/pay/:/root/logs/pay/ -d passport
 
 # php
 sudo docker run -p 9000:9000 --name gtc_website -v /root/docker/php-website/hangzhouYY:/www:rw --privileged=true -d php:5.6-fpm
@@ -177,4 +177,10 @@ sudo docker run -p 19000:9000 -p 18000:8000 --name gtc_portainer -v /var/run/doc
 ## 查询容器ip
 docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' gtc_website
 
+1安装镜像
+docker pull nginx
+2. 创建并启动nginx容器
+
+3修改配置文件
+4重启
 

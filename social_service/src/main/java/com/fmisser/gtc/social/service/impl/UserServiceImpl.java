@@ -9,6 +9,7 @@ import com.fmisser.gtc.base.dto.social.ProfitConsumeDetail;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.i18n.SystemTips;
 import com.fmisser.gtc.base.prop.OssConfProp;
+import com.fmisser.gtc.base.utils.ArrayUtils;
 import com.fmisser.gtc.base.utils.CryptoUtils;
 import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.*;
@@ -18,9 +19,14 @@ import com.fmisser.gtc.social.service.*;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.util.Pair;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -34,6 +40,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -65,16 +72,90 @@ public class UserServiceImpl implements UserService {
     private final GuardService guardService;
     private final CommonService commonService;
     private final RedisService redisService;
+    private final SysAppConfigService sysAppConfigService;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Transactional
     @Override
-    public User create(String phone, int gender, String nick, String inviteCode, String version,String channelId) throws ApiException {
+    public User create(String phone, int gender, String nick, String inviteCode, String version,String channelId,String ipAdress,String deviceId) throws ApiException {
         // check exist
         if (userRepository.existsByUsername(phone)) {
             // 已经存在
             throw new ApiException(-1, "用户名重复");
         }
+        /****
+        *客户端注册是检查IP是否在黑名单中，在不允许注册，不在黑名单中检查请求注册的IP在redis中的总数是否小于等于2
+         * 小于等于2时检查是否有设备码，
+         *  没有时往redis中写入允许注册的ip+1
+         *  有设备码检查设备码是否在设备码黑名单
+         *    在设备码黑名单不允许注册
+         *    不在设备码黑名单检查注册时请求的设备码在redis中的总数是否小于等于2
+         *      小于等于2时
+         */
+        if(!StringUtils.isEmpty(ipAdress) && ipAdress!="" && ipAdress!=null) {//注册时设备和ip黑名单检查
 
+            Set<String> keys_ip = redisTemplate.keys("*:" + ipAdress);
+            List<String> ipList = new ArrayList<String>();
+            List<Object> results = redisTemplate.executePipelined(new RedisCallback<String>() {
+                @Override
+                public String doInRedis(RedisConnection connection) throws DataAccessException {
+                    for (String s : keys_ip) {
+                        String ipAdress = (String) redisService.get(s);
+                        ipList.add(ipAdress);
+                    }
+                    return null;
+                }
+            });
+
+
+            Set<String> keys_device = redisTemplate.keys("*:" + deviceId);
+            List<String> deciceIdList=new ArrayList<String>();
+            List<Object> results2 = redisTemplate.executePipelined(new RedisCallback<String>() {
+                @Override
+                public String doInRedis(RedisConnection connection) throws DataAccessException {
+                    for (String s : keys_device) {
+                        String device = (String) redisService.get(s);
+                        deciceIdList.add(device);
+                    }
+                    return null;
+                }
+            });
+            if(ipList.size()>0){
+                throw new ApiException(-1, "你无法注册新的账号");
+            }else{
+                List<Object> lists = redisTemplate.opsForList().range("create:user:ip:list",0,-1);
+                List<String> ipResultList = (List<String>)(List)lists;
+                if(ArrayUtils.getCommonTotal(ipResultList).getFirst().equals("")){
+                    redisTemplate.opsForList().rightPush("create:user:ip:list",ipAdress);//没有设备码允许ip注册+
+                }else{
+                    if(ArrayUtils.getCommonTotal(ipResultList).getFirst().equals(ipAdress) && ArrayUtils.getCommonTotal(ipResultList).getSecond()<=2){
+                        if(!StringUtils.isEmpty(deviceId) && deviceId!="" && ipAdress!=null){
+                            if(deciceIdList.size()>0){
+                                throw new ApiException(-1, "你无法注册新的账号");
+                            }else{
+                                List<Object> lists2 = redisTemplate.opsForList().range("create:user:device:list",0,-1);
+                                List<String> deviceResultList = (List<String>)(List)lists2;
+                                if(ArrayUtils.getCommonTotal(deviceResultList).getFirst().equals("")){
+                                    redisTemplate.opsForList().rightPush("create:user:device:list",deviceId);
+                                }else{
+                                    if(ArrayUtils.getCommonTotal(deviceResultList).getFirst().equals(deviceId) && ArrayUtils.getCommonTotal(deviceResultList).getSecond()<=2){
+                                        redisTemplate.opsForList().rightPush("create:user:device:list",deviceId);
+                                    }else{
+                                        throw new ApiException(-1, "你无法注册新的账号");
+                                    }
+                                }
+                            }
+                        }else{
+                            redisTemplate.opsForList().rightPush("create:user:ip:list",ipAdress);//没有设备码允许ip注册+1
+                        }
+                    }else{
+                        throw new ApiException(-1, "你无法注册新的账号");
+                    }
+                }
+            }
+        }
+   /*********************************************************************************/
         // create
         User user = new User();
         user.setUsername(phone);
@@ -131,9 +212,9 @@ public class UserServiceImpl implements UserService {
         }
 
         // 注册送 视频卡 和 聊天券
-        if (sysConfigService.isAppAudit() && sysConfigService.getAppAuditVersion().equals(version)) {
-            // 如果是审核版本
-
+        if (sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version)) {
+            // 如果是审核版本 免费送20张聊天券
+            couponService.addCommMsgFreeCoupon(user.getId(), 20, 10);
         } else {
             // 非审核版本
             if (sysConfigService.isRegSendFreeVideo()) {
@@ -191,6 +272,14 @@ public class UserServiceImpl implements UserService {
         Optional<User> userOptional = userRepository.findByDigitId(digitId);
         if (!userOptional.isPresent()) {
             throw new ApiException(1005, "用户数据不存在");
+        }
+        return userOptional.get();
+    }
+
+    public User getUserByDigitId2(String digitId) {
+        Optional<User> userOptional = userRepository.findByDigitId(digitId);
+        if (!userOptional.isPresent()) {
+            return  null;
         }
         return userOptional.get();
     }
@@ -1597,24 +1686,54 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<AnchorCallStatusDto> getAnchorStatusList(List<String> anchorList) throws ApiException {
+    public List<AnchorCallStatusDto> getAnchorStatusList() throws ApiException {
         // TODO: 2021/7/20 测试正确性
-        List<Pair<String, String>> pairs = redisService.getList(anchorList);
+        String thumbnail_tail = "!head"; // 300x300
+        Set<String> set=redisTemplate.keys("*");
+        List<String> list = new ArrayList<String>(set);
         List<AnchorCallStatusDto> dtoList = new ArrayList<>();
+        List<Object> results = redisTemplate.executePipelined(new RedisCallback<String>() {
+            @Override
+            public String doInRedis(RedisConnection connection) throws DataAccessException {
+                for (String s: list) {
+                    User user=getUserByDigitId2(s);
+                    if(getUserByDigitId2(s)!=null){
+                        redisService.get(s);
+                        connection.get(s.getBytes(StandardCharsets.UTF_8));
+                        AnchorCallStatusDto dto = new AnchorCallStatusDto();
+                        if(user.getIdentity()==1){
+                            dto.setDigitId(user.getDigitId());
 
-        for (Pair pair: pairs) {
-            AnchorCallStatusDto dto = new AnchorCallStatusDto();
-            dto.setDigitId( pair.getFirst()+"");
-            if (Objects.isNull(pair.getSecond())) {
-                dto.setStatus(0);
-            } else {
-                String val=pair.getSecond()+"";
-                dto.setStatus(Integer.valueOf(val));
+                            String thumbnailUrl = String.format("%s/%s%s%s",
+                                    cosService.getDomainName(ossConfProp.getCosCdn(),
+                                            ossConfProp.getUserDynamicCosBucket()),
+                                    ossConfProp.getCosUserProfileRootPath(), user.getHead(), thumbnail_tail);
+                            dto.setStatus(Integer.valueOf(redisService.get(s).toString()));
+                            dto.setHeadThumbnailUrl(thumbnailUrl);
+                            dtoList.add(dto);
+                        }
+
+                    }
+                }
+                return null;
             }
-
-            dtoList.add(dto);
-        }
+        });
         return dtoList;
+    }
+
+    @Override
+    public Map<String, Object> getAnchorStatusLCount(List<String> anchorList) throws ApiException {
+        List<Pair<String, String>> pairs = redisService.getList(anchorList);
+        Map<String, Object> resultMap = new HashMap<>();
+        int i=0;
+        for(Pair  pair: pairs){
+            if(pair.getSecond().toString().equals("1")){
+                i++;
+            }
+        }
+        resultMap.put("onLine_anchor",i);
+        return  resultMap;
+
     }
 
     // TODO: 2020/12/30 整理到其他地方

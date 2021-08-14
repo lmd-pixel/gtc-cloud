@@ -50,7 +50,9 @@ public class UserController {
                          @RequestParam(value = "nick", required = false) String nick,
                          @RequestParam("gender") @Range(min = 0, max = 1) int gender,
                          @RequestParam(value = "invite", required = false) String invite,
-                         @RequestParam(value = "channelId", required = false) String channelId
+                         @RequestParam(value = "channelId", required = false) String channelId,
+                         @RequestParam(value = "ipAdress", required = false) String ipAdress,
+                         @RequestParam(value = "deviceId", required = false) String deviceId
       ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
@@ -59,7 +61,7 @@ public class UserController {
             // return error
             throw new ApiException(-1, "非法操作，认证用户无法创建其他用户资料！");
         }
-        User user = userService.create(username, gender, nick, invite, version,channelId);
+        User user = userService.create(username, gender, nick, invite, version,channelId,ipAdress,deviceId);
 
         // 针对版本审核
         if (sysConfigService.getAppAuditVersion().equals(version)) {
@@ -241,9 +243,19 @@ public class UserController {
         User userDo = userService.getUserByUsername(username);
 
         // 用户获取信息认为用户活跃，更新打招呼信息
-        if (sysConfigService.isMsgGreetEnable()) {
-            greetService.createGreet(userDo);
+        if(sysAppConfigService.getAppAuditVersion(version).equals(version)){
+            SysAppConfig sysAppConfig=sysAppConfigService.getSysAppconfig(version);
+            if(sysAppConfig!=null && sysAppConfig.getHarassIsStart().equals("1")){
+                greetService.createGreet(userDo);
+            }
+        }else{
+            if (sysConfigService.isMsgGreetEnable()) {
+                greetService.createGreet(userDo);
+            }
         }
+//        if (sysConfigService.isMsgGreetEnable()) {
+//            greetService.createGreet(userDo);
+//        }
 
         // 当不是审核版本时发送充值消息
         if (!sysConfigService.getAppAuditVersion().equals(version)) {

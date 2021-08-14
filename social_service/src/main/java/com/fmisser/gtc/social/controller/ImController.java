@@ -88,8 +88,9 @@ public class ImController {
         User userDo = userService.getUserByUsername(username);
 
         User userTo = null;
+        System.out.println("".equals(toUserDigitId));
         if (!StringUtils.isEmpty(toUserDigitId)) {
-            userTo = userService.getUserByDigitId(toUserDigitId);
+           // userTo = userService.getUserByDigitId(toUserDigitId);
         }
 
         int ret = imService.accept(userDo, userTo, roomId);

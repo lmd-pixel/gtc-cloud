@@ -41,4 +41,11 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
             "WHERE tf.status = 1 AND tf.userIdTo = :userId " +
             "GROUP BY tf.id ORDER BY tf.modifyTime DESC")
     Page<FansDto> getFansList(@Param("userId") Long userId, Pageable pageable);
+
+    @Query(value = "SELECT new com.fmisser.gtc.base.dto.social.FollowDto" +
+            "(tf.userIdFrom, tf.userIdTo, tf.createTime,tf.status) " +
+            "FROM Follow tf " +
+            "WHERE tf.status=1 and tf.userIdTo = :userId and tf.userIdFrom =:selfUser " +
+            "GROUP BY tf.id ORDER BY tf.modifyTime DESC")
+    List<FollowDto> getFollwList(@Param("userId") Long userId,@Param("selfUser") Long selfUser);
 }

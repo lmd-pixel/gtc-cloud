@@ -1,10 +1,10 @@
 package com.fmisser.gtc.social.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.fmisser.fpp.cache.redis.service.RedisService;
 import com.fmisser.fpp.oss.cos.service.CosService;
 import com.fmisser.gtc.base.aop.ReTry;
-import com.fmisser.gtc.base.dto.social.DynamicCommentDto;
-import com.fmisser.gtc.base.dto.social.DynamicDto;
-import com.fmisser.gtc.base.dto.social.GuardDto;
+import com.fmisser.gtc.base.dto.social.*;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.OssConfProp;
 import com.fmisser.gtc.base.utils.CryptoUtils;
@@ -13,28 +13,40 @@ import com.fmisser.gtc.social.domain.Dynamic;
 import com.fmisser.gtc.social.domain.DynamicComment;
 import com.fmisser.gtc.social.domain.DynamicHeart;
 import com.fmisser.gtc.social.domain.User;
-import com.fmisser.gtc.social.repository.DynamicCommentRepository;
-import com.fmisser.gtc.social.repository.DynamicHeartRepository;
-import com.fmisser.gtc.social.repository.DynamicRepository;
+import com.fmisser.gtc.social.repository.*;
 import com.fmisser.gtc.social.service.*;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.util.Pair;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+
+import com.alibaba.fastjson.JSON;
+
 
 import static com.fmisser.gtc.social.service.impl.UserServiceImpl.*;
 
@@ -45,11 +57,15 @@ public class DynamicServiceImpl implements DynamicService {
     private final DynamicRepository dynamicRepository;
     private final DynamicHeartRepository dynamicHeartRepository;
     private final DynamicCommentRepository dynamicCommentRepository;
+    private final FollowRepository followRepository;
+    private final BlockRepository blockRepository;
     private final OssConfProp ossConfProp;
     private final ImCallbackService imCallbackService;
     private final SysConfigService sysConfigService;
 //    private final OssService ossService;
 //    private final MinioService minioService;
+
+
     private final CosService cosService;
     private final GuardService guardService;
     private final ImService imService;
@@ -57,12 +73,15 @@ public class DynamicServiceImpl implements DynamicService {
     private final CommonService commonService;
     private final AsyncService asyncService;
     private final SysAppConfigService sysAppConfigService;
+    private RedisService redisService;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     @SneakyThrows
     public DynamicDto create(User user, int type, String content, String city,
                              BigDecimal longitude, BigDecimal latitude,
-                          Map<String, MultipartFile> multipartFileMap) throws ApiException {
+                             Map<String, MultipartFile> multipartFileMap) throws ApiException {
 
 //        int ret = imCallbackService.textModeration(user.getDigitId(), content, "biz_dymic", 1);
 //        if (ret == 0) {
@@ -376,6 +395,8 @@ public class DynamicServiceImpl implements DynamicService {
         return _prepareDynamicCommentDtoResponse(dynamicCommentDtos, selfUserId);
     }
 
+
+
     @Override
     public List<DynamicDto> getLatestDynamicList(User selfUser, int pageIndex, int pageSize, String version) throws ApiException, ParseException {
         // 如果不提供自己的 user id 则默认设置为0
@@ -383,10 +404,9 @@ public class DynamicServiceImpl implements DynamicService {
         if (selfUser != null) {
             selfUserId = selfUser.getId();
         }
-
         // 审核控制
         Date dateLimit = sysAppConfigService.getAppAuditDynamicDateLimit("",version);
-                //sysConfigService.getAppAuditDynamicDateLimit(version);
+        //sysConfigService.getAppAuditDynamicDateLimit(version);
 
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
         List<DynamicDto> dynamicDtos = dynamicRepository
@@ -399,6 +419,20 @@ public class DynamicServiceImpl implements DynamicService {
             guardDtoList = new ArrayList<>();
         }
         return _prepareDynamicDtoResponse(dynamicDtos, guardDtoList, false);
+    }
+
+    public static String[] convertMap(Map<String,Object> keyMap,String [] dataList){
+
+        for(int i=0;i<dataList.length;i++){
+
+            for(Map.Entry<String, Object> m:keyMap.entrySet()){
+                if(m.getValue().equals(dataList[i])){
+                    dataList[i]=m.getKey();
+                }
+            }
+        }
+
+        return dataList;
     }
 
     @Override
@@ -439,8 +473,8 @@ public class DynamicServiceImpl implements DynamicService {
 
     @Override
     public Pair<List<DynamicDto>, Map<String, Object>> managerListDynamic(String digitId, String nick, String content,
-                                   Date startTime, Date endTime,
-                                   int pageIndex, int pageSize) throws ApiException {
+                                                                          Date startTime, Date endTime,
+                                                                          int pageIndex, int pageSize) throws ApiException {
         Pageable pageable = PageRequest.of(pageIndex - 1, pageSize);
         Page<DynamicDto> dynamicDtoPage =
                 dynamicRepository.getManagerDynamicList(digitId, nick, startTime, endTime, pageable);
@@ -607,9 +641,8 @@ public class DynamicServiceImpl implements DynamicService {
     }
 
     private List<DynamicDto> _prepareDynamicDtoResponse(List<DynamicDto> dynamicDtos, List<GuardDto> guardList, boolean isManager) {
-        for (DynamicDto dynamicDto:
-                dynamicDtos) {
 
+        for (DynamicDto dynamicDto: dynamicDtos) {
             // 判断是否是守护者
             AtomicBoolean isGuard = new AtomicBoolean(false);
             if (dynamicDto.getType() >= 20) {
@@ -625,7 +658,6 @@ public class DynamicServiceImpl implements DynamicService {
                 // 不是守护动态则当成是守护的可见
                 isGuard.set(true);
             }
-
             // cos 通过设定后缀返回不同作用的图（比如缩略图、模糊效果等）
             final String thumbnail_tail;
             final String origin_tail;
@@ -657,6 +689,66 @@ public class DynamicServiceImpl implements DynamicService {
                 dynamicDto.setPictureThumbnailUrlList(pictureThumbnailUrlList);
             }
 
+          if(!isManager){
+              Long selfUser = null;
+              Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+              if (authentication.isAuthenticated() ) {
+                  String username = authentication.getPrincipal().toString();
+
+                  // 未授权默认登录的账户名字未 anonymousUser
+                  if (!username.equals("anonymousUser")) {
+                      selfUser = userService.getUserByUsername(username).getId();
+                  }
+              }
+              /*从数据库中直接获取*/
+              //对应的评论列表数据
+            dynamicDto.setCommentList(dynamicCommentRepository.getCommentListByDynamicId(dynamicDto.getId()));
+            dynamicDto.setCommentCount((long) dynamicDto.getCommentList().size());
+          //点赞
+            dynamicDto.setHeartList(dynamicHeartRepository.getDynamicHeartList(dynamicDto.getId()));
+            dynamicDto.setHeartCount((long) dynamicDto.getHeartList().size());
+            //关注
+            dynamicDto.setFollowList(followRepository.getFollwList(dynamicDto.getUserId(),selfUser));
+            dynamicDto.setFollow((long)dynamicDto.getFollowList().size());
+            //拉黑屏蔽
+            dynamicDto.setBlockList(blockRepository.getBlockList(dynamicDto.getId(),dynamicDto.getUserId(),selfUser));
+
+
+              /* 从redis中读取 */
+           /*   String pattern_heart="binlog:tdmq:gtc-social-db:t_dynamic_heart:";
+              Set<String> keys_comment=stringRedisTemplate.keys("*"+pattern_heart+"*");
+              List<String> list = new ArrayList<String>(keys_comment);
+              List<DynamicHeartListDto> heartListDtos=new ArrayList<>();
+              List<String> keysValue=new ArrayList<String>();
+              List<Object> results = redisTemplate.executePipelined(new RedisCallback<String>() {
+                  @Override
+                  public String doInRedis(RedisConnection connection) throws DataAccessException {
+                      for (String s: list) {
+                          String cache_heart=stringRedisTemplate.opsForValue().get(s);
+                          keysValue.add(cache_heart);
+                      }
+                      return null;
+                  }
+              });
+
+             redisTemplate.executePipelined(new RedisCallback<String>() {
+                  @Override
+                  public String doInRedis(RedisConnection connection) throws DataAccessException {
+                      for (String s: keysValue) {
+                          DynamicHeartListDto dynamicHeartListDto=JSON.parseObject(s,DynamicHeartListDto.class);
+                          if(dynamicHeartListDto.getDynamicId()==dynamicDto.getId()){
+                              heartListDtos.add(dynamicHeartListDto);
+                          }
+                      }
+                      return null;
+                  }
+              });
+
+              dynamicDto.setHeartList(heartListDtos);*/
+
+
+          }
+
             // 提供完整的视频链接
             if (!StringUtils.isEmpty(dynamicDto.getVideo())) {
                 String pureName = dynamicDto.getVideo().substring(0, dynamicDto.getVideo().lastIndexOf('.'));
@@ -686,6 +778,7 @@ public class DynamicServiceImpl implements DynamicService {
                         dynamicDto.setHeadUrl(v.getFirst());
                         dynamicDto.setHeadThumbnailUrl(v.getSecond());
                     });
+
         }
 
         return dynamicDtos;
