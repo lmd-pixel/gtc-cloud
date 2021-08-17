@@ -20,6 +20,9 @@ public interface DeviceForbiddenService {
     int disableForbidden(String identity) throws ApiException;
     DeviceForbidden getDeviceForbidden(String identity) throws ApiException;
 
+
+    List<DeviceForbidden> findByUserId(Long userId) throws ApiException;
+
     /**
      * 根据forbidden id 封号
      */

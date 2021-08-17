@@ -48,6 +48,11 @@ public class DeviceForbiddenServiceImpl implements DeviceForbiddenService {
         return null;
     }
 
+    @Override
+    public List<DeviceForbidden> findByUserId(Long userId) throws ApiException {
+        return deviceForbiddenRepository.findByUserId(userId);
+    }
+
     /*****
      * 解封删除redis对应的记录，对应的数据行
      * @param forbiddenId
@@ -74,12 +79,9 @@ public class DeviceForbiddenServiceImpl implements DeviceForbiddenService {
         }
         //解封时删除redis对应的数据（解封IP）
         if(deviceForbidden.getType()==2){
-            Optional<UserDevice> optionalUserDevice=   userDeviceRepository.findById(deviceForbidden.getDeviceId());
-            if(optionalUserDevice.isPresent()){
-                String redisKey=deviceForbidden.getDeviceId()+":"+deviceForbidden.getUserId()+":"+deviceForbidden.getIp();
-                if(redisService.hasKey(redisKey )){
-                    redisService.delKey(redisKey);
-                }
+            String redisKey=deviceForbidden.getDeviceId()+":"+deviceForbidden.getUserId()+":"+deviceForbidden.getIp();
+            if(redisService.hasKey(redisKey)){
+                redisService.delKey(redisKey);
             }
 
         }

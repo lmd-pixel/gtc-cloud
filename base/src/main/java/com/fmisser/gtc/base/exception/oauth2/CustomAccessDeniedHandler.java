@@ -48,6 +48,17 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
                     localeMessageUtil.getLocaleErrorMessage(ApiErrorEnum.ACCESS_DENIED));
         }
 
+
+        if (accessDeniedException instanceof ForbiddenAccountAccessDeniedException) {
+            // 账号封禁
+            exception = new ApiException(ApiErrorEnum.FORBIDDEN_DEVICE_ACCOUNT.getCode(),
+                    accessDeniedException.getMessage());
+        } else {
+            // 通用访问失败
+            exception = new ApiException(ApiErrorEnum.ACCESS_DENIED.getCode(),
+                    localeMessageUtil.getLocaleErrorMessage(ApiErrorEnum.ACCESS_DENIED));
+        }
+
         response.setContentType("application/json;charset=utf-8");
         response.getWriter().print(objectMapper.writeValueAsString(ApiResp.failed(exception)));
     }

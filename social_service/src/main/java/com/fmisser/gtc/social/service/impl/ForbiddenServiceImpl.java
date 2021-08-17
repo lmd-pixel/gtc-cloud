@@ -9,6 +9,7 @@ import com.fmisser.gtc.social.domain.User;
 import com.fmisser.gtc.social.domain.UserDevice;
 import com.fmisser.gtc.social.repository.DeviceForbiddenRepository;
 import com.fmisser.gtc.social.repository.ForbiddenRepository;
+import com.fmisser.gtc.social.repository.UserRepository;
 import com.fmisser.gtc.social.service.ForbiddenService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,11 +26,13 @@ public class ForbiddenServiceImpl implements ForbiddenService {
     private final ForbiddenRepository forbiddenRepository;
     private  final DeviceForbiddenRepository deviceForbiddenRepository;
     private final RedisService redisService;
+    private  final UserRepository userRepository;
 
-    public ForbiddenServiceImpl(ForbiddenRepository forbiddenRepository, DeviceForbiddenRepository deviceForbiddenRepository, RedisService redisService) {
+    public ForbiddenServiceImpl(ForbiddenRepository forbiddenRepository, DeviceForbiddenRepository deviceForbiddenRepository, RedisService redisService, UserRepository userRepository) {
         this.forbiddenRepository = forbiddenRepository;
         this.deviceForbiddenRepository = deviceForbiddenRepository;
         this.redisService = redisService;
+        this.userRepository = userRepository;
     }
 
 
@@ -79,13 +82,13 @@ public class ForbiddenServiceImpl implements ForbiddenService {
     public int deviceceForbidden(UserDevice userDevice,String type, int days, String message) throws ApiException {
         DeviceForbidden deviceForbidden=new DeviceForbidden();
         if(type.equals("1")){
-            deviceForbidden=deviceForbiddenRepository.getDeviceForbiddenByUserIdAndDeviceIdAndDisable(userDevice.getUserId(),userDevice.getId(),0);
+            deviceForbidden=deviceForbiddenRepository.getDeviceForbiddenByUserIdAndDeviceIdAndDisableAndType(userDevice.getUserId(),userDevice.getId(),0,1);
             if (Objects.nonNull(deviceForbidden)) {
                 throw new ApiException(-1, "该用户的此设备已经被封号或账号已注销！");
             }
         }
         if(type.equals("2")){
-            deviceForbidden=deviceForbiddenRepository.getDeviceForbiddenByUserIdAndIpAndDisable(userDevice.getUserId(),userDevice.getIpAddr(),0);
+            deviceForbidden=deviceForbiddenRepository.getDeviceForbiddenByUserIdAndIpAndDisableAndType(userDevice.getUserId(),userDevice.getIpAddr(),0,2);
             if (Objects.nonNull(deviceForbidden)) {
                 throw new ApiException(-1, "该用户的此ip已经被封号或账号已注销！");
             }
@@ -114,6 +117,7 @@ public class ForbiddenServiceImpl implements ForbiddenService {
 
         }
         if(type.equals("2")){
+            deviceForbidden.setDeviceId(userDevice.getId());
             deviceForbidden.setIp(userDevice.getIpAddr());
             //存入redis中设置key为设备ID+用户ID+IP
             if (days > 0) {
@@ -168,9 +172,12 @@ public class ForbiddenServiceImpl implements ForbiddenService {
 
         Forbidden forbidden = optionalForbidden.get();
         forbidden.setDisable(1);
-        String key="user:forbidden:"+forbidden.getUserId();
-        if(redisService.hasKey(key)){
-            redisService.delKey(key);
+        Optional<User> optionalUser = userRepository.findById(forbidden.getUserId());
+        if(optionalUser.isPresent()){
+            String key="user:forbidden:"+optionalUser.get().getPhone();
+            if(redisService.hasKey(key)){
+                redisService.delKey(key);
+            }
         }
         forbiddenRepository.save(forbidden);
 

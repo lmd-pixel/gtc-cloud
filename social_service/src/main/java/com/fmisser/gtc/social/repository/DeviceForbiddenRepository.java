@@ -2,6 +2,7 @@ package com.fmisser.gtc.social.repository;
 
 import com.fmisser.gtc.base.dto.social.DeviceForbiddenDto;
 import com.fmisser.gtc.social.domain.DeviceForbidden;
+import com.fmisser.gtc.social.domain.UserDevice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author by fmisser
@@ -19,13 +21,16 @@ import java.util.Date;
 @Repository
 public interface DeviceForbiddenRepository extends JpaRepository<DeviceForbidden, Long> {
 
-    DeviceForbidden getDeviceForbiddenByUserIdAndDeviceIdAndDisable(Long userId,long deviceId,int disable);
-    DeviceForbidden getDeviceForbiddenByUserIdAndIpAndDisable(Long userId,String ip,int disable);
+    DeviceForbidden getDeviceForbiddenByUserIdAndDeviceIdAndDisableAndType(Long userId,long deviceId,int disable,int type);
+    DeviceForbidden getDeviceForbiddenByUserIdAndIpAndDisableAndType(Long userId,String ip,int disable,int typ);
+
+
+    List<DeviceForbidden> findByUserId(Long userId);
 
 
 
     @Query(value = "SELECT tf.id AS id, tu.digit_id AS digitId,tu.identity As identity, tu.nick AS nick, " +
-            "tf.days AS days, tf.message AS message, tf.start_time AS startTime, tf.end_time AS endTime,tf.ip AS ipAdress,tud.device_android_id AS deviceName " +
+            "tf.days AS days, tf.message AS message, tf.start_time AS startTime, tf.end_time AS endTime,tf.ip AS ipAdress,if(tf.type=1,tud.device_android_id,'') AS deviceName " +
             "FROM t_device_forbidden tf " +
             "INNER JOIN t_user tu ON tu.id = tf.user_id AND " +
             "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +

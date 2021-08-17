@@ -53,4 +53,16 @@ public class ArrayUtils {
       }
         return null;
     }
+
+
+    public static int getCount(List<String> list,String key){
+        int i=0;
+        for(String item : list){
+            if(item.equals(key)){
+                i++;
+            }
+        }
+
+        return i;
+    }
 }

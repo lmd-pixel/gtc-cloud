@@ -1,9 +1,14 @@
 package com.fmisser.gtc.social.config;
 
+import com.fmisser.fpp.cache.redis.service.RedisService;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.exception.oauth2.ForbiddenAccountAccessDeniedException;
+import com.fmisser.gtc.social.domain.DeviceForbidden;
 import com.fmisser.gtc.social.domain.Forbidden;
 import com.fmisser.gtc.social.domain.User;
+import com.fmisser.gtc.social.domain.UserDevice;
+import com.fmisser.gtc.social.repository.UserDeviceRepository;
+import com.fmisser.gtc.social.service.DeviceForbiddenService;
 import com.fmisser.gtc.social.service.ForbiddenService;
 import com.fmisser.gtc.social.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +26,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 
 @Configuration
 public class CommonAccessDecisionManager implements AccessDecisionManager {
@@ -29,7 +36,14 @@ public class CommonAccessDecisionManager implements AccessDecisionManager {
     private ForbiddenService forbiddenService;
 
     @Autowired
+    private DeviceForbiddenService deviceForbiddenService;
+
+    @Autowired
     private UserService userService;
+    @Autowired
+    private RedisService redisService;
+    @Autowired
+    private  UserDeviceRepository userDeviceRepository;
 
     @Override
     public void decide(Authentication authentication, Object object, Collection<ConfigAttribute> configAttributes) throws AccessDeniedException, InsufficientAuthenticationException, ApiException {
@@ -59,6 +73,31 @@ public class CommonAccessDecisionManager implements AccessDecisionManager {
                         throw new ForbiddenAccountAccessDeniedException(msg);
                     }
                 }
+                List<DeviceForbidden> list=deviceForbiddenService.findByUserId(user.getId());
+                if(!list.isEmpty()){
+                    for(DeviceForbidden e:list){
+                        if(e.getType()==1){
+                            Optional<UserDevice> optionalUserDevice=   userDeviceRepository.findById(e.getDeviceId());
+                            if(optionalUserDevice.isPresent()){
+                                String redisKey=e.getDeviceId()+":"+e.getUserId()+":"+optionalUserDevice.get().getDeviceAndroidId();
+                                if(redisService.hasKey(redisKey)){
+                                   /* SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("MM月dd日HH:mm");
+                                    String msg = String.format("当前账号存在违规行为，已被系统封禁%d天，将于%s解封",
+                                            e.getDays(), dateTimeFormatter.format(e.getEndTime()));*/
+                                    throw new ForbiddenAccountAccessDeniedException("你暂时无法登录");
+                                }
+                            }
+                        }
+                        if(e.getType()==2){
+                            String redisKey=e.getDeviceId()+":"+user.getId()+":"+e.getIp();
+                            if(redisService.hasKey(redisKey)){
+                                throw new ForbiddenAccountAccessDeniedException("你暂时无法登录");
+                            }
+                        }
+                    }
+
+                }
+
             }
         }
     }
