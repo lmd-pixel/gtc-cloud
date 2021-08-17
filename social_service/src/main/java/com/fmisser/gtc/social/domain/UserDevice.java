@@ -96,5 +96,17 @@ public class UserDevice {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column
     private Date createTime;
+
+
+
+    public  UserDevice(){
+       super();
+    }
+
+
+    public  UserDevice(Long userId,String deviceAndroidId){
+        this.deviceAndroidId=deviceAndroidId;
+        this.userId=userId;
+    }
 }
 

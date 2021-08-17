@@ -122,7 +122,7 @@ public class UserServiceImpl implements UserService {
                 }
             });
             if(ipList.size()>0){
-                throw new ApiException(-1, "你无法注册新的账号");
+                throw new ApiException(-1, "你暂时无法注册新的账号");
             }else{
                 List<Object> lists = redisTemplate.opsForList().range("create:user:ip:list",0,-1);
                 List<String> ipResultList = (List<String>)(List)lists;
@@ -130,9 +130,9 @@ public class UserServiceImpl implements UserService {
                     redisTemplate.opsForList().rightPush("create:user:ip:list",ipAdress);//没有设备码允许ip注册+
                 }else{
                     if(ArrayUtils.getCommonTotal(ipResultList).getFirst().equals(ipAdress) && ArrayUtils.getCommonTotal(ipResultList).getSecond()<=2){
-                        if(!StringUtils.isEmpty(deviceId) && deviceId!="" && ipAdress!=null){
+                        if(!StringUtils.isEmpty(deviceId) && deviceId!="" && deviceId!=null){
                             if(deciceIdList.size()>0){
-                                throw new ApiException(-1, "你无法注册新的账号");
+                                throw new ApiException(-1, "你暂时无法注册新的账号");
                             }else{
                                 List<Object> lists2 = redisTemplate.opsForList().range("create:user:device:list",0,-1);
                                 List<String> deviceResultList = (List<String>)(List)lists2;
@@ -142,7 +142,7 @@ public class UserServiceImpl implements UserService {
                                     if(ArrayUtils.getCommonTotal(deviceResultList).getFirst().equals(deviceId) && ArrayUtils.getCommonTotal(deviceResultList).getSecond()<=2){
                                         redisTemplate.opsForList().rightPush("create:user:device:list",deviceId);
                                     }else{
-                                        throw new ApiException(-1, "你无法注册新的账号");
+                                        throw new ApiException(-1, "你暂时无法注册新的账号");
                                     }
                                 }
                             }
@@ -150,7 +150,7 @@ public class UserServiceImpl implements UserService {
                             redisTemplate.opsForList().rightPush("create:user:ip:list",ipAdress);//没有设备码允许ip注册+1
                         }
                     }else{
-                        throw new ApiException(-1, "你无法注册新的账号");
+                        throw new ApiException(-1, "你暂时无法注册新的账号");
                     }
                 }
             }

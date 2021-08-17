@@ -25,6 +25,8 @@ public enum ApiErrorEnum {
 
     FORBIDDEN_ACCOUNT(1010, "msg.api.err.forbidden_account"),
 
+    FORBIDDEN_DEVICE_ACCOUNT(1010, "msg.api.err.forbidden_device_account"),
+
     // domain error
 
     USER_ALREADY_EXIST(10001, "msg.api.err.user_already_exist"),

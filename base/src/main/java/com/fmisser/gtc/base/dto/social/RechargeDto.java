@@ -16,4 +16,5 @@ public interface RechargeDto {
     String getDigitId();
     String getNick();
     String getPhone();
+    String getChannelId();
 }

@@ -34,7 +34,7 @@ public interface RechargeRepository extends JpaRepository<Recharge, Long> {
     @Query(value = "SELECT tr.order_number AS orderNumber, tr.type AS type, tr.coin AS coin, " +
             "tr.coin_before AS coinBefore, tr.coin_after AS coinAfter, " +
             "tr.price AS price, tr.status AS status, tr.creat_time AS createTime," +
-            "tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone " +
+            "tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.channel_id AS channelId " +
             "FROM t_recharge tr " +
             "INNER JOIN t_user tu ON tu.id = tr.user_id AND " +
             "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +

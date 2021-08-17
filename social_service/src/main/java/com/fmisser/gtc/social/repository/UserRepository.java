@@ -319,7 +319,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                                        int limit, int offset, String order);
 
     // 改良版主播数据模糊查询（正确了？）
-    @Query(value = "SELECT tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.gender AS gender,tu.channel_id AS channel_id, " +
+    @Query(value = "SELECT tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.gender AS gender,tu.channel_id AS channelId, " +
             "tu.follows AS follows, tu.create_time AS createTime, " +
             "(SELECT SUM(tc.duration) FROM t_call tc WHERE tc.user_id_to = tu.id AND type = 0) AS audioDuration, " +
             "(SELECT SUM(tc.duration) FROM t_call tc WHERE tc.user_id_to = tu.id AND type = 1) AS videoDuration, " +
@@ -357,7 +357,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                                  Date startTime, Date endTime);
 
     // 改良版 用户数据模糊查询（正确？）
-    @Query(value = "SELECT tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.channel_id AS channel_id," +
+    @Query(value = "SELECT tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.channel_id AS channelId," +
             "tu.create_time AS createTime, " +
             "(SELECT SUM(tr.coin) FROM t_recharge tr WHERE tr.user_id = tu.id AND tr.status >= 20) AS rechargeCoin, " +
             "(SELECT SUM(tcb.origin_coin) FROM t_call_bill tcb WHERE tcb.user_id_from = tu.id AND type = 0) AS audioCoin, " +

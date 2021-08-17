@@ -13,6 +13,7 @@ public interface AnchorDto {
     String getNick();
     String getPhone();
     int getGender();
+    String getChannelId();
     Long getFollows();
     BigDecimal getAudioDuration();
     BigDecimal getVideoDuration();

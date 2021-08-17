@@ -104,6 +104,15 @@ public class ProfitManagerServiceImpl implements ProfitManagerService {
         extra.put("commission", calcMessageProfitDto.getCommission());
         extra.put("consume", calcMessageProfitDto.getConsume());
 
+
+        CalcAnchorProfitDto calcAnchorProfitDto=callBillRepository.getAnchorProfit(digitId,nick,startTime,endTime);
+
+        extra.put("totalProfit",calcAnchorProfitDto.getTotalProfit());
+        extra.put("videoProfit",calcAnchorProfitDto.getVideoProfit());
+        extra.put("voiceProfit",calcAnchorProfitDto.getVoiceProfit());
+        extra.put("msgProfit",calcAnchorProfitDto.getMsgProfit());
+        extra.put("giftProfit",calcAnchorProfitDto.getGiftProfit());
+
         return Pair.of(messageBillDtoList, extra);
     }
 
@@ -130,6 +139,15 @@ public class ProfitManagerServiceImpl implements ProfitManagerService {
         extra.put("profit", calcGiftProfitDto.getProfit());
         extra.put("commission", calcGiftProfitDto.getCommission());
         extra.put("consume", calcGiftProfitDto.getConsume());
+
+
+        CalcAnchorProfitDto calcAnchorProfitDto=callBillRepository.getAnchorProfit(digitId,nick,startTime,endTime);
+
+        extra.put("totalProfit",calcAnchorProfitDto.getTotalProfit());
+        extra.put("videoProfit",calcAnchorProfitDto.getVideoProfit());
+        extra.put("voiceProfit",calcAnchorProfitDto.getVoiceProfit());
+        extra.put("msgProfit",calcAnchorProfitDto.getMsgProfit());
+        extra.put("giftProfit",calcAnchorProfitDto.getGiftProfit());
 
         return Pair.of(anchorGiftBillDtoList, extra);
     }
@@ -203,6 +221,14 @@ public class ProfitManagerServiceImpl implements ProfitManagerService {
         extra.put("commission", calcMessageProfitDto.getCommission());
         extra.put("consume", calcMessageProfitDto.getConsume());
 
+        CalcConsumerProfitDto CalcConsumerProfitDto=callBillRepository.getConsumerProfit(consumerDigitId, consumerNick, anchorDigitId, anchorNick, startTime, endTime);
+
+        extra.put("totalProfit",CalcConsumerProfitDto.getTotalProfit());
+        extra.put("videoProfit",CalcConsumerProfitDto.getVideoProfit());
+        extra.put("voiceProfit",CalcConsumerProfitDto.getVoiceProfit());
+        extra.put("msgProfit",CalcConsumerProfitDto.getMsgProfit());
+        extra.put("giftProfit",CalcConsumerProfitDto.getGiftProfit());
+
         return Pair.of(consumerMessageBillDtoList, extra);
     }
 
@@ -231,6 +257,15 @@ public class ProfitManagerServiceImpl implements ProfitManagerService {
         extra.put("profit", calcGiftProfitDto.getProfit());
         extra.put("commission", calcGiftProfitDto.getCommission());
         extra.put("consume", calcGiftProfitDto.getConsume());
+
+
+        CalcConsumerProfitDto CalcConsumerProfitDto=callBillRepository.getConsumerProfit(consumerDigitId, consumerNick, anchorDigitId, anchorNick, startTime, endTime);
+
+        extra.put("totalProfit",CalcConsumerProfitDto.getTotalProfit());
+        extra.put("videoProfit",CalcConsumerProfitDto.getVideoProfit());
+        extra.put("voiceProfit",CalcConsumerProfitDto.getVoiceProfit());
+        extra.put("msgProfit",CalcConsumerProfitDto.getMsgProfit());
+        extra.put("giftProfit",CalcConsumerProfitDto.getGiftProfit());
 
         return Pair.of(consumerGiftBillDtoList, extra);
     }

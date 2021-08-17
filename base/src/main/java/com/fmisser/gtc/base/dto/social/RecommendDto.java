@@ -15,6 +15,7 @@ public interface RecommendDto {
     String getNick();
     String getPhone();
     int getGender();
+    String getChannelId();
     @JsonFormat(timezone = "GMT+8", pattern = "HH:mm:ss")
     Date getStartTime();
     @JsonFormat(timezone = "GMT+8", pattern = "HH:mm:ss")

@@ -260,7 +260,7 @@ public class UserDetailServiceImpl implements UserService {
      * 自定义手机号验证码登录模式
      * 注册，登录一体
      */
-    public UserDetails loadUserByPhoneAndSms(String phone, String code) {
+    public UserDetails loadUserByPhoneAndSms (String phone, String code) {
         // verify sms code
         if (!smsService.checkPhoneCode(phone, code, 0)) {
             return null;
@@ -268,13 +268,16 @@ public class UserDetailServiceImpl implements UserService {
 
         User user = userRepository.findByUsername(phone);
         if (user != null) {
-            String key="user:forbidden:"+phone;
-            if(Objects.nonNull(redisTemplate.opsForValue().get(key))){
-                throw new ApiException(-1, "LOGINFAIL");
-            }else{
-                return user;
+          try{
+              String key="user:forbidden:"+phone;
+              if(Objects.nonNull(redisTemplate.opsForValue().get(key))){
+                  throw new Exception("LOGINFAIL");
+              }else{
+                  return user;
+              }
+            }catch(Exception e){
+             e.getStackTrace();
             }
-
         }
 
         // 认证过后，如果数据库没有这条数据，则创建一条
@@ -303,7 +306,16 @@ public class UserDetailServiceImpl implements UserService {
 
         User user = userRepository.findByUsername(phoneDecode);
         if (user != null) {
-            return user;
+            String key="user:forbidden:"+phoneDecode;
+            try{
+                if(Objects.nonNull(redisTemplate.opsForValue().get(key))){
+                    throw new ApiException(-1, "你暂时无法登录");
+                }else{
+                    return user;
+                }
+            }catch(Exception e){
+                throw  new ApiException(-1,e.getMessage());
+            }
         }
 
         // 认证过后，如果数据库没有这条数据，则创建一条

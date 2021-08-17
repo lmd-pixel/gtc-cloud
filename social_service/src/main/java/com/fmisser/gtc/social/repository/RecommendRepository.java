@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface RecommendRepository extends JpaRepository<Recommend, Long> {
 
     @Query(value = "SELECT tr.type AS type, tr.level AS level, " +
-            "tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.gender AS gender,tu.channel_id AS channel_id," +
+            "tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.gender AS gender,tu.channel_id AS channelId," +
             "tr.start_time AS startTime, tr.end_time AS endTime, " +
             "tr.start_time2 AS startTime2, tr.end_time2 AS endTime2 " +
             "FROM t_recommend tr " +

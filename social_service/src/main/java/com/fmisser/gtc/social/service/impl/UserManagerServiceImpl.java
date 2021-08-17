@@ -21,6 +21,8 @@ import org.springframework.util.StringUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.*;
+
 @Slf4j
 @Service
 @AllArgsConstructor
@@ -194,7 +196,21 @@ public class UserManagerServiceImpl implements UserManagerService {
         user.setBirthDay(user.getBirth());
 
         List<UserDevice> userDeviceList=  userDeviceRepository.findByUserId(user.getId());
-        user.setUserDeviceList(userDeviceList);
+        Map<UserDevice, List<UserDevice>> prodMap = userDeviceList.stream().collect(Collectors.groupingBy(item -> new UserDevice(item.getUserId(),item.getIpAddr())));
+
+        List<UserDevice> userDeviceIdList=  userDeviceList.stream().collect(
+                collectingAndThen(
+                        toCollection(() -> new TreeSet<>(Comparator.comparing(UserDevice::getDeviceAndroidId))), ArrayList::new)
+        );
+
+        List<UserDevice> userDeviceIPList=  userDeviceList.stream().collect(
+                collectingAndThen(
+                        toCollection(() -> new TreeSet<>(Comparator.comparing(UserDevice::getIpAddr))), ArrayList::new)
+        );
+
+
+        user.setUserDeviceList(userDeviceIdList);
+        user.setUserDeviceIpList(userDeviceIPList);
 
 
         return userService.profile(user);
@@ -376,7 +392,7 @@ public class UserManagerServiceImpl implements UserManagerService {
                     .stream()
                     .filter(r -> !r.getId().equals(recommendDo.getId()))
                     .peek(r -> r.setLevel(r.getLevel() + 1))
-                    .collect(Collectors.toList());
+                    .collect(toList());
 
             adjustList.add(recommendDo);
 

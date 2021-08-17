@@ -46,7 +46,13 @@ public class UserController {
                                        @RequestParam("token") String token,
                                        @RequestParam(value = "ipAddress",required = false) String ipAddress,
                                        @RequestParam(value ="deviceId",required = false) String deviceId) throws ApiException {
-        return ApiResp.succeed(userService.autoLogin(identity, token,ipAddress,deviceId));
+        try {
+            return ApiResp.succeed(userService.autoLogin(identity, token,ipAddress,deviceId));
+        } catch (Exception e) {
+            return ApiResp.failed(-1, "你暂时无法登录");
+
+        }
+
     }
 
     @PostMapping("/sms-login")
@@ -58,10 +64,10 @@ public class UserController {
         try {
             return ApiResp.succeed(userService.smsLogin(phone, code,ipAddress,deviceId));
         } catch (Exception e) {
-            if(e.getMessage().equals("LOGINFAIL")){
-                return ApiResp.failed(-1, "你暂时无法登录!");
-            }else{
+            if(!e.getMessage().equals("LOGINFAIL")){
                 return ApiResp.failed(-1, "验证码不正确，请重试!");
+            }else{
+                return ApiResp.failed(-1, "你暂时无法登录");
             }
 
         }

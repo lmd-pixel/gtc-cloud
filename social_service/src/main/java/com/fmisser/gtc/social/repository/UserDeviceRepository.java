@@ -2,6 +2,7 @@ package com.fmisser.gtc.social.repository;
 
 import com.fmisser.gtc.social.domain.UserDevice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,6 +15,5 @@ import java.util.List;
 @Repository
 public interface UserDeviceRepository extends JpaRepository<UserDevice, Long> {
     UserDevice getTopByUserIdOrderByCreateTimeDesc(Long userId);
-
     List<UserDevice> findByUserId(Long userId);
 }

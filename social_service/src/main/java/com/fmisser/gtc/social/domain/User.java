@@ -288,4 +288,7 @@ public class User implements Serializable {
    // @Deprecated
     @Transient
     private  List<UserDevice> userDeviceList;
+
+    @Transient
+    private  List<UserDevice> userDeviceIpList;
 }
