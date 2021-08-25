@@ -65,17 +65,21 @@ public class CommonController {
             @RequestParam(value = "gender", required = false) Integer gender,
             @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
             @RequestParam(value = "pageSize", required = false, defaultValue = "30") int pageSize) {
-
         // 针对版本审核
         if (sysAppConfigService.getAppAuditVersion(version).equals(version) && sysAppConfigService.getAppAuditVersionTime(version)) {
-            List<User> userList = userService.getAuditAnchorList(type, gender, pageIndex, pageSize);
-            for (User user:
-                 userList) {
-                user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
-                user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
-                user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+            if(sysAppConfigService.getSysAppconfig(version)!=null && sysAppConfigService.getSysAppconfig(version).getVersionStatus().equals("1")){
+                List<User> userList = userService.getAnchorList(type, gender, pageIndex, pageSize);
+                return ApiResp.succeed(userList);
+            }else{
+                List<User> userList = userService.getAuditAnchorList(type, gender, pageIndex, pageSize);
+                for (User user:
+                        userList) {
+                    user.setMessagePrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+                    user.setCallPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+                    user.setVideoPrice(BigDecimal.valueOf(-1).setScale(2, BigDecimal.ROUND_HALF_UP));
+                }
+                return ApiResp.succeed(userList);
             }
-            return ApiResp.succeed(userList);
         } else {
             List<User> userList = userService.getAnchorList(type, gender, pageIndex, pageSize);
             return ApiResp.succeed(userList);

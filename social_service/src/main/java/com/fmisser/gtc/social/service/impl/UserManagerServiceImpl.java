@@ -99,7 +99,7 @@ public class UserManagerServiceImpl implements UserManagerService {
         List<AnchorDto> anchorDtoList = userRepository
                 .anchorStatisticsEx2(digitId, nick, phone, gender, startTime, endTime, pageSize, (pageIndex - 1) * pageSize, channelId);
 
-        Long totalCount = userRepository.countAnchorStatisticsEx(digitId, nick, phone, gender, startTime, endTime);
+        Long totalCount = userRepository.countAnchorStatisticsEx(digitId, nick, phone, gender, startTime, endTime,channelId);
         Long totalPage = (totalCount / pageSize) + 1;
 
         Map<String, Object> extra = new HashMap<>();
@@ -167,7 +167,7 @@ public class UserManagerServiceImpl implements UserManagerService {
         List<ConsumerDto> consumerDtoList = userRepository
                 .consumerStatisticsEx2(digitId, nick, phone, startTime, endTime, pageSize, (pageIndex - 1) * pageSize, channelId);
 
-        CalcConsumeDto calcConsumeDto = userRepository.calcConsume(digitId, nick, phone, startTime, endTime);
+        CalcConsumeDto calcConsumeDto = userRepository.calcConsume(digitId, nick, phone, startTime, endTime, channelId);
         Long totalCount = calcConsumeDto.getCount();
         Long totalPage = (totalCount / pageSize) + 1;
 
@@ -194,16 +194,27 @@ public class UserManagerServiceImpl implements UserManagerService {
         user.setGiftProfitRatio(asset.getGiftProfitRatio());
 
         user.setBirthDay(user.getBirth());
-
+        List<UserDevice> deviceList=new ArrayList<>();
         List<UserDevice> userDeviceList=  userDeviceRepository.findByUserId(user.getId());
-        Map<UserDevice, List<UserDevice>> prodMap = userDeviceList.stream().collect(Collectors.groupingBy(item -> new UserDevice(item.getUserId(),item.getIpAddr())));
+        for(UserDevice userDevice:userDeviceList){
+            if(userDevice.getDeviceAndroidId()!=null && userDevice.getDeviceAndroidId()!="" && !StringUtils.isEmpty( userDevice.getDeviceAndroidId())){
+                deviceList.add(userDevice);
+            }
+        }
 
-        List<UserDevice> userDeviceIdList=  userDeviceList.stream().collect(
+        List<UserDevice> userDeviceIdList=  deviceList.stream().collect(
                 collectingAndThen(
                         toCollection(() -> new TreeSet<>(Comparator.comparing(UserDevice::getDeviceAndroidId))), ArrayList::new)
         );
 
-        List<UserDevice> userDeviceIPList=  userDeviceList.stream().collect(
+        List<UserDevice> ipList=new ArrayList<>();
+        List<UserDevice> userDeviceList2=  userDeviceRepository.findByUserId(user.getId());
+        for (UserDevice userDevice:userDeviceList2){
+            if(userDevice.getIpAddr()!=null && userDevice.getIpAddr()!="" && !StringUtils.isEmpty( userDevice.getIpAddr())){
+                ipList.add(userDevice);
+            }
+        }
+        List<UserDevice> userDeviceIPList=  ipList.stream().collect(
                 collectingAndThen(
                         toCollection(() -> new TreeSet<>(Comparator.comparing(UserDevice::getIpAddr))), ArrayList::new)
         );

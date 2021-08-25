@@ -13,7 +13,7 @@ import java.util.Map;
 public interface UserService {
 
     // 创建用户
-    User create(String phone, int gender, String nick, String inviteCode, String version,String channelId,String ipAdress,String deviceId) throws ApiException;
+    User create(String phone, int gender, String nick, String inviteCode, String version,String channelId,String ipAdress,String deviceId,String email) throws ApiException;
 
     // 通过用户名查找用户实体
     User getUserByUsername(String username) throws ApiException;
@@ -21,6 +21,8 @@ public interface UserService {
     boolean isUserExist(String username) throws ApiException;
 
     boolean isNickExist(String nick) throws ApiException;
+
+    String getNick(String nick) throws ApiException;
 
     // 通过数字id查找用户实体
     User getUserByDigitId(String digitId) throws ApiException;

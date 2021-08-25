@@ -15,5 +15,7 @@ import java.util.List;
 @Repository
 public interface UserDeviceRepository extends JpaRepository<UserDevice, Long> {
     UserDevice getTopByUserIdOrderByCreateTimeDesc(Long userId);
+    List<UserDevice> findByUserIdAndDeviceType(Long userId,int type);
+
     List<UserDevice> findByUserId(Long userId);
 }

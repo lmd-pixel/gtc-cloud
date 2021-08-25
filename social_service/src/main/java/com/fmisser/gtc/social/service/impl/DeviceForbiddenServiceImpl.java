@@ -75,6 +75,10 @@ public class DeviceForbiddenServiceImpl implements DeviceForbiddenService {
                 if(redisService.hasKey(redisKey)){
                     redisService.delKey(redisKey);
                 }
+
+                if(redisService.hasKey(optionalUserDevice.get().getDeviceAndroidId())){
+                    redisService.delKey(optionalUserDevice.get().getDeviceAndroidId());
+                }
             }
         }
         //解封时删除redis对应的数据（解封IP）
@@ -82,6 +86,10 @@ public class DeviceForbiddenServiceImpl implements DeviceForbiddenService {
             String redisKey=deviceForbidden.getDeviceId()+":"+deviceForbidden.getUserId()+":"+deviceForbidden.getIp();
             if(redisService.hasKey(redisKey)){
                 redisService.delKey(redisKey);
+            }
+
+            if(redisService.hasKey(deviceForbidden.getIp())){
+                redisService.delKey(deviceForbidden.getIp());
             }
 
         }

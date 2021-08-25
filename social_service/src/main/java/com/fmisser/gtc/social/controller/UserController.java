@@ -52,7 +52,8 @@ public class UserController {
                          @RequestParam(value = "invite", required = false) String invite,
                          @RequestParam(value = "channelId", required = false) String channelId,
                          @RequestParam(value = "ipAddress", required = false) String ipAddress,
-                         @RequestParam(value = "deviceId", required = false) String deviceId
+                         @RequestParam(value = "deviceId", required = false) String deviceId,
+                         @RequestParam(value = "email", required = false) String email
       ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
@@ -61,7 +62,7 @@ public class UserController {
             // return error
             throw new ApiException(-1, "非法操作，认证用户无法创建其他用户资料！");
         }
-        User user = userService.create(username, gender, nick, invite, version,channelId,ipAddress,deviceId);
+        User user = userService.create(username, gender, nick, invite, version,channelId,ipAddress,deviceId,email);
 
         // 针对版本审核
         if (sysConfigService.getAppAuditVersion().equals(version)) {

@@ -154,7 +154,7 @@ public class DynamicController {
             @RequestHeader(value = "version", required = false, defaultValue = "v1") String version,
             @RequestParam("digitId") String digitId,
             @RequestParam("pageIndex") int pageIndex,
-            @RequestParam("pageSize") int pageSize) {
+            @RequestParam("pageSize") int pageSize) throws ParseException {
         User user = userService.getUserByDigitId(digitId);
         User selfUser = null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

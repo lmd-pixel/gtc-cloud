@@ -111,8 +111,11 @@ public class ForbiddenServiceImpl implements ForbiddenService {
             //存入redis中设置key为设备ID+用户ID+设备码
             if (days > 0) {
                 redisService.set(userDevice.getId()+":"+userDevice.getUserId()+":"+userDevice.getDeviceAndroidId(),userDevice.getDeviceAndroidId(),(long) days * 3600 * 24);
+                redisService.set(userDevice.getDeviceAndroidId(),(long) days * 3600 * 24);
+
             }else{
                 redisService.set(userDevice.getId()+":"+userDevice.getUserId()+":"+userDevice.getDeviceAndroidId(),userDevice.getDeviceAndroidId(),365*5 * 3600 * 24);
+                redisService.set(userDevice.getDeviceAndroidId(), 365*5 * 3600 * 24);
             }
 
         }
@@ -122,9 +125,11 @@ public class ForbiddenServiceImpl implements ForbiddenService {
             //存入redis中设置key为设备ID+用户ID+IP
             if (days > 0) {
                 redisService.set(userDevice.getId()+":"+userDevice.getUserId()+":"+userDevice.getIpAddr(),userDevice.getIpAddr(),(long) days * 3600  * 24);
+                redisService.set(userDevice.getIpAddr(),(long) days * 3600 * 24);
+
             }else{
                 redisService.set(userDevice.getId()+":"+userDevice.getUserId()+":"+userDevice.getIpAddr(),userDevice.getIpAddr(),365*5 * 3600  * 24);
-
+                redisService.set(userDevice.getIpAddr(),365*5 * 3600  * 24);
             }
 
         }

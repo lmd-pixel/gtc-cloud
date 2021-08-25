@@ -25,6 +25,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByNick(String nick);
     Page<User> findByIdentityOrderByCreateTimeDesc(int identity, Pageable pageable);
 
+
+    @Query(value = "SELECT tu.nick AS nick  FROM  t_user tu  where nick=?1",nativeQuery = true)
+    String getNick(String nick);
+
     // 注意 要开启事务, service 开启了的话这里不用开启
 //    @Transactional
     @Modifying(clearAutomatically = true)
@@ -351,10 +355,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
             "(tu.phone LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
             "(tu.gender LIKE CONCAT('%', ?4, '%') OR ?4 IS NULL) AND " +
+            "(tu.channel_id LIKE CONCAT('%', ?7, '%') OR ?7 IS NULL) AND " +
             "(tu.create_time BETWEEN ?5 AND ?6 OR ?5 IS NULL OR ?6 IS NULL) ",
     nativeQuery = true)
     Long countAnchorStatisticsEx(String digitId, String nick, String phone, Integer gender,
-                                 Date startTime, Date endTime);
+                                 Date startTime, Date endTime, String channelId);
 
     // 改良版 用户数据模糊查询（正确？）
     @Query(value = "SELECT tu.digit_id AS digitId, tu.nick AS nick, tu.phone AS phone, tu.channel_id AS channelId," +
@@ -365,13 +370,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "(SELECT SUM(tmb.origin_coin) FROM t_message_bill tmb WHERE tmb.user_id_from = tu.id) AS messageCoin, " +
             "(SELECT SUM(tgb.origin_coin) FROM t_gift_bill tgb WHERE tgb.user_id_from = tu.id ) AS giftCoin, " +
             "(SELECT tas.coin FROM t_asset tas WHERE tas.user_id = tu.id) AS coin, " +
-            "(SELECT MAX(ta.active_time) FROM t_active ta WHERE ta.user_id = tu.id) AS activeTime " +
-            "FROM t_user tu WHERE tu.identity = 0 AND " +
+            "(SELECT MAX(ta.active_time) FROM t_active ta WHERE ta.user_id = tu.id) AS activeTime, " +
+            "(SELECT GROUP_CONCAT(DISTINCT(tud.app_version))  FROM t_user_device tud  where tud.user_id =tu.id) AS appVersion "+
+            "FROM t_user tu " +
+            "WHERE tu.identity = 0 AND " +
             "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
             "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
             "(tu.phone LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
             "(tu.create_time BETWEEN ?4 AND ?5 OR ?4 IS NULL OR ?5 IS NULL)  AND" +
             "(tu.channel_id LIKE CONCAT('%', ?8, '%') OR ?8 IS NULL)  " +
+
             "ORDER BY create_time desc " +
             "LIMIT ?6 OFFSET ?7 ",
             nativeQuery = true)
@@ -484,9 +492,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "(tu.digit_id LIKE CONCAT('%', ?1, '%') OR ?1 IS NULL) AND " +
             "(tu.nick LIKE CONCAT('%', ?2, '%') OR ?2 IS NULL) AND " +
             "(tu.phone LIKE CONCAT('%', ?3, '%') OR ?3 IS NULL) AND " +
+            "(tu.channel_id LIKE CONCAT('%', ?6, '%') OR ?6 IS NULL) AND " +
             "(tu.create_time BETWEEN ?4 AND ?5 OR ?4 IS NULL OR ?5 IS NULL) ",
             nativeQuery = true)
-    CalcConsumeDto calcConsume(String digitId, String nick, String phone, Date startTime, Date endTime);
+    CalcConsumeDto calcConsume(String digitId, String nick, String phone, Date startTime, Date endTime,String channelId);
 
     // 获取随机主播
     @Query(value = "SELECT * FROM t_user tu WHERE tu.identity = 1 ORDER BY RAND() LIMIT ?1", nativeQuery = true)

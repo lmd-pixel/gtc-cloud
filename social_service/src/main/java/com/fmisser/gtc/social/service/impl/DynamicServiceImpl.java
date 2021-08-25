@@ -251,7 +251,7 @@ public class DynamicServiceImpl implements DynamicService {
     }
 
     @Override
-    public List<DynamicDto> getUserDynamicList(User user, User selfUser, int pageIndex, int pageSize, String version) throws ApiException {
+    public List<DynamicDto> getUserDynamicList(User user, User selfUser, int pageIndex, int pageSize, String version) throws ApiException, ParseException {
         // 如果不提供自己的 user id 则默认设置为0
         Long selfUserId = 0L;
         if (selfUser != null) {
@@ -259,8 +259,10 @@ public class DynamicServiceImpl implements DynamicService {
         }
 
         // 审核控制
-        Date dateLimit = sysConfigService.getAppAuditDynamicDateLimit(version);
+       // Date dateLimit = sysConfigService.getAppAuditDynamicDateLimit(version);
+        Date dateLimit = sysAppConfigService.getAppAuditDynamicDateLimit("",version);
 
+                //getAppAuditDynamicDateLimit("",version);
         List<Integer> status;
         if (selfUserId.equals(user.getId())) {
             // 自己可以看见审核中的动态

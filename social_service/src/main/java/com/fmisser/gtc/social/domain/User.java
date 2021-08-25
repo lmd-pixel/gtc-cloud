@@ -46,6 +46,9 @@ public class User implements Serializable {
     @Column
     private String nick;
 
+    @Column
+    private  String  email;
+
     @JsonIgnore
     @Column
     private String head;

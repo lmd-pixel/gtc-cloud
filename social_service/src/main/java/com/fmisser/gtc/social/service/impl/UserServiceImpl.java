@@ -78,12 +78,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public User create(String phone, int gender, String nick, String inviteCode, String version,String channelId,String ipAdress,String deviceId) throws ApiException {
-        // check exist
-        if (userRepository.existsByUsername(phone)) {
-            // 已经存在
-            throw new ApiException(-1, "用户名重复");
-        }
+    public User create(String phone, int gender, String nick, String inviteCode, String version,String channelId,String ipAdress,String deviceId,String email) throws ApiException {
         /****
         *客户端注册是检查IP是否在黑名单中，在不允许注册，不在黑名单中检查请求注册的IP在redis中的总数是否小于等于2
          * 小于等于2时检查是否有设备码，
@@ -94,97 +89,138 @@ public class UserServiceImpl implements UserService {
          *      小于等于2时
          */
         if(!StringUtils.isEmpty(ipAdress) && ipAdress!="" && ipAdress!=null) {//注册时设备和ip黑名单检查
+            int k=0;
+            int i=0;
 
-            Set<String> keys_ip = redisTemplate.keys("*:" + ipAdress);
-            List<String> ipList = new ArrayList<String>();
-            List<Object> results = redisTemplate.executePipelined(new RedisCallback<String>() {
-                @Override
-                public String doInRedis(RedisConnection connection) throws DataAccessException {
-                    for (String s : keys_ip) {
-                        String ipAdress = (String) redisService.get(s);
-                        ipList.add(ipAdress);
-                    }
-                    return null;
-                }
-            });
-
-
-            Set<String> keys_device = redisTemplate.keys("*:" + deviceId);
-            List<String> deciceIdList=new ArrayList<String>();
-            List<Object> results2 = redisTemplate.executePipelined(new RedisCallback<String>() {
-                @Override
-                public String doInRedis(RedisConnection connection) throws DataAccessException {
-                    for (String s : keys_device) {
-                        String device = (String) redisService.get(s);
-                        deciceIdList.add(device);
-                    }
-                    return null;
-                }
-            });
-            if(ipList.size()>0){
-                throw new ApiException(-1, "你暂时无法注册新的账号");
-            }else{
-                List<Object> lists = redisTemplate.opsForList().range("create:user:ip:list",0,-1);
-                List<String> ipResultList = (List<String>)(List)lists;
-                if(ipResultList.isEmpty()){
-                   // redisTemplate.opsForList().rightPush("create:user:ip:list",ipAdress);//没有设备码允许ip注册+
+            if(redisService.hasKey(ipAdress)){//判断IP是否在黑名单，黑名单无法注册
+                throw new ApiException(-1, "当前设备注册已达上限");
+            }else{//不在黑名单，且redis中无数据
+                if(!redisService.hasKey(ipAdress+":create:user:ip:list")){//如果redis中无数据,但是有设备码
                     if(!StringUtils.isEmpty(deviceId) && deviceId!="" && deviceId!=null){
-                        if(deciceIdList.size()>0){
-                            throw new ApiException(-1, "你暂时无法注册新的账号");
-                        }else{
-                            List<Object> lists2 = redisTemplate.opsForList().range("create:user:device:list",0,-1);
-                            List<String> deviceResultList = (List<String>)(List)lists2;
-                            if(deviceResultList.isEmpty()){
-                                redisTemplate.opsForList().rightPush("create:user:device:list",deviceId);
-                                redisTemplate.opsForList().rightPush("create:user:ip:list",ipAdress);//没有设备码允许ip注册+
-                            }else{
-                                if(ArrayUtils.getCommonTotal(deviceResultList).getFirst().equals(deviceId) && ArrayUtils.getCommonTotal(deviceResultList).getSecond()<2){
-                                    redisTemplate.opsForList().rightPush("create:user:device:list",deviceId);
-                                    redisTemplate.opsForList().rightPush("create:user:ip:list",ipAdress);//没有设备码允许ip注册+
-                                }else if(!ArrayUtils.getCommonTotal(deviceResultList).getFirst().equals(deviceId)){
-                                    redisTemplate.opsForList().rightPush("create:user:device:list",deviceId);
+                        if(redisService.hasKey(deviceId)){//设备码在黑名单无法注册
+                            throw new ApiException(-1, "当前设备注册已达上限");
+                        }else{//设备码不在黑名单且redis中无数据
+                            if(!redisService.hasKey(ipAdress+":create:user:device:list")){
+                                if(redisService.hasKey(deviceId+":"+"create:user:device:list")){
+                                    Integer value=Integer.valueOf((String)redisService.get(deviceId+":"+"create:user:device:list"));
+                                    k=value+1;
+                                    redisService.delKey(deviceId+":"+"create:user:device:list");
                                 }else{
-                                    throw new ApiException(-1, "你暂时无法注册新的账号");
+                                    k++;
+                                }
+                                redisService.set(deviceId+":"+"create:user:device:list",k+"");
+
+                                if(redisService.hasKey(ipAdress+":create:user:ip:list")){
+                                    Integer value=Integer.valueOf((String)redisService.get(ipAdress+":"+"create:user:ip:list"));
+                                    i=value+1;
+                                    redisService.delKey(ipAdress+":create:user:ip:list");
+                                }else{
+                                    i++;
+                                }
+                                redisService.set(ipAdress+":create:user:ip:list",i+"");
+                            }else{
+                                if(Integer.valueOf((String)redisService.get(deviceId+":"+"create:user:ip:list"))<2){
+                                    if(redisService.hasKey(deviceId+":"+"create:user:device:list")){
+                                        Integer value=Integer.valueOf((String)redisService.get(deviceId+":"+"create:user:device:list"));
+                                        k=value+1;
+                                        redisService.delKey(deviceId+":"+"create:user:device:list");
+                                    }else{
+                                        k++;
+                                    }
+                                    redisService.set(deviceId+":"+"create:user:device:list",k+"");
+
+                                    if(redisService.hasKey(ipAdress+":create:user:ip:list")){
+                                        Integer value=Integer.valueOf((String)redisService.get(ipAdress+":"+"create:user:ip:list"));
+                                        i=value+1;
+                                        redisService.delKey(ipAdress+":create:user:ip:list");
+                                    }else{
+                                        i++;
+                                    }
+                                    redisService.set(ipAdress+":create:user:ip:list",i+"");
+                                }else{
+                                    throw new ApiException(-1, "当前设备注册已达上限");
                                 }
                             }
                         }
                     }else{
-                        redisTemplate.opsForList().rightPush("create:user:ip:list",ipAdress);//没有设备码允许ip注册+1
+                        i++;
+                        redisService.set(ipAdress+":create:user:ip:list",i+"");
                     }
                 }else{
-                    if(ArrayUtils.getCommonTotal(ipResultList).getFirst().equals(ipAdress) && ArrayUtils.getCommonTotal(ipResultList).getSecond()<2){
+                    Integer redisIpKey=Integer.valueOf((String)redisService.get(ipAdress+":"+"create:user:ip:list"));
+                    if(redisIpKey<2){
                         if(!StringUtils.isEmpty(deviceId) && deviceId!="" && deviceId!=null){
-                            if(deciceIdList.size()>0){
-                                throw new ApiException(-1, "你暂时无法注册新的账号");
-                            }else{
-                                List<Object> lists2 = redisTemplate.opsForList().range("create:user:device:list",0,-1);
-                                List<String> deviceResultList = (List<String>)(List)lists2;
-                                if(ArrayUtils.getCommonTotal(deviceResultList).getFirst().equals("")){
-                                    redisTemplate.opsForList().rightPush("create:user:device:list",deviceId);
-                                }else{
-                                    if(ArrayUtils.getCommonTotal(deviceResultList).getFirst().equals(deviceId) && ArrayUtils.getCommonTotal(deviceResultList).getSecond()<2){
-                                        redisTemplate.opsForList().rightPush("create:user:device:list",deviceId);
-                                        redisTemplate.opsForList().rightPush("create:user:ip:list",ipAdress);//没有设备码允许ip注册+
-                                    }else if(!ArrayUtils.getCommonTotal(deviceResultList).getFirst().equals(deviceId) && ArrayUtils.getCount(deviceResultList,deviceId)<2){
-                                        redisTemplate.opsForList().rightPush("create:user:device:list",deviceId);
-                                        redisTemplate.opsForList().rightPush("create:user:ip:list",ipAdress);//没有设备码允许ip注册+
+                            //如果设备不为空判断是否在黑名单，在黑名单中无法注册
+                            if(redisService.hasKey(deviceId)){
+                                throw new ApiException(-1, "当前设备注册已达上限");
+                            }else{//不在黑名单判断设备在redis中注册数
+                                //1先判断redis中是否有key 如果没有直接存入，value为1
+                                if(!redisService.hasKey(deviceId+":"+"create:user:device:list")){
+                                    if(redisService.hasKey(deviceId+":"+"create:user:device:list")){
+                                        Integer value=Integer.valueOf((String)redisService.get(deviceId+":"+"create:user:device:list"));
+                                        k=value+1;
+                                        redisService.delKey(deviceId+":"+"create:user:device:list");
                                     }else{
-                                        throw new ApiException(-1, "你暂时无法注册新的账号");
+                                        k++;
+                                    }
+                                    redisService.set(deviceId+":"+"create:user:device:list",k+"");
+                                }else{//如果redis中有key判断是否小于2，小于2设备，IP往redis中+1
+                                    Integer deviceKey=Integer.valueOf((String)redisService.get(deviceId+":"+"create:user:device:list"));
+                                    if(deviceKey<2){
+                                        if(redisService.hasKey(deviceId+":"+"create:user:device:list")){
+                                            Integer value=Integer.valueOf((String)redisService.get(deviceId+":"+"create:user:device:list"));
+                                            k=value+1;
+                                            redisService.delKey(deviceId+":"+"create:user:device:list");
+                                        }else{
+                                            k++;
+                                        }
+                                        redisService.set(deviceId+":"+"create:user:device:list",k+"");
+
+                                        if(redisService.hasKey(ipAdress+":create:user:ip:list")){
+                                            Integer value=Integer.valueOf((String)redisService.get(ipAdress+":"+"create:user:ip:list"));
+                                            i=value+1;
+                                            redisService.delKey(ipAdress+":create:user:ip:list");
+                                        }else{
+                                            i++;
+                                        }
+                                        redisService.set(ipAdress+":create:user:ip:list",i+"");
+                                    }else{//否则无法注册
+                                        throw new ApiException(-1, "当前设备注册已达上限");
                                     }
                                 }
                             }
                         }else{
-                            redisTemplate.opsForList().rightPush("create:user:ip:list",ipAdress);//没有设备码允许ip注册+1
+                            if(redisService.hasKey(ipAdress+":create:user:ip:list")){
+                                Integer value=Integer.valueOf((String)redisService.get(ipAdress+":"+"create:user:ip:list"));
+                                i=value+1;
+                                redisService.delKey(ipAdress+":create:user:ip:list");
+                            }else{
+                                i++;
+                            }
+                            redisService.set(ipAdress+":create:user:ip:list",i+"");
                         }
-                    }else if(!ArrayUtils.getCommonTotal(ipResultList).getFirst().equals(ipAdress)){
-                        redisTemplate.opsForList().rightPush("create:user:ip:list",ipAdress);//没有设备码允许ip注册+
-                    } else{
-                        throw new ApiException(-1, "你暂时无法注册新的账号");
+                    }/*else if(Integer.valueOf((String)redisService.get(ipAdress+":"+"create:user:ip:list"))<2){
+                        if(redisService.hasKey(ipAdress+":create:user:ip:list")){
+                            Integer value=Integer.valueOf((String)redisService.get(ipAdress+":"+"create:user:ip:list"));
+                            i=value+1;
+                            redisService.delKey(ipAdress+":create:user:ip:list");
+                        }else{
+                            i++;
+                        }
+                        redisService.set(ipAdress+":create:user:ip:list",i+"");
+                    }*/ else{
+                        throw new ApiException(-1, "当前设备注册已达上限");
                     }
                 }
             }
         }
    /*********************************************************************************/
+        // check exist
+        if (userRepository.existsByUsername(phone)) {
+            // 已经存在
+            throw new ApiException(-1, "用户名重复");
+        }
+
         // create
         User user = new User();
         user.setUsername(phone);
@@ -201,11 +237,15 @@ public class UserServiceImpl implements UserService {
         if (StringUtils.isEmpty(nick)) {
             user.setNick(String.format("会员%s", digitId));
         } else {
-            if (isNickExist(nick)) {
+            if (Objects.nonNull(getNick(nick))) {
                 throw new ApiException(-1, "用户昵称重复");
             } else {
                 user.setNick(nick);
             }
+        }
+
+        if(!StringUtils.isEmpty(email)){
+         user.setEmail(email);
         }
 
         LocalDateTime defaultBirth = LocalDateTime.of(1990, 1, 1, 0, 0);
@@ -294,6 +334,11 @@ public class UserServiceImpl implements UserService {
     public boolean isNickExist(String nick) throws ApiException {
         Optional<User> userOptional = userRepository.findByNick(nick);
         return userOptional.isPresent();
+    }
+
+    @Override
+    public String getNick(String nick) throws ApiException {
+        return userRepository.getNick(nick);
     }
 
     @Override

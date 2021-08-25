@@ -27,7 +27,7 @@ public interface DynamicService {
                       BigDecimal longitude, BigDecimal latitude,
                       Map<String, MultipartFile> multipartFileMap) throws ApiException;
     // 获取用户发布的动态列表
-    List<DynamicDto> getUserDynamicList(User user, User selfUser, int pageIndex, int pageSize, String version) throws ApiException;
+    List<DynamicDto> getUserDynamicList(User user, User selfUser, int pageIndex, int pageSize, String version) throws ApiException, ParseException;
     // 点赞或者取消点赞
     int dynamicHeart(Long dynamicId, User selfUser, int isCancel) throws ApiException;
     // 添加评论

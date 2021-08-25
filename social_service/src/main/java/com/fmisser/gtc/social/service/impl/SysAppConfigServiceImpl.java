@@ -4,7 +4,6 @@ package com.fmisser.gtc.social.service.impl;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.utils.DateUtils;
 import com.fmisser.gtc.social.domain.SysAppConfig;
-import com.fmisser.gtc.social.domain.SysConfig;
 import com.fmisser.gtc.social.repository.SysAppConfigRepository;
 import com.fmisser.gtc.social.service.SysAppConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,11 +33,11 @@ public class SysAppConfigServiceImpl  implements SysAppConfigService {
      */
     @Override
     public String getAppAuditVersionEx(String channelId, String version) throws ApiException, ParseException {
-        String versionStatus="";
         SysAppConfig sysAppConfig = sysAppConfigRepository.findByName(version);
         if (Objects.isNull(sysAppConfig)) {
             return "0";
         }
+
         List<String> versionLists = Arrays.asList(sysAppConfig.getVersion().split(","));
         if(versionLists.contains(version)){//判断是否在版本范围内
             if(!StringUtils.isEmpty(sysAppConfig.getWeek()) &&sysAppConfig.getWeek().contains(DateUtils.getWeek()+"") ){//判断是否是当前的week
@@ -50,18 +49,16 @@ public class SysAppConfigServiceImpl  implements SysAppConfigService {
                         Integer.valueOf(formateDate)>=Integer.valueOf(sysAppConfig.getStartTime())  &&
                         Integer.valueOf(formateDate)<=Integer.valueOf(sysAppConfig.getEndTime())
                 ){//判断是否是当前的时间点
-                    versionStatus="1";
+                    return  sysAppConfig.getDynamicIsSwitch();
                 }else{
-                    versionStatus="0";
+                    return  "0";
                 }
             }else{
-                versionStatus="0";
+                return  "0";
             }
         }else{
-            versionStatus="0";
+            return  "0";
         }
-
-        return versionStatus;
     }
 
     /****
