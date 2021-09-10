@@ -1,7 +1,6 @@
 package com.fmisser.gtc.auth.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fmisser.gtc.auth.domain.AppleAuthKey;
 import com.fmisser.gtc.auth.domain.AppleAuthToken;
@@ -19,11 +18,12 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
+import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -45,6 +45,7 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
     private final AppleAuthTokenRepository appleAuthTokenRepository;
 
     private final AppleAuthKeyRepository appleAuthKeyRepository;
+
 
     public ThirdPartyLoginServiceImpl(ObjectMapper objectMapper,
                                       AppleAuthFeign appleAuthFeign,
@@ -156,4 +157,53 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
         // 这里暂不验证
         return true;
     }
+
+    @Override
+    public boolean getGooleAccessTOken(String code,String token) throws ApiException, GeneralSecurityException, IOException {
+/*
+                 GoogleIdToken idToken = verifier.verify(token);
+                  if (idToken == null) {
+                    //  GoogleIdToken.Payload payload = idToken.getPayload();
+                     *//* idToken.getHeader();
+                      // Print user identifier
+                      String userId = payload.getSubject();
+                     System.out.println("User ID: " + userId);
+
+                      String email = payload.getEmail();
+                      boolean emailVerified = Boolean.valueOf(payload.getEmailVerified());
+                     String name = (String) payload.get("name");
+                      String pictureUrl = (String) payload.get("picture");
+                      String locale = (String) payload.get("locale");
+                      String familyName = (String) payload.get("family_name");
+                      String givenName = (String) payload.get("given_name");*//*
+                      throw new ApiException(-1, "token解析出错或已超时");
+                      // Use or store profile information
+                      // ...
+                  }*/
+/***
+ * 通过令牌获取token
+ */
+      /*  GoogleTokenResponse tokenResponse =new GoogleAuthorizationCodeTokenRequest( new NetHttpTransport(),JacksonFactory.getDefaultInstance(),"https://oauth2.googleapis.com/token",
+                gooleConfProp.getClientId(),gooleConfProp.getClientSecret(), code, gooleConfProp.getRedirectUrl())
+                         // Specify the same redirect URI that you use with your web
+                        // app. If you don't have a web version of your app, you can
+                        // specify an empty string.
+                        .execute();
+
+        HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+        JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(httpTransport, jsonFactory)// Specify the CLIENT_ID of the app that accesses the backend:
+                .setAudience(Collections.singletonList(gooleConfProp.getClientId()))
+                // Or, if multiple clients access the backend:
+                //.setAudience(Arrays.asList(CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3))
+                .build();
+
+        GoogleIdToken idToken=verifier.verify(tokenResponse.getIdToken());
+      GoogleIdToken.Payload payload =  idToken.getPayload();*/
+
+
+        return  true;
+    }
+
+
 }

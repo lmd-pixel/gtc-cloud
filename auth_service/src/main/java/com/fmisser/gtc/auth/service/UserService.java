@@ -3,8 +3,6 @@ package com.fmisser.gtc.auth.service;
 import com.fmisser.gtc.auth.domain.User;
 import com.fmisser.gtc.base.dto.auth.TokenDto;
 import com.fmisser.gtc.base.exception.ApiException;
-import com.fmisser.gtc.base.response.ApiResp;
-import io.swagger.annotations.Api;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface UserService extends UserDetailsService {
@@ -43,6 +41,9 @@ public interface UserService extends UserDetailsService {
      */
     TokenDto appleLogin(String subject, String token) throws ApiException;
 
+
+    TokenDto gooleLogin(String code, String token) throws  ApiException;
+
     /**
      * wx 登录
      */
@@ -57,4 +58,8 @@ public interface UserService extends UserDetailsService {
      * 用户登出
      */
     int logout(User user) throws ApiException;
+
+
+
+
 }

@@ -2,6 +2,9 @@ package com.fmisser.gtc.auth.service;
 
 import com.fmisser.gtc.base.exception.ApiException;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+
 /**
  * 第三方登录
  */
@@ -14,4 +17,6 @@ public interface ThirdPartyLoginService {
 
     // 微信登录验证
     boolean checkWxLogin(String unionid) throws ApiException;
+
+    boolean getGooleAccessTOken(String code,String token) throws ApiException, GeneralSecurityException, IOException;
 }

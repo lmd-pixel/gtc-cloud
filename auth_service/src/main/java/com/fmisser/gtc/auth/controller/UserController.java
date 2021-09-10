@@ -1,6 +1,5 @@
 package com.fmisser.gtc.auth.controller;
 
-import com.fmisser.gtc.auth.domain.User;
 import com.fmisser.gtc.auth.service.SmsService;
 import com.fmisser.gtc.auth.service.UserService;
 import com.fmisser.gtc.base.dto.auth.TokenDto;
@@ -8,17 +7,11 @@ import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.base.response.ApiRespHelper;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
 import javax.validation.constraints.Size;
-import java.security.Principal;
 
 @Api(description = "平台账户中心")
 @RestController
@@ -85,10 +78,20 @@ public class UserController {
         return ApiResp.succeed(userService.wxLogin(unionid));
     }
 
+    @PostMapping("/goole-login")
+    public ApiResp<TokenDto> gooleLogin(@RequestParam("code") String code,
+                                        @RequestParam(value = "token", required = false) String token) throws ApiException {
+        return ApiResp.succeed(userService.gooleLogin(code,token));
+    }
+
+
     @PostMapping("/refresh-token")
     public ApiResp<TokenDto> refreshToken(@RequestParam("refreshToken") String refreshToken) throws ApiException {
         return ApiResp.succeed(userService.refreshToken(refreshToken));
     }
+
+
+
 
     @PostMapping("/phone-code")
     public ApiResp<String> sendPhoneCode(@RequestParam("phone") @Size(min = 11, max = 11, message = "请输入有效的手机号") String phone,

@@ -14,24 +14,19 @@ import com.fmisser.gtc.auth.service.UserService;
 import com.fmisser.gtc.base.dto.auth.TokenDto;
 import com.fmisser.gtc.base.exception.ApiException;
 import com.fmisser.gtc.base.prop.OauthConfProp;
-import com.fmisser.gtc.base.response.ApiResp;
 import com.fmisser.gtc.base.utils.AuthUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.common.exceptions.InvalidGrantException;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.*;
 
 @Slf4j
@@ -157,7 +152,7 @@ public class UserDetailServiceImpl implements UserService {
     public TokenDto autoLogin(String identity, String token,String ipAddress,String deviceId) throws ApiException {
         String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
         if((!StringUtils.isEmpty(ipAddress) && ipAddress!="" && ipAddress!=null) || (deviceId!=null && !StringUtils.isEmpty(deviceId) && deviceId!=null)){
-            Set<String> keys_ip = redisTemplate.keys("*:" + ipAddress);
+        /*    Set<String> keys_ip = redisTemplate.keys("*:" + ipAddress);
             List<String> ipList = new ArrayList<String>();
             List<Object> results = redisTemplate.executePipelined(new RedisCallback<String>() {
                 @Override
@@ -180,8 +175,8 @@ public class UserDetailServiceImpl implements UserService {
                     }
                     return null;
                 }
-            });
-            if(ipList.size()>0 || deviceList.size()>0){
+            });*/
+            if(redisTemplate.hasKey(ipAddress) ||redisTemplate.hasKey(deviceId)){
                 throw new ApiException(-1, "LOGINFAIL");
             }else{
                 return oAuthFeign.autoLogin(basicAuth, identity, token, oauthConfProp.getOauth2Scope(), "auto_login");
@@ -197,31 +192,7 @@ public class UserDetailServiceImpl implements UserService {
     public TokenDto smsLogin(String phone, String code,String ipAddress,String device) throws ApiException {
         String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
         if((!StringUtils.isEmpty(ipAddress) && ipAddress!="" ) || (device!=null && !StringUtils.isEmpty(device))){
-            Set<String> keys_ip = redisTemplate.keys("*:" + ipAddress);
-            List<String> ipList = new ArrayList<String>();
-            List<Object> results = redisTemplate.executePipelined(new RedisCallback<String>() {
-                @Override
-                public String doInRedis(RedisConnection connection) throws DataAccessException {
-                    for (String s : keys_ip) {
-                        String ipAdress = (String) redisTemplate.opsForValue().get(s);
-                        ipList.add(ipAdress);
-                    }
-                    return null;
-                }
-            });
-            Set<String> keys_device = redisTemplate.keys("*:" + device);
-            List<String> deviceList = new ArrayList<String>();
-            List<Object> results2 = redisTemplate.executePipelined(new RedisCallback<String>() {
-                @Override
-                public String doInRedis(RedisConnection connection) throws DataAccessException {
-                    for (String s : keys_device) {
-                        String device = (String) redisTemplate.opsForValue().get(s);
-                        deviceList.add(device);
-                    }
-                    return null;
-                }
-            });
-            if(ipList.size()>0 || deviceList.size()>0){
+            if(redisTemplate.hasKey(ipAddress) ||redisTemplate.hasKey(device)){
                 throw new ApiException(-1, "LOGINFAIL");
             }else{
                 return oAuthFeign.smsLogin(basicAuth, phone, code, oauthConfProp.getOauth2Scope(), "sms_login");
@@ -242,6 +213,12 @@ public class UserDetailServiceImpl implements UserService {
     public TokenDto appleLogin(String subject, String token) throws ApiException {
         String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
         return oAuthFeign.appleLogin(basicAuth, subject, token, oauthConfProp.getOauth2Scope(), "apple_login");
+    }
+
+    @Override
+    public TokenDto gooleLogin(String code, String token) throws ApiException {
+        String basicAuth = AuthUtils.genBasicAuthString(oauthConfProp.getOauth2Client(), oauthConfProp.getOauth2ClientSecret());
+        return oAuthFeign.gooleLogin(basicAuth,code,token,oauthConfProp.getOauth2Scope(),"goole_login");
     }
 
     @Override
@@ -268,7 +245,7 @@ public class UserDetailServiceImpl implements UserService {
 
         User user = userRepository.findByUsername(phone);
         if (user != null) {
-          try{
+         /* try{
               String key="user:forbidden:"+phone;
               if(Objects.nonNull(redisTemplate.opsForValue().get(key))){
                   throw new Exception("LOGINFAIL");
@@ -277,7 +254,8 @@ public class UserDetailServiceImpl implements UserService {
               }
             }catch(Exception e){
              e.getStackTrace();
-            }
+            }*/
+            return user;
         }
 
         // 认证过后，如果数据库没有这条数据，则创建一条
@@ -362,10 +340,31 @@ public class UserDetailServiceImpl implements UserService {
         return _innerCreateByUsername(unionid, 12);
     }
 
+    /***
+     * 自定义谷歌登录
+     * @param token
+     * @return
+     */
+    public  UserDetails loaduserByGooleLogin(String code,String token) throws GeneralSecurityException, IOException {
+        if (!thirdPartyLoginService.getGooleAccessTOken(code,token)) {
+            return null;
+        }
+
+        User user = userRepository.findByUsername(code);
+        if (user != null) {
+            return user;
+        }
+
+        // 认证过后，如果数据库没有这条数据，则创建一条
+        return _innerCreateByUsername(code, 22);
+    }
+
     @Override
     public int logout(User user) throws ApiException {
         return 0;
     }
+
+
 
     private User _innerCreateByUsername(String username, int type) {
         User newUser = new User();

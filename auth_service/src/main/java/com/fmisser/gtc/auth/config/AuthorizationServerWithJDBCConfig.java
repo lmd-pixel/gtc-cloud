@@ -3,6 +3,7 @@ package com.fmisser.gtc.auth.config;
 import com.fmisser.gtc.auth.config.autologin.AutoLoginTokenGranter;
 import com.fmisser.gtc.auth.config.smslogin.SmsLoginTokenGranter;
 import com.fmisser.gtc.auth.config.thirdpartlogin.AppleLoginTokenGranter;
+import com.fmisser.gtc.auth.config.thirdpartlogin.GooleLoginTokenGranter;
 import com.fmisser.gtc.auth.config.thirdpartlogin.WxLoginTokenGranter;
 import com.fmisser.gtc.auth.service.impl.UserDetailServiceImpl;
 import com.fmisser.gtc.base.exception.oauth2.CustomExceptionTranslator;
@@ -163,6 +164,9 @@ public class AuthorizationServerWithJDBCConfig extends AuthorizationServerConfig
                 clientDetailsService,requestFactory, (UserDetailServiceImpl) userDetailsService));
         // wx login
         tokenGranters.add(new WxLoginTokenGranter(tokenServices,
+                clientDetailsService,requestFactory, (UserDetailServiceImpl) userDetailsService));
+        //新增谷歌登录
+        tokenGranters.add(new GooleLoginTokenGranter(tokenServices,
                 clientDetailsService,requestFactory, (UserDetailServiceImpl) userDetailsService));
 
         return tokenGranters;

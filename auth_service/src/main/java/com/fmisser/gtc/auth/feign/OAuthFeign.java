@@ -42,6 +42,13 @@ public interface OAuthFeign {
                    @RequestParam(value = "grant_type") String grant_type);
 
     @PostMapping(value = "/oauth/token")
+    TokenDto gooleLogin(@RequestHeader("Authorization") String basicAuth,
+                        @RequestParam("code") String code,
+                        @RequestParam("token") String token,
+                        @RequestParam("scope") String scope,
+                        @RequestParam(value = "grant_type") String grant_type);
+
+    @PostMapping(value = "/oauth/token")
     TokenDto wxLogin(@RequestHeader("Authorization") String basicAuth,
                         @RequestParam("unionid") String unionid,
                         @RequestParam("scope") String scope,
